@@ -128,7 +128,7 @@
 						    (funcall ',(meta::default-sql-to-value-fn (get-value-type slot) nil)
 						     ,(read-from-string (name slot)))))
 				  (meta::initialize-unbound-slots object)
-				  (meta::mark-object-as-modified object))))))))
+				  (meta::silent-mark-object-as-modified object))))))))
 		      (meta::save-modified-objects store))))
 	      (when source
 		(if stream
