@@ -319,7 +319,7 @@
   (when (modifiable-p *dispatcher*)
     (decf index start-index)
     (html::html ((:input :type "checkbox" 
-			 :fformat (:name "~aC~d" (name (item *dispatcher*)) index)
+			 :fformat (:id "~aC~d" (name (item *dispatcher*)) index)
 			 :optional (:checked (and (find index (selected-objects-idx *dispatcher*)) "true")))))))
 
 (defun std-list-format-fn (start objects max-nb total-length)
@@ -332,8 +332,7 @@
 	  (html:html
 	    (:tr
 	     ((:td :class "dvcv") index1)
-	     (:when (modifiable-p *dispatcher*)
-	       ((:td :class "dvcv") (std-list-checkbox index start)))
+	     ((:td :class "dvcv") (std-list-checkbox index start))
 	     ((:td :class "dvcv")
 	      ((:a :href (encode-object-url object))
 	       (html:esc (meta:list-description object *object*))))))))))

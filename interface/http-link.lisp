@@ -1,5 +1,25 @@
 (in-package interface)
 
+;; explanations for fractal.js compression and obfuscation
+;; v684 and v683 are time out and watchdog counters
+;; F6541() is increment timeout counter
+;; F6451() is watchdog functions
+;; F6514(str) is send-string-to-server(string)
+;; v685 is URL postfix for watchdog
+;; v686 is URL pull for watchdog
+;; F5641() is set URL pull and http-link-id for watchdog
+;; v688 is push URL
+;; F5614() is set URL push 
+;; v687 is packet-sync
+;; v689 is http-link-id
+;; F5164() is set packet-sync
+;; F5146() is check page-packet-sync <= packet-sync
+;; Slk is SendLink
+;; Fch is fire_on_change 
+;; Fck is fire_on_click
+;; Fad is fire_add
+;; Fcl is fire_on_call
+
 (defvar *http-links* (make-hash-table :test #'equal)); Id->Interface
 (defvar *http-link-timeout* 30) ;in seconds
 (defvar *http-link-id* 1000)
@@ -55,8 +75,8 @@
 		  (if queue
 		   (progn
 		     (setf (output-queue http-link) '())
-		     (incf (output-counter http-link))
-		     (html:html-to-string (html:ffmt "if(parent.F5146(~d)){" (output-counter http-link))
+		     (incf (output-counter http-link));alert(window.F5146+'  '+ parent.F5146 + x_.F5146);
+		     (html:html-to-string (html:ffmt "if(x_.F5146(~d)){" (output-counter http-link))
 					  (dolist (string (nreverse queue))
 					    (write-string string html:*html-stream*))
 					  "};" :crlf))
@@ -64,8 +84,9 @@
   (when (output-sent http-link)
     (html:html (loop for string in (output-sent http-link)
 		     when string do (write-string string html:*html-stream*))
-	       (html:ffmt "parent.F5164(~d);parent.F5641(~s, ~s);parent.F5614(~s);"
-			  (output-counter http-link)(url-pull http-link) (interface-id http-link) (url-push http-link)) :crlf))
+	       (html:ffmt "x_.F5164(~d);x_.F5641(~s, ~s);x_.F5614(~s);"
+			  (output-counter http-link) (url-pull http-link)
+			  (interface-id http-link) (url-push http-link)) :crlf))
   (pop (output-sent http-link)))
 
 (defun send-to-interface (string &optional (http-link *http-link*))
@@ -73,7 +94,7 @@
     (push string (output-queue http-link))))
 
 (defun send-message-to-interface (message &optional (http-link *http-link*))
-  (send-to-interface (format nil "parent.alert('~a');"
+  (send-to-interface (format nil "x_.alert('~a');"
 			     (html:quote-javascript-string message))
 		     http-link))
 
@@ -81,14 +102,14 @@
   (let ((referer (normalize-referer (referer *request*))))
     (when referer
       (push (cons referer url)(url-history *session*))))
-  (send-to-interface (format nil "parent.location.href='~a';" url) http-link))
+  (send-to-interface (format nil "x_.location.href='~a';" url) http-link))
 
 (defun send-open-new-win-to-interface (url &optional (http-link *http-link*))
-  (send-to-interface (format nil "parent.open('~a', '_blank', 'toolbar=yes, location=yes, directories=yes,status=yes,menubar=yes,scrollbars=yes,copyhistory=yes, resizable=yes');"
+  (send-to-interface (format nil "x_.open('~a', '_blank', 'toolbar=yes, location=yes, directories=yes,status=yes,menubar=yes,scrollbars=yes,copyhistory=yes, resizable=yes');"
 			     url) http-link))
 
 (defun reload-interface (&optional (http-link *http-link*))
-  (send-to-interface "parent.location.reload(true);" http-link))
+  (send-to-interface "x_.location.reload(true);" http-link))
 
 (defvar *count* 1)
 (defvar *execute* nil)
@@ -96,6 +117,7 @@
 
 (defun process-http-link-pull (request &optional no-refresh)
   (incf *count*)
+  (setf (content-type request) "text/html; charset=iso-8859-1")
   (let* ((interface-id (getf (session-params request) :link ))
 	 (*http-link* (when interface-id (gethash interface-id *http-links*))))
     (log-message (format nil "process-http-link-pull ~s~%" (posted-content request)))
@@ -103,27 +125,35 @@
       (with-output-to-request (request s)
 	(unless (registered *http-link*) (register-http-link *http-link*))
 	(setf (last-access-time *http-link*) *session-timer-time*)
-	(html:html-to-stream s
-	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',2000)")))
-		     (:p "no-refresh")
-		     (:jscript (send-packets *http-link*)
+	(if *xml-http*
+	    (html:html-to-stream s
+	     "{var x_=window;"
+	     (send-packets *http-link*)
+	     "F6541();"
+	     (html:ffmt "F5641(~s, ~s);F5614(~s);}"
+			(url-pull *http-link*) interface-id (url-push *http-link*)))
+	    (html:html-to-stream s
+	     (:html ((:body :optional 
+			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',2000);"))
+		     (:jscript "{var x_=parent;"
+			       (send-packets *http-link*)
 			       "parent.F6541();"
-			       (html:ffmt "parent.F5641(~s, ~s);parent.F5614(~s);"
+			       (html:ffmt "parent.F5641(~s, ~s);parent.F5614(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
 		     ))))
-      (with-output-to-request (request s)
-	(html:html-to-stream s
-	   (:html (:body
-		   (:p "no-refresh")
-		   (:jscript "parent.location.reload(true);")))))))
-  t)
+	(with-output-to-request (request s)
+	  (html:html-to-stream s
+	       (:html (:body
+		       (:p "no-refresh")
+		       (:jscript "parent.location.reload(true);")))))))
+    t))
 
 (add-named-func "lpull" 'process-http-link-pull)
 ;(add-named-func "lpull" #'(lambda (r) (process-http-link-pull r t)))
 
 (defun process-http-link-push (request)
-  (with-posted-strings (request (action "v654")(name "v645")(value "v465"))
+  (with-posted-strings (request (action "v654")(name "v645")(value "v465")(*xml-http* "v564"))
     (log-message (format nil "process-http-link-push ~s~%" (posted-content request)))
     (let ((action-func (gethash action *action-funcs*)))
       (when action-func
@@ -146,8 +176,8 @@
 					    (:body
 					     (:fformat "Error : ~a~%" e) :br
 					     (:format "Backtrace:<br>~{ ~S <br>~}" (nreverse bt))))))))))))
-	      (funcall action-func *http-link* name value)))))))
-  (process-http-link-pull request t))
+	      (funcall action-func *http-link* name value)))))
+      (process-http-link-pull request t))))
 
 (add-named-func "lpush" 'process-http-link-push)
 
@@ -218,25 +248,11 @@
 
 (defvar *http-link-timer* (start-http-link-timer))
 
-;; v684 and v683 are time out and watchdog counters
-;; F6541() is increment timeout counter
-;; F6451() is watchdog functions
-;; F6514(str) is send-string-to-server(string)
-;; v685 is URL postfix for watchdog
-;; v686 is URL pull for watchdog
-;; F5641() is set URL pull and http-link-id for watchdog
-;; v688 is push URL
-;; F5614() is set URL push 
-;; v687 is packet-sync
-;; v689 is http-link-id
-;; F5164() is set packet-sync
-;; F5146() is check page-packet-sync <= packet-sync
-
 (defun connect-tag (attributes forms)
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
       (html::optimize-progn
-       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 5000);"
+       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 2000);"
 			  (html:ffmt "v686=~s;" http-link-url)))
        ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
 			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
@@ -253,6 +269,7 @@
 		  nconc (list :view (name view) :object (encode-object-id object))))))
 
 (defun process-http-popup (request &optional no-refresh)
+(break)
   (let* ((interface-id (getf (session-params request) :link ))
 	 (interface (when interface-id (gethash interface-id *http-links*))))
     (log-message (format nil "process-http-link-pull ~s~%" (posted-content request)))
@@ -261,7 +278,8 @@
 	(unless (registered interface) (register-http-link interface))
 	(setf (last-access-time interface) *session-timer-time*)
 	(html:html-to-stream s
-	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',2000)")))
+	     (:html (:head ((:meta :http-equiv "Content-Type" :content "text/html; charset=iso-8859-1")))
+		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',2000);")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
 			       "parent.F6541();"

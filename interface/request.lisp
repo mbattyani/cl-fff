@@ -18,7 +18,7 @@
   ((command :initform nil :accessor command :initarg :command)
    (clear-content :initform nil :accessor clear-content)
    (status :initform "200 OK" :accessor status)
-   (content-type :initform "text/html" :accessor content-type)
+   (content-type :initform "text/html; charset=iso-8859-1" :accessor content-type)
    (content-length :initform nil :accessor content-length)
    (content-value :initform "" :accessor content-value)
    (date   :initform (get-universal-time) :accessor date)

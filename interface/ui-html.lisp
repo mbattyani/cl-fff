@@ -52,26 +52,26 @@
   (html:html-to-string
    ((:input type (input-type item) 
 	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onchange='fire_onchange(~s,~a.value);'" (name item)(name item))))))
+	    :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item))))))
 
 (defmethod write-construction ((item button) container (language (eql :html)))
   (html:html-to-string
    ((:input type (input-type item) 
 	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onclick ='fire_onclick(~s,~a.value);'" (name item)(name item))))))
+	    :exec (html:fast-format html:*html-stream* " onclick ='Fck(~s,~a.value);'" (name item)(name item))))))
 
 (defmethod write-construction ((item check-box-button) container (language (eql :html)))
   (html:html-to-string
    ((:input type (input-type item) 
 	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onclick ='fire_onchange(~s,~a.checked);'" (name item)(name item))))))
+	    :exec (html:fast-format html:*html-stream* " onclick ='Fch(~s,~a.checked);'" (name item)(name item))))))
 
 (defmethod write-construction ((item radio-button) container (language (eql :html)))
   (html:html-to-string
    ((:input :type (input-type item)
 	    :name (name container)
 	    :exec (write-item-id&style item (list (list :background-color "red")))
-	    :exec (html:fast-format html:*html-stream* " onclick='fire_onchange(~s,~a);'"
+	    :exec (html:fast-format html:*html-stream* " onclick='Fch(~s,~a);'"
 				    (name container)(index item))))))
 
 (defmethod write-construction ((item panel) container (language (eql :html)))
@@ -110,7 +110,7 @@
 (defmethod write-construction ((item combo-box) container (language (eql :html)))
   (html:html-to-string
    ((:select :exec (write-item-id&style item)
-	     :exec (html:fast-format html:*html-stream* " onchange='fire_onchange(~s,~a.value);'" (name item)(name item)))(defun translate-tag (attributes form)
+	     :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item)))(defun translate-tag (attributes form)
   (if (and (consp (first form))(eq (caar form) 'quote)(= (length form) 1))
       `(write-string
 	(meta::translate ',(mapcar #'(lambda(x)(if (stringp x)(html::quote-string x) x))
@@ -126,17 +126,17 @@
 (defmethod make-set-value-javascript ((item combo-box) value slot)
   (let ((position (position value (meta::choices slot) :key #'first)))
     (unless position (setf position -1))
-    (html:fast-format nil "parent.document.all.~a.selectedIndex='~a';" (name item) position)))
+    (html:fast-format nil "parent.fgt('~a').selectedIndex='~a';" (name item) position)))
 
 (defmethod make-set-value-javascript ((item check-box-button) value slot)
-  (html:fast-format nil "parent.document.all.~a.checked=~a;" (name item) (if value "true" "false")))
+  (html:fast-format nil "parent.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
 (defmethod write-construction ((item image) container (language (eql :html)))
   (when (click-map item) )
   (html:html ((:img :exec (write-item-id&style item '(("cursor" "hand")))
 		    :src  (filename item)
 		    :exec (when (click-id item)
-			    (html:ffmt " onclick='fire_onclick(~s, ~s);'" (name item)(click-id item)))))))
+			    (html:ffmt " onclick='Fck(~s, ~s);'" (name item)(click-id item)))))))
 
 ;  (format html:*html-stream* "<OBJECT CLASSID=\"clsid:CB4C9FD7-C14F-11D3-A943-00C095ED76C8\" HEIGHT=~d WIDTH=~d ~a></OBJECT>~%" (round (dx item))(round (dy item))(write-style item))
 ; (with-script (dolist (combo-item (combo-items item))
@@ -155,11 +155,11 @@
 (defmethod make-set-status-javascript ((item html-item) status slot)
   (when (or (not slot) (modifiable-p *dispatcher*))
     (if status
-	(concatenate 'string "parent.document.all." (name item) ".disabled=true;")
-	(concatenate 'string "parent.document.all." (name item) ".disabled=false;"))))
+	(concatenate 'string "parent.fgt('" (name item) "').disabled=true;")
+	(concatenate 'string "parent.fgt('" (name item) "').disabled=false;"))))
 
 (defmethod make-show-error-javascript ((item ui-item) error-text slot)
-  (format nil "parent.document.all.~a.style.backgroundColor='red';" (name item)))
+  (format nil "parent.fgt('~a').style.backgroundColor='red';" (name item)))
 
 (defmethod write-interface (item (language (eql :html)))
   (html:html "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\"> "

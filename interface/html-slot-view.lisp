@@ -21,15 +21,15 @@
   (let ((j-value (html:quote-javascript-string
 		  (if (stringp value) value (write-to-string value)))))
     (if (modifiable-p *dispatcher*)
-	(concatenate 'string "parent.f826svi('" (name item) "', '" j-value "');")
-	(concatenate 'string "parent.f826si('" (name item) "', '" j-value "');"))))
+	(concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")
+	(concatenate 'string "x_.f826si('" (name item) "', '" j-value "');"))))
 
 
 (defmethod make-set-status-javascript ((item html-edit) status slot)
   (when (modifiable-p *dispatcher*)
     (if status
-	(concatenate 'string "parent.f8252h('" (name item) "');")
-	(concatenate 'string "parent.f8252s('" (name item) "');"))))
+	(concatenate 'string "x_.f8252h('" (name item) "');")
+	(concatenate 'string "x_.f8252s('" (name item) "');"))))
 
 (defun slot-edit-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -42,7 +42,7 @@
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:input :type "text" :id ,(name edit) :style "display:'none'" :insert-string
-				    ,(format nil "onchange='fire_onchange(~s,~a.value);'"
+				    ,(format nil "onchange='Fch(~s,~a.value);'"
 					     (name edit) (name edit))
 				    ,@attrs))
 			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
@@ -68,7 +68,7 @@
 			 (:progn
 			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:'none'"
 				       :cols ,(getf attrs :rows "30") :insert-string
-				       ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
+				       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit))
 				       ,@attrs))
 			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
@@ -86,25 +86,16 @@
 	(let ((j-value (if (show-time item)
 			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
 			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
-	  (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');")))
-      (concatenate 'string "parent.f826si('" (name item) "', '');")))
+	  (concatenate 'string "x_.f826si('" (name item) "', '" j-value "');")))
+      (concatenate 'string "x_.f826si('" (name item) "', '');")))
 
 (defmethod make-set-status-javascript ((item html-date) status slot)
   (when (modifiable-p *dispatcher*)
     (if status
-	(concatenate 'string ;"parent.f8252h('" (name item) "');"
-		     "parent.document.all." (name item) "l.style.visibility='hidden';")
-	(concatenate 'string ;"parent.f8252s('" (name item) "');"
-		     "parent.document.all." (name item) "l.style.visibility='inherit';"))))
-
-;(:progn
-;			   ((:input :type "text" :id ,(name edit) :read-only "true" :insert-string 
-;				    ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
-;				    ,@attrs))
-;			   ((:a :id ,(concatenate 'string (name edit) "l")
-;				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
-;					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
-;			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+	(concatenate 'string
+		     "x_.fgt('" (name item) "l').style.visibility='hidden';")
+	(concatenate 'string
+		     "x_.fgt('" (name item) "l').style.visibility='inherit';"))))
 
 (defun slot-date-edit-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -147,10 +138,10 @@
   (let ((first-week-day (first-week-day month year))
 	(last-day (last-day month year))
 	(time (if show-time 
-		  " '+document.all.hour.value+':'+document.all.mn.value+':'+document.all.sec.value);"
+		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
 		  "');")))
     (html:html
-     (:jscript "function f42(d){if (d == '') window.opener.fire_onchange('" item "','nil');else window.opener.fire_onchange('" item "',d+'/" month "/" year time
+     (:jscript "function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
      ((:table :class "calt" :align "center")
       (:tr ((:th :class "calh") "Di")((:th :class "calh") "Lu")((:th :class "calh") "Ma")
@@ -222,11 +213,11 @@
 	      
 	      ((:div :align "center")
 	       (:when (show-time (item dispatcher))
-		 ((:input :name "hour" :value (princ-to-string hour) :style "width:20px;"))
+		 ((:input :name "hour" :id "hour" :value (princ-to-string hour) :style "width:20px;"))
 		 ":"
-		 ((:input :name "mn" :value (princ-to-string mn) :style "width:20px;"))
+		 ((:input :name "mn" :id "mn" :value (princ-to-string mn) :style "width:20px;"))
 		 ":"
-		 ((:input :name "sec" :value (princ-to-string sec) :style "width:20px;")) :br)
+		 ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br)
 	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
 		 (html:html "&nbsp;&nbsp;"
 			    ((:a :href "javascript:f42('');")
@@ -243,7 +234,7 @@
 (defmethod make-set-value-javascript ((item html-combo) value slot)
   (let ((position (position value (meta::choices slot) :key #'first :test #'equal)))
     (unless position (setf position -1))
-    (html:fast-format nil "parent.document.all.~a.selectedIndex='~a';" (name item) position)))
+    (html:fast-format nil "x_.fgt('~a').selectedIndex='~a';" (name item) position)))
 
 (defun slot-combo-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -253,10 +244,10 @@
       (let ((combo (make-instance 'html-combo :tooltip (meta::tooltip slot) :slot slot))
 	    (choices (loop for (value string) in (meta::choices slot) collect (meta::translate string))))
 	`(html:html
-	  ((:select :name ,(name combo)
+	  ((:select :id ,(name combo)
 	    :insert-string
 	    (if (modifiable-p ,slot)
-		,(format nil "onchange=\"fire_onchange('~a',~a.value);\""(name combo)(name combo))
+		,(format nil "onchange=\"Fch('~a',~a.value);\""(name combo)(name combo))
 		"disabled='true'")
 	    ,@attrs)
 	   ,@(loop for choice in choices
@@ -271,7 +262,7 @@
   ())
 
 (defmethod make-set-value-javascript ((item html-check-box) value slot)
-  (html:fast-format nil "parent.document.all.~a.checked=~a;" (name item) (if value "true" "false")))
+  (html:fast-format nil "x_.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
 (defun slot-check-box-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -279,10 +270,10 @@
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((check-box (make-instance 'html-check-box :tooltip (meta::tooltip slot) :slot slot)))
-	`(html:html ((:input :type "checkbox" :name ,(name check-box)
+	`(html:html ((:input :type "checkbox" :id ,(name check-box)
 		      :insert-string
 		      (if (modifiable-p ,slot)
-			  ,(format nil "onclick='fire_onchange(~s,~a.checked);'"
+			  ,(format nil "onclick='Fch(~s,~a.checked);'"
 				   (name check-box)(name check-box))
 			  "disabled='true'")
 		      ,@attrs)))))))
@@ -368,7 +359,7 @@
 			    object)
 		   (send-url-to-interface (encode-object-url new-obj) (interface *dispatcher*)))
 		 (send-to-interface
-		  (html:fast-format nil "parent.open1('/asp/obj-new.html', '250px', '250px', '~a');"
+		  (html:fast-format nil "x_.open1('/asp/obj-new.html', '250px', '250px', '~a');"
 				    (name (item *dispatcher*))))))
 	    ((= value -5) ; (not (find 0 (selected-objects-idx *dispatcher*))))
 	     (dolist (idx (collect-list-idx))
@@ -393,7 +384,7 @@
 	    ((= value -7)
 	     (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
 	     (send-to-interface
-	      (html:fast-format nil "parent.open1('/asp/obj-del.html', '250px', '250px', '~a');"
+	      (html:fast-format nil "x_.open1('/asp/obj-del.html', '250px', '250px', '~a');"
 				(name (item *dispatcher*))))))))))
 
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
@@ -405,7 +396,7 @@
 	(setf start (* max-nb (truncate length max-nb))))
       (when (< start 0) (setf start 0))
       (setf (start *dispatcher*) start)
-      (html:fast-format nil "parent.document.all.~a.innerHTML='~a';" (name item)
+      (html:fast-format nil "x_.fgt('~a').innerHTML='~a';"(name item)
 	(html:quote-javascript-string
 	 (html:html-to-string
 	  (funcall (list-format-fn (list-format *dispatcher*)) start (nthcdr start list) max-nb length)))))))
@@ -417,7 +408,7 @@
 ;;; "b" = buttons 
 
 (defun slot-list-tag (attributes forms)
-  (destructuring-bind (slot-name &key (height "100px") (width "100%") (class "stdlist") add-fn-only) attributes
+  (destructuring-bind (slot-name &key (height "''") (width "100%") (class "stdlist") add-fn-only) attributes
     (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
@@ -444,26 +435,26 @@
 	       ((:table :class ,(concatenate 'string class "h") :align "left" :width "100%")
 		(:tr
 		 (:td
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -1);" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', -1);" (name item)(name item)))
 		   ((:img :border "0" :src "/sl1.jpg" :width "22" :height "18" :alt "First Page")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -2);" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', -2);" (name item)(name item)))
 		   ((:img :border "0" :src "/sl2.jpg" :width "22" :height "18" :alt "Previous Page")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -3);" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', -3);" (name item)(name item)))
 		   ((:img :border "0" :src "/sl3.jpg" :width "22" :height "18" :alt "Next Page")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -4);" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', -4);" (name item)(name item)))
 		   ((:img :border "0" :src "/sl4.jpg" :width "22" :height "18" :alt "Last Page")))
 		  ((:img :border "0" :src "/v.jpg" :width "22" :height "18" :alt ""))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-5));" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-5));" (name item)(name item)))
 		   ((:img :border "0" :src "/up.jpg" :width "22" :height "18" :alt "Move Up")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-6));" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-6));" (name item)(name item)))
 		   ((:img :border "0" :src "/d.jpg" :width "22" :height "18" :alt "Move Down")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-7));" (name item)(name item)))
+		  ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-7));" (name item)(name item)))
 		   ((:img :border "0" :src "/k.jpg" :width "22" :height "18" :alt "Remove")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-8));" (name item)(name item)))
+		  #+nil((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-8));" (name item)(name item)))
 		   ((:img :border "0" :src "/cu.jpg" :width "22" :height "18" :alt "Cut")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-9));" (name item)(name item)))
+		  #+nil((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-9));" (name item)(name item)))
 		   ((:img :border "0" :src "/cp.jpg" :width "22" :height "18" :alt "Copy")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-10));" (name item)(name item)))
+		  #+nil((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-10));" (name item)(name item)))
 		   ((:img :border "0" :src "/p.jpg" :width "22" :height "18" :alt "Paste"))))
 		 ((:td :align "right")
 		  ,@(when (meta::get-object-func slot)
@@ -502,7 +493,7 @@
 		  (:body
 		   :br
 		   (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
-		   (:jscript "function f42(d){window.opener.fire_add('" item "',d);"
+		   (:jscript "function f42(d){window.opener.Fad('" item "',d);"
 			     "window.close();};")
 		   (loop for object in (when dispatcher
 					 (funcall (meta::get-object-func (slot dispatcher))(object dispatcher)))
@@ -535,7 +526,7 @@
 	      (:body
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-	       (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
+	       (:jscript "function f42(d){window.opener.Fck('" item "',d);"
 			 "window.close();};")
 	       (loop for object in (when dispatcher (sub-classes dispatcher))
 		     for i from 1
@@ -567,7 +558,7 @@
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
-	       (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
+	       (:jscript "function f42(d){window.opener.Fck('" item "',d);"
 			 "window.close();};")
 	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
 			 (:translate '(:en "Do you want to remove these objects:"
@@ -614,8 +605,8 @@
   (when (modifiable-p *dispatcher*)
     (when (action-link item)
       (if status
-	  (concatenate 'string "parent.document.all." (action-link item) ".style.visibility='hidden';")
-	  (concatenate 'string "parent.document.all." (action-link item) ".style.visibility='inherit';")))))
+	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='hidden';")
+	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='inherit';")))))
 
 (defun slot-pick-val-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -667,7 +658,7 @@
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-      (:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
@@ -739,7 +730,7 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	(:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+	(:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		  "window.close();};")
 	(:p (:translate (meta::get-value-text slot)))
 	(when dispatcher
@@ -817,14 +808,14 @@ function fh(name)
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
 	((:form :name "go" :method "post" :action "/asp/pick-val.html")
-	 ((:input :name "item" :type "hidden" :value item-name))
-	 ((:input :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
-	 ((:input :name "index" :type "hidden"))
-	 ((:input :name "level" :type "hidden"))
-	 ((:input :name "action" :type "hidden"))
-	 (:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+	 ((:input :id "item" :name "item" :type "hidden" :value item-name))
+	 ((:input :id "link" :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
+	 ((:input :id "index" :name "index" :type "hidden"))
+	 ((:input :id "level" :name "level" :type "hidden"))
+	 ((:input :id "action":name "action" :type "hidden"))
+	 (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		   "window.close();};"
-		   "function f43(l,i,a){document.all.index.value=i;document.all.level.value=l;document.all.action.value=a;"
+		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
 		   "document.forms['go'].submit();};")
 
 	 (:p (:translate (meta::get-value-text slot)))
@@ -847,7 +838,7 @@ function fh(name)
   ())
 
 (defmethod make-set-value-javascript ((item html-obj-link) value slot)
-  (html:fast-format nil "parent.document.all.~a.href='~a';parent.document.all.~a.innerHTML='~a';"
+  (html:fast-format nil "x_.fgt('~a').href='~a';x_.fgt('~a').innerHTML='~a';"
 		    (name item)
 		    (if (meta::fc-object-p value) (encode-object-url value) "javascript:void(0)")
 		    (name item)
@@ -885,7 +876,7 @@ function fh(name)
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet")))
-      (:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
@@ -907,7 +898,7 @@ function fh(name)
 
 (defmethod make-set-value-javascript ((item html-pick-color) value slot)
   (setf value (if value (html:quote-javascript-string value) ""))
-  (html:fast-format nil "parent.document.all.~a.style.backgroundColor='~a';parent.document.all.~a.value='~a';"
+  (html:fast-format nil "x_.fgt('~a').style.backgroundColor='~a';x_.fgt('~a').value='~a';"
 		    (name item) value (name item) value))
 
 (defun slot-pick-color-tag (attributes form)
@@ -960,7 +951,7 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-	(:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+	(:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		  "window.close();};")
 	((:table :class "pcolt" :align "center")
 	 (loop for x below 18
@@ -991,12 +982,12 @@ function fh(name)
 (defmethod make-set-value-javascript ((item html-pick-multi-val) value slot)
   (if value
       (with-output-to-string (s)
-	(html:fast-format s "parent.document.all.~a.innerHTML='" (name item))
+	(html:fast-format s "x_.fgt('~a').innerHTML='" (name item))
 	(loop for (val . rest) on value do
 	      (write-string (html:quote-javascript-string (meta::short-description val)) s)
 	      (when rest (write-string ", " s)))
 	(write-string "';" s))
-      (html:fast-format nil "parent.document.all.~a.innerHTML='';" (name item))))
+      (html:fast-format nil "x_.fgt('~a').innerHTML='';" (name item))))
 
 (defmethod html-pick-multi-val-action-fn (object value click-str)
   (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
@@ -1061,15 +1052,15 @@ function fh(name)
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      (:jscript "function f42(i,st){if (st) window.opener.fire_onclick('" item-name "',i);"
-		"else window.opener.fire_onclick('" item-name "',-i);"
+      (:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+		"else window.opener.Fck('" item-name "',-i);"
 		"};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(loop for (text value) in (funcall (choices-fn dispatcher) object)
 	      for i from 0
 	      do (html:html "&nbsp;&nbsp;"
-			    ((:input :type "checkbox" :fformat (:name "CB~d" i)
+			    ((:input :type "checkbox" :fformat (:id "CB~d" i)
 				     :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
 				     :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")
 				     ))
@@ -1093,7 +1084,7 @@ function fh(name)
 		    (value (second name)))
 	       (if value
 		   (html:html "&nbsp;&nbsp;"
-			      ((:input :type "checkbox" :fformat (:name "CB~d" i)
+			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
 				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
 				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
 			      (incf i)
@@ -1133,8 +1124,8 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	(:jscript "function f42(i,st){if (st) window.opener.fire_onclick('" item-name "',i);"
-		"else window.opener.fire_onclick('" item-name "',-i);"
+	(:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+		"else window.opener.Fck('" item-name "',-i);"
 		"};")
 	(:p (:translate (meta::get-value-text slot)))
 	(when dispatcher
@@ -1172,7 +1163,7 @@ function fh(name)
 		    (value (second name)))
 	       (if value
 		   (html:html "&nbsp;&nbsp;"
-			      ((:input :type "checkbox" :fformat (:name "CB~d" i)
+			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
 				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
 				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
 			      (incf i)
@@ -1195,13 +1186,13 @@ function fh(name)
 	((:form :name "go" :method "post" :action "/asp/pick-val.html")
 	 ((:input :name "item" :type "hidden" :value item-name))
 	 ((:input :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
-	 ((:input :name "index" :type "hidden"))
-	 ((:input :name "level" :type "hidden"))
-	 ((:input :name "action" :type "hidden"))
-	 (:jscript "function f42(i,st){if (st) window.opener.fire_onclick('" item-name "',i);"
-		   "else window.opener.fire_onclick('" item-name "',-i);"
+	 ((:input :id "index" :name "index" :type "hidden"))
+	 ((:input :id "level" :name "level" :type "hidden"))
+	 ((:input :id "action" :name "action" :type "hidden"))
+	 (:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+		   "else window.opener.Fck('" item-name "',-i);"
 		   "};"
-		   "function f43(l,i,a){document.all.index.value=i;document.all.level.value=l;document.all.action.value=a;"
+		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
 		   "document.forms['go'].submit();};")
 	 (:p (:translate (meta::get-value-text slot)))
 	 (when dispatcher

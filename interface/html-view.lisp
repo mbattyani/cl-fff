@@ -75,7 +75,7 @@
 (defun push-button-slot-tag (attributes form)
   (let ((item (make-instance 'html-push-button :action-fn (first form))))
     `(html:html ((:input :type "submit" :name ,(name item)
-		  :insert-string ,(format nil "onclick='fire_onclick(~s, 0);'" (name item))
+		  :insert-string ,(format nil "onclick='Fck(~s, 0);'" (name item))
 		  ,@attributes)))))
 
 (html:add-func-tag :push-button 'push-button-slot-tag)
@@ -141,8 +141,8 @@
 
 (defmethod make-set-status-javascript ((item html-fn-link) status slot)
   (if status
-      (concatenate 'string "parent.f8252h('" (name item) "');")
-      (concatenate 'string "parent.f8252s('" (name item) "');")))
+      (concatenate 'string "x_.f8252h('" (name item) "');")
+      (concatenate 'string "x_.f8252s('" (name item) "');")))
 
 (defun fn-link-tag (attributes form)
   (destructuring-bind (fc-function . attrs) attributes
@@ -183,7 +183,7 @@
      (:body
       :br
       (:h1 (:translate (meta::get-value-title fc-function) :default '(:en "Choose an object" :fr "Choisissez un objet")))
-      (:jscript "function f42(d){window.opener.fire_onchange('" item-name "',d);"
+      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text fc-function)))
       (when dispatcher

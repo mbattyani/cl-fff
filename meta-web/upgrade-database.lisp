@@ -2,7 +2,9 @@
 
 (defun update-class-slot-info-3-to-4 (store pass)
   (let* ((*package* (find-package "META-WEB")) (class (find-class 'slot-info)))
-    (when (eq pass :modify-tables) (meta-level::add-slot-to-class-table store class 'list-format))
+    (when (eq pass :modify-tables)
+;      (meta-level::add-slot-to-class-table store class 'list-format)
+      (meta-level::add-slot-to-class-table store class 'enable-copy-paste))
     (when (eq pass :modify-data)
       (clsql-sys:with-database (nil nil :pool *database-pool*)
         (clsql-sys:do-query ((object-id) "SELECT id  FROM slot_info" :types :auto)
@@ -10,6 +12,7 @@
             (when object
               (let ((data-object (meta-level::load-object-data object)))
                 (slot-makunbound data-object 'list-format)
+                (slot-makunbound data-object 'enable-copy-paste)
                 (meta-level::initialize-unbound-slots object)
                 (meta-level::silent-mark-object-as-modified object))))))))
   (meta-level::save-modified-objects store))
@@ -36,12 +39,12 @@
 
 
 (defun convert-base-from-version-3-to-4 (store)
-  (dolist (class '(other-document))
+  (dolist (class '())
      (meta::create-class-table store (find-class class)))
-(update-class-project-3-to-4 store :modify-tables)
+;(update-class-project-3-to-4 store :modify-tables)
 (update-class-slot-info-3-to-4 store :modify-tables)
 
 
-(update-class-project-3-to-4 store :modify-data)
+;(update-class-project-3-to-4 store :modify-data)
 (update-class-slot-info-3-to-4 store :modify-data)
 )

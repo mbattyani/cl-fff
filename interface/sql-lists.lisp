@@ -57,7 +57,7 @@
 
 (defmethod make-set-value-javascript ((item html-sql-list) param1 param2)
   (let* ((sql-list (sql-list *dispatcher*)))
-    (html:fast-format nil "parent.document.all.~a.innerHTML='~a';" (name item)
+    (html:fast-format nil "parent.fgt('~a').innerHTML='~a';" (name item)
 		      (html:quote-javascript-string
 		       (html:html-to-string
 			((:table :class (table-class item))
@@ -113,13 +113,13 @@
 		  :id ,(name item))  "list" :br)
 	   ((:div  :style ,(format nil "height:~dpx;width:100%" buttons-height)) " "
 	    ((:input :type "submit" :value "first" :class ,(concatenate 'string class "b")
-		     :onclick ,(format nil "fire_onclick('~a', 0)" (name item)))) " "
+		     :onclick ,(format nil "Fck('~a', 0)" (name item)))) " "
 	    ((:input :type "submit" :value "prev 25" :class ,(concatenate 'string class "b")
-		     :onclick ,(format nil "fire_onclick('~a', 1)" (name item)))) " "
+		     :onclick ,(format nil "Fck('~a', 1)" (name item)))) " "
 	    ((:input :type "submit" :value "next 25" :class ,(concatenate 'string class "b")
-		     :onclick ,(format nil "fire_onclick('~a', 2)" (name item)))) " "
+		     :onclick ,(format nil "Fck('~a', 2)" (name item)))) " "
 	    ((:input :type "submit" :value "last" :class ,(concatenate 'string class "b")
-		     :onclick ,(format nil "fire_onclick('~a', 3)" (name item))))
+		     :onclick ,(format nil "Fck('~a', 3)" (name item))))
 	    ))))))
 
 (html:add-func-tag :sql-list 'sql-list-tag)

@@ -24,3 +24,4 @@
 (defvar *tab-id* 1)
 (defvar *dispatcher* nil)
 (defvar *fired-action-value* nil)
+(defvar *xml-http* nil)

@@ -153,14 +153,15 @@
 		as visibility = "" then "none"
 		as i from 0
 		as pane-name = (format nil "~a~d" pane-array-name i)
-		collect (html-gen `((:div :id ,pane-name :class ,pane-class-name :style ,(format nil "display:~a;" visibility))
+		collect (html-gen `((:div :id ,pane-name :class ,pane-class-name 
+					  :style ,(format nil "display:~a;" visibility))
 				    ,@tab-form)))
 	,(html-gen `(:jscript
 		     ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
 			      pane-array-name pane-array-name
 			      tab-array-name tab-array-name)
 		     ,@(loop for i from 0 below (length tab-forms)
-			     collect (format nil "~a[~d]=document.getElementById('~a~d');~a[~d]=document.getElementById('~a~d');"
+			     collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
 					     pane-array-name i pane-array-name i
 					     tab-array-name i tab-array-name i))))))))
 
@@ -216,7 +217,7 @@
 			      *tab-tab-array-name* *tab-tab-array-name*)
 		     ,@(loop for tab-item in *tab-items*
 			   as i from 0
-			   collect (format nil "~a[~d]=document.getElementById('~a~d');~a[~d]=document.getElementById('~a~d');"
+			   collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
 					   *tab-pane-array-name* i *tab-pane-array-name* i
 					   *tab-tab-array-name* i *tab-tab-array-name* i))))))))
 

@@ -1,3 +1,12 @@
+function fgt(name)
+{
+  var item;
+  if (document.getElementById)
+    item=document.getElementById(name);
+  else
+    item=document.all[name];
+  return item;
+}
 
 function f85425(Tabs, Panes, nTab, BaseClassName, SelectedClassName, remove)
 {
@@ -23,7 +32,6 @@ function f85425(Tabs, Panes, nTab, BaseClassName, SelectedClassName, remove)
    Tab = Tabs[nTab-1];
    if (Tab) Tab.style.borderRightStyle = "none";
   }
- event.returnValue = false;
 }
     
 function f8532(Tabs, table, SelClass) 
@@ -62,7 +70,6 @@ function f825s(name)
   var item;
   item=document.getElementById(name);
   if (item) item.style.display = "";
-  if (event) event.returnValue = false;
 }
 
 function f825h(name)
@@ -70,7 +77,6 @@ function f825h(name)
   var item;
   item=document.getElementById(name);
   if (item) item.style.display = "none";
-  if (event) event.returnValue = false;
 }
 
 function f8252s(name) {f825h(name+'d');f825s(name);}
@@ -81,9 +87,7 @@ function f825foc(name)
 {
   f825h(name);
   f825s(name+'d');
-  fire_onclick(name, 0);
-  if (event)
-      event.returnValue = false;
+  Fck(name, 0);
 }
 
 var v684=3651;var v683=3651; var v686=''; var v688; var v685=''; var v687=0;  var FrameNb = 12; var v689; var v690;
@@ -92,14 +96,14 @@ function F5641(v856, v857){v686=v856;v689=v857;};
 function F5614(v856){v688=v856;};
 function F5164(v856){v687=v856;};
 function F5146(v856){return v687<v856;};
-function SendLink(v456, v457, v458)
+function SLk2(v456, v457, v458, v459)
 {
   var container;
   var containerName = 'F'+ FrameNb;
   FrameNb++;
   if (!v688) return;
   document.body.insertAdjacentHTML( 'afterBegin', '<span id=\"SPAN' + containerName + '\"></span>' );
-  var span = document.all("SPAN" + containerName);
+  var span = fgt("SPAN" + containerName);
   var html = '<iframe name=\"' + containerName + '\" src=\"javascript:void;\"></iframe>';
   span.innerHTML = html;
   span.style.display = 'none';
@@ -107,7 +111,7 @@ function SendLink(v456, v457, v458)
   var doc = container.document;
   doc.open();
   doc.write('<html><body>');
-  doc.write('<form name=\"go\" method=\"post\" target=\"\" action=\"'+v688+'\">');
+  doc.write('<form name=\"go\" method=\"post\" target=\"\" action=\"'+v459+'\">');
   doc.write('<input type=\"hidden\" name=\"v654\">');
   doc.write('<input type=\"hidden\" name=\"v645\">');
   doc.write('<input type=\"hidden\" name=\"v465\">');
@@ -121,15 +125,21 @@ function SendLink(v456, v457, v458)
 
 function F6451()
 {
-  if (v684 == v683) 
-    window.frames['Lisp1'].document.location.replace(v686);v683=v684;
+  if (v684 >= v683) 
+    {
+      var x = getxh();
+      if (x)
+	SLk('', '', '', v688);
+      else
+	window.frames['Lisp1'].document.location.replace(v686);v683=v684;
+    }
 };
 
 function f854(name, id)
 {
  var s = "";
  for (var i = 0; i < 25; i++)
-   {var item=document.getElementById(name+'c'+i)
+   {var item=document.getElementById(name+'C'+i)
      if (item && item.checked)
 	 s=s+'t';
      else
@@ -140,11 +150,6 @@ function f854(name, id)
 
 function open1(url, dx, dy, item)
 {
- if (event)
-  {
-   var x = event.screenX;
-   var y = event.screenY;
-  }
  v690 = window.open(url+'?link='+v689+'&item='+item,'pop','status=no,width='+dx+'px,height='+dy+'px,resizable=yes,scrollbars=yes');
 };
 
@@ -157,10 +162,10 @@ function close()
   }
 };
 
-function fire_onchange(ItemName, value){SendLink('4', ItemName, value);};
-function fire_add(ItemName, value){SendLink('12', ItemName, value);};
-function fire_onclick(ItemName, value){SendLink('8', ItemName, value);};
-function fire_call(ItemName, value){SendLink('13', ItemName, value);};
+function Fch(Name, val){SLk('4', Name, val, v688);};
+function Fad(Name, val){SLk('12', Name, val, v688);};
+function Fck(Name, val){SLk('8', Name, val, v688);};
+function Fcl(Name, val){SLk('13', Name, val, v688);};
 
 
 function open2(text, dx, dy)
@@ -170,5 +175,48 @@ function open2(text, dx, dy)
   v691.open("text/html", "replace");
   v691.write(text);
   v691.close();
+};
+
+function getxh()
+{
+  var x = false;
+  try {
+    x=new ActiveXObject("Msxml2.XMLHTTP");
+  }
+  catch (e) {
+    try {
+      x=new ActiveXObject("Microsoft.XMLHTTP");
+    } 
+    catch (E) {
+      x=false;
+    }
+  }
+  if (!x && document.createElement)
+    {
+      try {
+	x = new XMLHttpRequest();
+      } catch (e) {
+	x=false;
+      }
+    }
+  return x;
+}
+
+function SLk(v456, v457, v458, v459)
+{
+  var x = getxh();
+  if (!x)
+    return SLk2(v456, v457, v458, v459);
+  
+  if (!v688) return;
+  
+  x.open("POST", v459, true);
+  x.onreadystatechange = function() { 
+    if(x.readyState == 4) { 
+      eval(x.responseText);
+    }
+  }
+  x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  x.send ("v654="+v456+"&v645="+v457+"&v465="+v458+"&v564=1");
 };
 

@@ -108,13 +108,7 @@
   (if (name obj) (name obj) "(Pas de nom)"))
 
 (defmethod meta::short-description ((obj slot-info))
-  (format nil "~a (~a~a ~a)"
-	  (if (name obj) (name obj) "<Pas de nom>")
-	  (if (list-of-values obj) "list of " "")
-	  (value-type obj)
-	  (if (and (eq (value-type obj) :object)(object-type obj))
-	      (name (object-type obj))
-	      "")))
+  (name obj))
 
 (defun make-choice (c)
   `(list ,(read-from-string (choice-value c))
@@ -140,11 +134,13 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("Vue"
-      (:slot-table view-type html-tag-attributes list-format pathname-filter value-to-string-func string-to-value-func
+      (:slot-table view-type html-tag-attributes list-format 
+		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Règles"
-      (:slot-table indexed unique-p null-allowed duplicate-value make-copy-string duplicate-value-fn
+      (:slot-table indexed unique-p null-allowed enable-copy-paste 
+		   duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))
      ("Aide"
       (:object-view :object (object-help interface::*object*)))
@@ -162,11 +158,13 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("View"
-      (:slot-table view-type html-tag-attributes list-format pathname-filter value-to-string-func string-to-value-func
+      (:slot-table view-type html-tag-attributes list-format 
+		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Rules"
-      (:slot-table indexed unique-p null-allowed duplicate-value make-copy-string duplicate-value-fn
+      (:slot-table indexed unique-p null-allowed enable-copy-paste
+		   duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))
      ("Help"
       (:object-view :object (object-help interface::*object*)))
@@ -301,4 +299,41 @@
 				    dont-display-null-value)
 		 as key = (intern (symbol-name slot-name) key-package)
 		 nconc `(,key (,slot-name slot)))))
+
+(make-instance 'interface::slot-list-format 
+   :name "ot2r" :country-languages '(:fr :en)
+   :object-class 'slot-info
+   :list-format-fn
+   #'(lambda (start objects max-nb total-length)
+       (html:html
+	 ((:table :class "dvl" :style "border:'0';background-color:#808080;" 
+		  :cellpadding "2" :cellspacing "1")
+	  (:when objects
+	    (:tr
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "&nbsp;")
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Slot name")
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "List")
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Type")
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Linked")))
+	  (loop repeat max-nb
+	     for object in objects
+	     for index from start
+	     for index1 = (1+ index) do
+	       (html:html
+		 (:tr
+		  ((:td :class "dvcv") index1 (interface::std-list-checkbox index start))
+		  ((:td :class "dvcv")
+		   ((:a :href (interface::encode-object-url object))
+		    (html:esc (meta::short-description object))))
+		  ((:td :class "dvcv")
+		   (:p (:if (list-of-values object) 
+			    "list"
+			    "&nbsp;&nbsp;&nbsp;&nbsp;")))
+		  ((:td :class "dvcv")
+		   (:p (html:fmt "~a"
+				 (if (and (eq (value-type object) :object)(object-type object))
+				     (name (object-type object))
+				     (value-type object)))))
+		  ((:td :class "dvcv")
+		   (:p (:if (linked-value object) "linked" ""))))))))))
 
