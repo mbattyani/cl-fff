@@ -12,15 +12,30 @@
       (setf (current-version old-class) nil)
       (push old-class (previous-versions class-info)))))
 
+(defun find-current-class-version (class-info)
+  (if (current-version class-info)
+      class-info
+      (find-current-class-version (meta::parent class-info))))
+
+(defun find-class-version (class-info version)
+  (if (= version (version class-info))
+      class-info
+      (let ((current-version (find-current-class-version class-info)))
+	(if (= (version current-version) version)
+	    current-version
+	    (find version (previous-versions current-version) :key #'version)))))
+
 (defvar *effective-stored-slots* nil)
 
 (defun effective-stored-slots (class-info)
   (let ((*effective-stored-slots* nil))
-    (effective-stored-slots% class-info)
+    (effective-stored-slots% class-info (version class-info))
     *effective-stored-slots*))
 
-(defun effective-stored-slots% (class-info)
-  (map nil 'effective-stored-slots% (direct-superclasses class-info))
+(defun effective-stored-slots% (class-info version)
+  (map nil #'(lambda (class)
+	       (effective-stored-slots% (find-class-version class version) version))
+       (direct-superclasses class-info))
   (dolist (slot (direct-slots class-info))
     (when (stored slot)
       (pushnew slot *effective-stored-slots*))))
@@ -34,7 +49,7 @@
     (loop for class in (previous-versions base-class-info)
 	  do (when (= *from-project-version* (version class))
 	       (setf class-info class)(return)))
-    (when class-info
+    (when (and class-info (instanciable class-info))
       (let* ((obj (unless stream (make-instance 'update-sql-table-function :store meta::*memory-store*)))
 	     (parent-class base-class-info)
 	     (*package* (ensure-package (project-package (project class-info))))
