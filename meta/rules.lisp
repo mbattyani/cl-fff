@@ -65,7 +65,7 @@
 (defmacro with-slot-values-in-context (slots instance &body body)
   `(let ,(mapcar #'(lambda (slot)
 		     `(,(slot-definition-name slot)
-		       (let ((value (getf *slot-values-context* slot %no-slot-value%)))
+		       (let ((value (getf *slot-values-context* ,slot %no-slot-value%)))
 			 (if (eq value %no-slot-value%)
 			   (,(accessor slot) ,instance)
 			   value))))
