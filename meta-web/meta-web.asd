@@ -19,6 +19,7 @@
 	       (:file "project-info" :depends-on ("class-info"))
 	       (:file "upgrade" :depends-on ("project-info"))
 	       (:file "upgrade-meta" :depends-on ("project-info"))
+	       (:file "upgrade-database" :depends-on ("global"))
 	       (:file "gen-doc" :depends-on ("meta-classes"))
 	       (:file "pages" :depends-on ("style")))
   :depends-on (:interface :utility :clsql :clsql-postgresql :cl-typesetting :cl-typegraph)

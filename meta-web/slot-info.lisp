@@ -108,8 +108,9 @@
   (if (name obj) (name obj) "(Pas de nom)"))
 
 (defmethod meta::short-description ((obj slot-info))
-  (format nil "~a (~a ~a)"
+  (format nil "~a (~a~a ~a)"
 	  (if (name obj) (name obj) "<Pas de nom>")
+	  (if (list-of-values obj) "list of " "")
 	  (value-type obj)
 	  (if (and (eq (value-type obj) :object)(object-type obj))
 	      (name (object-type obj))

@@ -2,6 +2,9 @@
 
 (defvar *class-info-to-class* (make-hash-table))
 
+(defun get-source-files (project)
+  (files project))
+
 (defmethod project ((obj project))
   obj)
 
@@ -279,3 +282,60 @@ rankdir=LR;
   (dolist (group (class-groups proj))
     (dolist (class (classes group))
       (funcall fn class))))
+
+(make-instance 'interface::object-view :object-class 'project
+	       :country-languages '(:en :fr) :name "class-en" :source-code 
+  `(
+    ((:tab :class "tabf")
+	    ("Description"
+	     (:slot-table name project-package description version sources-directory
+			  application-ip application-port class-groups))
+	    ("User Groups"
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+	       (:slot-table name project-package description version sources-directory
+			    application-ip application-port class-groups)
+	       ((:td :class "dvch2" :colspan "2")
+		((:slot-list user-groups :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "User groups"))))))))
+	    ("Files"
+	     (:slot-table print-source-files)
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+	       ((:td :class "dvch2" :colspan "2")
+		((:slot-list direct-views :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "Source files"))))))))
+	    ("SQL-Lists"
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+		   ((:td :class "dvch2" :colspan "2")
+		    ((:slot-list sql-lists :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		     (:table (:tr ((:td :class "dvch2") "SQL lists")))))))))
+    (:table
+     (:tr
+      (:td ((:tab :class "tabf")
+	    ("Description"
+	     (:slot-table name project-package description version sources-directory
+			  application-ip application-port class-groups))
+	    ("User Groups"
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+	       (:slot-table name project-package description version sources-directory
+			    application-ip application-port class-groups)
+	       ((:td :class "dvch2" :colspan "2")
+		((:slot-list user-groups :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "User groups"))))))))
+	    ("Files"
+	     (:slot-table print-source-files)
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+	       ((:td :class "dvch2" :colspan "2")
+		((:slot-list direct-views :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "Source files"))))))))
+	    ("SQL-Lists"
+	     ((:table :class "dvt")
+	      ((:tr :class "dvr")
+		   ((:td :class "dvch2" :colspan "2")
+		    ((:slot-list sql-lists :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		     (:table (:tr ((:td :class "dvch2") "SQL lists"))))))))))
+      (:td (:obj-fn-table))))))
