@@ -119,7 +119,7 @@
 			 (:progn
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
 			   ((:a :id ,(concatenate 'string (name edit) "l")
-				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
+				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '280px', '~a')"
 					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
 			   )
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
@@ -143,11 +143,14 @@
 (defvar *month-names* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
 		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
 
-(defun html-month (item month year)
+(defun html-month (item month year show-time)
   (let ((first-week-day (first-week-day month year))
-	(last-day (last-day month year)))
+	(last-day (last-day month year))
+	(time (if show-time 
+		  " '+document.all.hour.value+':'+document.all.mn.value+':'+document.all.sec.value);"
+		  "');")))
     (html:html
-     (:jscript "function f42(d){if (d == '') window.opener.fire_onchange('" item "','nil');else window.opener.fire_onchange('" item "',d+'/" month "/" year "');"
+     (:jscript "function f42(d){if (d == '') window.opener.fire_onchange('" item "','nil');else window.opener.fire_onchange('" item "',d+'/" month "/" year time
 	       "window.close();};")
      ((:table :class "calt" :align "center")
       (:tr ((:th :class "calh") "Di")((:th :class "calh") "Lu")((:th :class "calh") "Ma")
@@ -169,16 +172,25 @@
 	     (item (cdr (assoc "item" (posted-content request) :test 'string=)))
 	     (year (cdr (assoc "year" (posted-content request) :test 'string=)))
 	     (month (cdr (assoc "month" (posted-content request) :test 'string=)))
+	     (hour (cdr (assoc "hour" (posted-content request) :test 'string=)))
+	     (mn (cdr (assoc "mn" (posted-content request) :test 'string=)))
+	     (sec (cdr (assoc "sec" (posted-content request) :test 'string=)))
 	     (dispatcher (when link (gethash item (dispatchers link))))
 	     (*session* (session link))
 	     (*user* (user *session*))
 	     (*country-language* (country-language *session*)))
 	(setf year  (when year (parse-integer year)))
 	(setf month (when month (parse-integer month)))
-	(unless (and year month)
-	  (multiple-value-bind (s mn h d m y) (decode-universal-time (get-universal-time))
-	    (setf year (or year y))
-	    (setf month (or month m))))
+	(setf hour (when hour (parse-integer hour :junk-allowed t)))
+	(setf mn (when mn (parse-integer mn :junk-allowed t)))
+	(setf sec (when sec (parse-integer sec :junk-allowed t)))
+	(multiple-value-bind (s min h d m y) 
+	    (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))(get-universal-time)))
+	  (setf year (or year y))
+	  (setf month (or month m))
+	  (setf hour (or hour h))
+	  (setf mn (or mn min))
+	  (setf sec (or sec s)))
 	(with-output-to-request (request)
 	  (html::html-to-stream
 	   *request-stream*
@@ -206,9 +218,15 @@
 		      do (if (= year a)
 			   (html:ffmt "<option value=~d SELECTED>~d" a a)
 			   (html:ffmt "<option value=~d>~d" a a)))))
-	       (html-month item month year)
+	       (html-month item month year (show-time (item dispatcher)))
 	      
 	      ((:div :align "center")
+	       (:when (show-time (item dispatcher))
+		 ((:input :name "hour" :value (princ-to-string hour) :style "width:20px;"))
+		 ":"
+		 ((:input :name "mn" :value (princ-to-string mn) :style "width:20px;"))
+		 ":"
+		 ((:input :name "sec" :value (princ-to-string sec) :style "width:20px;")) :br)
 	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
 		 (html:html "&nbsp;&nbsp;"
 			    ((:a :href "javascript:f42('');")
