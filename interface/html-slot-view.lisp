@@ -317,6 +317,8 @@
 					   (elt (sub-classes *dispatcher*) (1- value)))
 				       :parent (unless (meta::linked-value slot) object)
 				       :store (meta::object-store object))))
+		   (when (meta::process-new-object-fn slot)
+		     (setf new-obj (funcall (meta::process-new-object-fn slot) new-obj object)))
 		   (funcall (set-value-fn *dispatcher*) (if (meta::new-objects-first slot)
 							    (cons new-obj list)
 							    (nconc list (list new-obj)))

@@ -11,7 +11,7 @@
 			       :make-copy-string :duplicate-value-fn
 			       :get-value-html-fn :get-value-title :get-value-text :get-value-sql
 			       :value-to-string-fn :string-to-value-fn :value-to-sql-fn :sql-to-value-fn
-			       :can-create-new-object :create-new-object :get-object-func
+			       :can-create-new-object :create-new-object :get-object-func :process-new-object-fn
 			       :dont-display-null-value :view-type :duplicate-value
 			       :html-tag-attributes)))
 
@@ -65,6 +65,7 @@
    (create-new-object       :initform nil :accessor create-new-object :initarg :create-new-object)
    (can-create-new-object   :initform nil :accessor can-create-new-object :initarg :can-create-new-object)
    (get-object-func         :initform nil :accessor get-object-func :initarg :get-object-func)
+   (process-new-object-fn   :initform nil :accessor process-new-object-fn :initarg :process-new-object-fn)
    (new-objects-first       :initform t   :accessor new-objects-first :initarg :new-objects-first)
    (dont-display-null-value :initform nil :accessor dont-display-null-value :initarg :dont-display-null-value)
    (view-type               :initform nil :accessor view-type :initarg :view-type)
