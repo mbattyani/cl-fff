@@ -27,27 +27,28 @@ as type and sets speed to 3 with safety 0 within its scope."
 
 (defun write-string-quoting-specials (string &optional (stream *html-stream*) (start 0) end)
   "Writes STRING to STREAM being careful to translated any special characters for HTML."
-  (flet ((%token-spec-for-special-char (char)
-           #.`(case char
-                ,.(loop for (char . string) in *special-character-translation-alist*
-                        collect `(,char '(,string . ,(length string))))
-                (t nil)))
-         (write-part (string stream start end)
-           (unless (= start end)
-             (write-string string stream :start start :end  end))))
-    (declare (inline %token-spec-for-special-char write-part))
-    (with-fast-array-references ((vector string string))
-      (loop with scan-idx
-            for idx upfrom start below (or end (length vector))
-            for char = (aref vector idx)
-            for token-spec = (%token-spec-for-special-char char)
-            do (when token-spec
-                 (write-part vector stream (or scan-idx start) idx)
-                 (write-string (car token-spec) stream :start 0 :end (cdr token-spec))
-                 (setq scan-idx (1+ (the fixnum idx))))
-            finally (if scan-idx
-                        (write-part vector stream scan-idx idx)
-                        (write-string vector stream :start start :end idx))))))
+  (when string
+    (flet ((%token-spec-for-special-char (char)
+	     #.`(case char
+		 ,.(loop for (char . string) in *special-character-translation-alist*
+			 collect `(,char '(,string . ,(length string))))
+		 (t nil)))
+	   (write-part (string stream start end)
+	     (unless (= start end)
+	       (write-string string stream :start start :end  end))))
+      (declare (inline %token-spec-for-special-char write-part))
+      (with-fast-array-references ((vector string string))
+	(loop with scan-idx
+	  for idx upfrom start below (or end (length vector))
+	  for char = (aref vector idx)
+	  for token-spec = (%token-spec-for-special-char char)
+	  do (when token-spec
+	       (write-part vector stream (or scan-idx start) idx)
+	       (write-string (car token-spec) stream :start 0 :end (cdr token-spec))
+	       (setq scan-idx (1+ (the fixnum idx))))
+	  finally (if scan-idx
+		      (write-part vector stream scan-idx idx)
+		      (write-string vector stream :start start :end idx)))))))
 
 (defun quote-string (string)
   (with-output-to-string (str)
