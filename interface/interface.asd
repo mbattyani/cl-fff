@@ -25,5 +25,5 @@
 	       (:file "rpc" :depends-on ("specials"))
 	       (:file "std-web" :depends-on ("specials"))
 	       (:file "apache" :depends-on ("specials")))
-  :depends-on (:utility :meta :html)
+  :depends-on (:utility :iterate :meta :html)
   )
