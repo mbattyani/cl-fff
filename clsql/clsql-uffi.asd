@@ -75,7 +75,7 @@
   :components
   ((:module :uffi
 	    :components
-	    ((:clsql-uffi-source-file "uffi")
+	    (;(:clsql-uffi-source-file "uffi")
 	     (:file "clsql-uffi-package")
-	     (:file "clsql-uffi-loader" :depends-on ("clsql-uffi-package" "uffi"))
+	     (:file "clsql-uffi-loader" :depends-on ("clsql-uffi-package" ))
 	     (:file "clsql-uffi" :depends-on ("clsql-uffi-loader"))))))
