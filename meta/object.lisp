@@ -47,7 +47,6 @@
 	  (original-lists object) ())
     (let ((*parent-of-root-object-initialized* object))
       (when (anonymous (class-of object))(setf anonymous t))
-      (mark-object-as-modified object)
       (setf (new-object object) t)
       (if anonymous
 	(setf (id object) 0)
@@ -57,7 +56,8 @@
       (setf (data-object object) (apply 'make-instance (data-class (class-of object)) (append init-options '(:allow-other-keys t))))
       (unless no-init-forms
 	(call-next-method object)
-	(initialize-disable-predicates object))))
+	(initialize-disable-predicates object))
+      (mark-object-as-modified object)))
   (unless anonymous (setf (gethash (id object) (loaded-objects store)) object))
   (hcl:flag-special-free-action object))
 

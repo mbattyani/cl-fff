@@ -84,8 +84,8 @@
 
 (defun ensure-slot (slot class)
   (if (symbolp slot)
-    (find (symbol-name slot) (clos:class-slots class)
-	  :test #'string= :key #'clos:slot-definition-name)
+    (find slot (clos:class-slots class)
+	  :test #'eql :key #'clos:slot-definition-name)
     slot))
 
 (defmethod html-func :around ((view object-view))

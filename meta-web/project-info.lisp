@@ -2,8 +2,8 @@
 
 (defvar *class-info-to-class* (make-hash-table))
 
-(defun get-source-files (project)
-  (files project))
+(defun get-source-files (source-file)
+  (sort (files (meta::parent source-file)) #'string<= :key #'name))
 
 (defmethod project ((obj project))
   obj)
@@ -28,12 +28,16 @@
       t))
 
 (defun html-project-list()
-  #-no-psql(clsql:with-database (nil nil :pool *database-pool*)
-    (loop for (project-id) in (clsql:query "select id from project" :types :auto)
-	  for project = (meta::load-object project-id *meta-store*)
-	  do (html:html ((:a :href (interface::encode-object-url project))
-			 (html:esc (meta::short-description project)) :br))))
-  (html:html :br ((:a :href "/asp/new-project.html") "new projet")))
+  (clsql:with-database (nil nil :pool *database-pool*)
+    (html:html
+     (loop for project in (sort (mapcar #'(lambda (x)
+					    (meta::load-object (first x) *meta-store*))
+					(clsql:query "select id from project" :types :auto))
+				#'string< :key #'name)
+	   do (html:html ((:a :href (interface::encode-object-url project))
+			  (:esc (meta::short-description project))) ": "
+			  (:i (:insert-string (description project))) :br))
+     :br ((:a :href "/asp/new-project.html") "New projet"))))
 
 (defparameter *meta-web-classes*
   '(slot-info class-info project choice-value user-group translated-string sql-list
@@ -239,21 +243,24 @@ rankdir=LR;
       (unless pathname
         (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id)))))
 
-(defmethod gen-lisp-files ((group class-group))
+(defun make-update-file (proj)
+  (make-update-project-fn proj nil (concatenate 'string	(sources-directory proj) "upgrade-database.lisp")))
+    
+(defmethod gen-lisp-files ((group class-group) &optional (make-update t))
   (view-group-classes-source
    group
    (concatenate 'string
 		(or (and (> (length (sources-directory group)) 0)
 			 (sources-directory group))
 		    (sources-directory (meta::parent group)))
-		(name group) "-classes.lisp")))
+		(name group) "-classes.lisp"))
+  (when make-update
+    (make-update-file (meta::parent group))))
 
-(defmethod gen-lisp-files ((proj project))
-  (map nil 'gen-lisp-files (class-groups proj))
-  (make-update-project-fn proj nil
-			  (concatenate 'string
-				       (sources-directory proj)
-				       "upgrade-database.lisp")))
+(defmethod gen-lisp-files ((proj project) &optional (make-update t))
+  (map nil #'(lambda (g) (gen-lisp-files g nil))(class-groups proj))
+  (when make-update
+    (make-update-file proj)))
 
 (defun get-project-values-tables (obj)
   (values-tables (project obj)))
@@ -284,58 +291,66 @@ rankdir=LR;
       (funcall fn class))))
 
 (make-instance 'interface::object-view :object-class 'project
-	       :country-languages '(:en :fr) :name "class-en" :source-code 
-  `(
-    ((:tab :class "tabf")
-	    ("Description"
-	     (:slot-table name project-package description version sources-directory
-			  application-ip application-port class-groups))
-	    ("User Groups"
-	     ((:table :class "dvt")
-	      ((:tr :class "dvr")
-	       (:slot-table name project-package description version sources-directory
-			    application-ip application-port class-groups)
-	       ((:td :class "dvch2" :colspan "2")
-		((:slot-list user-groups :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
-		 (:table (:tr ((:td :class "dvch2") "User groups"))))))))
-	    ("Files"
-	     (:slot-table print-source-files)
-	     ((:table :class "dvt")
-	      ((:tr :class "dvr")
-	       ((:td :class "dvch2" :colspan "2")
-		((:slot-list direct-views :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
-		 (:table (:tr ((:td :class "dvch2") "Source files"))))))))
-	    ("SQL-Lists"
-	     ((:table :class "dvt")
-	      ((:tr :class "dvr")
-		   ((:td :class "dvch2" :colspan "2")
-		    ((:slot-list sql-lists :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
-		     (:table (:tr ((:td :class "dvch2") "SQL lists")))))))))
-    (:table
+	       :country-languages '(:en :fr) :name "proj-v" :source-code 
+  `((:table
      (:tr
       (:td ((:tab :class "tabf")
 	    ("Description"
 	     (:slot-table name project-package description version sources-directory
 			  application-ip application-port class-groups))
-	    ("User Groups"
+	    ("User&nbsp;Groups"
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
-	       (:slot-table name project-package description version sources-directory
-			    application-ip application-port class-groups)
 	       ((:td :class "dvch2" :colspan "2")
 		((:slot-list user-groups :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
 		 (:table (:tr ((:td :class "dvch2") "User groups"))))))))
 	    ("Files"
-	     (:slot-table print-source-files)
+	     (:slot-table print-source-files used-lisp-modules)
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
+	       ((:td :class "dvch2" :colspan "2") "ASDF directives"))
+	      ((:tr :class "dvr")
+	       ((:td :class "dvcv" :colspan "2")
+		((:slot-medit asdf-directives :class "dvcve" :rows "4" :cols "100" :style "width:440px"))))
+	      ((:tr :class "dvr")
 	       ((:td :class "dvch2" :colspan "2")
-		((:slot-list direct-views :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
+		((:slot-list files :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
 		 (:table (:tr ((:td :class "dvch2") "Source files"))))))))
-	    ("SQL-Lists"
+	    ("SQL&nbsp;Lists"
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
 		   ((:td :class "dvch2" :colspan "2")
 		    ((:slot-list sql-lists :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
 		     (:table (:tr ((:td :class "dvch2") "SQL lists"))))))))))
       (:td (:obj-fn-table))))))
+
+(defun gen-asdf-file (project)
+  (with-open-file (s (format nil "~a~a.asd1"
+			     (sources-directory project)
+			     (string-downcase (name project)))
+		     :direction :output :if-exists :supersede)
+    (format s ";;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+
+(in-package asdf) 
+
+(defsystem :~a
+    :name ~s
+    :description ~s
+    :long-description ~s
+    :components ("
+    (string-downcase (name project))
+    (name project)
+    (description project)
+    (description project))
+    (dolist (file (files project))
+      (when (in-asdf file)
+	(format s "~%                 (:file ~s"
+		(pathname-name (pathname (name file))))
+	(when (dependances file)
+	  (format s "~%                        :depends-on ~s"
+		  (mapcar #'(lambda (f) (pathname-name (pathname (name f))))(dependances file))))
+	(format s ")")))
+    (format s ")~%")
+    (write-string (asdf-directives project) s)
+    (format s "    :depends-on (~a))~%" (used-lisp-modules project))))
+

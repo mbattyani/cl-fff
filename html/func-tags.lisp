@@ -75,6 +75,10 @@
 
 (add-func-tag :esc 'esc-tag)
 
+(defun insert-string-tag (attributes form)
+  `(write-string ,(first form) *html-stream*))
+
+(add-func-tag :insert-string 'insert-string-tag)
 
 (export '*html-insert-file-defaults*)
 (defvar *html-insert-file-defaults* ".htm")

@@ -1,6 +1,6 @@
 (in-package meta)
 
-(defun mark-object-as-modified (object)
+(defmethod mark-object-as-modified (object)
   (unless (modified object)
 	  (setf (modified object) t)
 	  (when (object-store object)

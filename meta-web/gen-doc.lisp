@@ -13,34 +13,34 @@
      (tt::paragraph (:h-align :center :font "Helvetica"
 			      :font-size 10 :color '(0 0 0))
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 0.7) :border-width 0.5)
-		    " classe, "
+		    " class, "
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 0.7 0.7) :border-width 0.5)
 		    " super-classes, "
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 1.0 0.7) :border-width 0.5)
-		    " sous-classes, "
+		     " sub-classes, " #+nil " sous-classes, "
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 0.7 1.0) :border-width 0.5)
-		    " utilise la classe, "
+		    " use the class, " #+nil " utilise la classe, "
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 1.0) :border-width 0.5)
-		    " utilisé par la classe."))
+		    " used by the class." #+nil " utilisé par la classe."))
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun edge-color (color)
   (list 
-   (+ (first color)  (* (random 2000) 0.0002) -0.0001)
-   (+ (second color) (* (random 2000) 0.0002) -0.0001)
-   (+ (third color)  (* (random 2000) 0.0002) -0.0001)))
+   (min (max (+ (first color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)
+   (min (max (+ (second color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)
+   (min (max (+ (third color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)))
 
 (defun make-class-node-box (graph class-info class-type)
-  (make-instance 'tt::graph-node :graph graph :dx 100 :data
+  (make-instance 'tt::graph-node :graph graph :dx 150 :data
 		 (tt::make-filled-vbox
 		  (tt::compile-text ()
   		     (tt::paragraph (:h-align :center :font "Helvetica-Oblique"
-					      :font-size 12 :color '(0 0 0))
+					      :font-size 13 :color '(0 0 0))
 				    (tt::put-string (name class-info))
 				    :eol
-				    (tt::with-style (:font "Times-Italic" :font-size 9)
+				    (tt::with-style (:font "Times-Italic" :font-size 10)
 				      (tt::put-string (french (user-name class-info))))))
-		  100 tt::+huge-number+)
+		  150 tt::+huge-number+)
 		 :background-color (case class-type
 				     (:start-class '(0.7 1.0 0.7))
 				     (:to-class '(0.7 0.7 1.0))
@@ -49,10 +49,10 @@
 				     (:sub-class '(1.0 1.0 0.7))
 				     (t '(1.0 1.0 1.0)))))
 
-(defun gen-class-graph-layout (project classes depth)
+(defun gen-class-graph-layout (project classes depth &optional (max-dx 440) (max-dy 550))
   (let* ((g (make-instance 'tt::graph
-			   :dot-attributes '(("rankdir" "LR")("nodesep" "0.3")("ranksep" "0.8"))
-			   :max-dx 440 :max-dy 550 :border-width nil))
+			   :dot-attributes '(("rankdir" "LR")("nodesep" "0.2")("ranksep" "0.5"))
+			   :max-dx max-dx :max-dy max-dy :border-width nil))
 	 (nodes (make-hash-table))
 	 (all-classes (get-project-classes project))
 	 (new-classes classes)
@@ -116,8 +116,61 @@
 					:label-color '(0.0 0.0 0.0)
 					:color (edge-color '(0.3 0.3 0.7)) :width 2))
 		     members-by-value-class)))
+	(when (> (hash-table-count nodes) 8)
+	  (setf (tt::max-dx g) 660
+		(tt::max-dy g) 440
+		(tt::landscape-layout g) t))
 	(tt::compute-graph-layout g)
 	g)))
+
+(defun draw-file-graph-legend (box x y)
+  (tt::draw-block
+   (tt::compile-text ()
+     (tt::paragraph (:h-align :center :font "Helvetica"
+			      :font-size 10 :color '(0 0 0))
+		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 0.7) :border-width 0.5)
+		    " User file, "
+		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 0.7 0.7) :border-width 0.5)
+		    " Generated file"))
+   x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
+
+(defun make-file-node-box (graph source-file)
+  (make-instance 'tt::graph-node :graph graph :dx 200 :data
+		 (tt::make-filled-vbox
+		  (tt::compile-text ()
+		    (tt::paragraph (:h-align :center :font "Helvetica-Oblique"
+					     :font-size 16 :color '(0 0 0))
+				   (tt::put-string (name source-file))
+				   :eol
+				   (tt::with-style (:font "Times-Italic" :font-size 12)
+				     (tt::put-string (description source-file)))
+				   (tt::vspace 5)))
+		  200 tt::+huge-number+)
+		 :background-color (if (generated source-file)
+				       (edge-color '(1.0 0.7 0.7))
+				       (edge-color '(0.7 1.0 0.7)))))
+
+(defun gen-file-graph-layout (project &optional (max-dx 660) (max-dy 450))
+  (let* ((g (make-instance 'tt::graph
+			   :dot-attributes '(("rankdir" "LR")("nodesep" "0.2")("ranksep" "0.9"))
+			   :max-dx max-dx :max-dy max-dy :border-width 0
+			   :background-color '(0.8 0.8 0.8) :landscape-layout t))
+	 (nodes (make-hash-table)))
+    (flet ((get-file-node (file)
+	     (if (gethash file nodes)
+		 (gethash file nodes)
+		 (let ((node (make-file-node-box g file)))
+		   (setf (gethash file nodes) node)
+		   node))))
+      (loop for file in (files project)
+	    for node = (get-file-node file) do
+	    (loop for dep-file in (dependances file)
+		  for dep-node = (get-file-node dep-file) do
+		  (make-instance 'tt::graph-edge :graph g
+				 :head dep-node :tail node
+				 :color (edge-color '(0.3 0.3 0.7)) :width 2)))
+      (tt::compute-graph-layout g)
+      g)))
 
 (defun draw-doc-wavelet-rule (box x0 y0)
   (let ((dx/2 (* (tt::dx box) 0.5))
@@ -168,7 +221,8 @@
 (defmethod gen-doc-content ((fn function-info))
   (push (list (format nil "~a (fonction de ~a)" (string-downcase (name fn))
 		      (name (meta::parent fn))) fn) *index*)
-  (let ((content
+  (let* ((tt::*pp-font-size* 12)
+	(content
 	 (tt::compile-text ()
    	    (tt::mark-ref-point fn)
 	    (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
@@ -186,7 +240,7 @@
 				    "Commentaire" (comment fn)
 				    "Visible par" (visible-string fn)))))
 	    (when (disable-predicate fn)
-	      (tt:paragraph (:font "Helvetica-Bold" :font-size 12 :top-margin 10)
+	      (tt:paragraph (:font "Helvetica-Bold" :font-size 12 :top-margin 10 :bottom-margin 5)
 			    "Prédicat pour désactivation :")
 	      (tt::process-lisp-code (safe-read-from-string (disable-predicate fn))))
 	    :fresh-page)))
@@ -196,7 +250,8 @@
 (defmethod gen-doc-content ((slot slot-info))
   (push (list (format nil "~a (slot de ~a)" (string-downcase (name slot))
 		      (name (meta::parent slot))) slot) *index*)
-  (let ((content
+  (let* (*(tt::*pp-font-size* 12)
+	(content
 	 (tt::compile-text ()
 	 (tt::mark-ref-point slot)
 	 (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 0)
@@ -313,12 +368,12 @@
 						  (short-description class)
 						  "voir sources et super-classes")
 			 )))
-	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 14 :top-margin 20)
-			 "Graphe des classes voisines.")
 	  (tt::vspace 3)
 	  :hfill (tt::graph-box (gen-class-graph-layout (project class) (list class) 1)) :hfill
-	  (tt::vspace 6)
+	  (tt::vspace 10)
 	  (tt::user-drawn-box :dx 400 :dy 12 :stroke-fn 'draw-class-graph-legend) :eol
+	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 14 :top-margin 6)
+			 "Graph of neighbor classes" #+nil "Graphe des classes voisines.")
 	  (when (direct-slots class)
 	    (tt::vspace 20)
 	    (tt::table (:col-widths '(100 120 30 170 30) :splittable-p t)
@@ -518,10 +573,10 @@
 	       (tt::hrule :dy 30 :stroke-fn 'draw-doc-wavelet-rule :color *color1*)
 	       (tt::vspace 5))
 	     (tt::with-style (:font "Times-Italic" :font-size 40 :color *color1*)
-	       "Documentation technique" :vfill))
+	       "Technical Documentation" #+nil "Documentation technique" :vfill))
 	     :eop
 	     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-			   "Table des matières")
+			   "Table of Contents" #+nil "Table des matières")
 	     (tt:hrule :dy 2)
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -559,13 +614,18 @@
 	       (tt::vspace 10))
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				  :left-margin 25 :right-margin 25)
-			"Fichiers sources" (tt::dotted-hfill))
+			    "Fichiers sources" (tt::dotted-hfill))
 	     (tt::vspace 10)
 	     (dolist (file (files project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 12 :color '(0.0 0 0.4)
 				    :left-margin 65 :right-margin 25)
 			  (tt::format-string "Fichier ~a" (name file)) (tt::dotted-hfill)
 			  (tt::format-string "~d" (tt::find-ref-point-page-number file))))
+	     (tt::vspace 10)
+	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 14 :color '(0.0 0 0.4)
+				      :left-margin 45 :right-margin 25)
+			    "Graphe de dépendance des fichiers sources" (tt::dotted-hfill)
+			    (tt::format-string "~d" (tt::find-ref-point-page-number :file-graph)))
 	     (tt::vspace 20)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				      :left-margin 25 :right-margin 25)
@@ -607,15 +667,16 @@
 		     (tt::cell ()(tt::paragraph () "Description"))
 		     (tt::cell ()(tt::paragraph () "Page")))
 		 (dolist (class-group (class-groups project))
-		   (tt::row ()
-			(tt::cell ()(tt::paragraph (:font-size 11)
-						   (tt::put-string (name class-group))))
+		   (when (print-in-doc class-group)
+		     (tt::row ()
+		      (tt::cell ()(tt::paragraph (:font-size 11)
+					 (tt::put-string (name class-group))))
 ;			(tt::cell ()(tt::paragraph () (tt::put-string (french (user-name class-group)) )))
-			(tt::cell ()(tt::paragraph (:font "Helvetica-Oblique" :font-size 11)
-						   (tt::put-string (description class-group))))
+		      (tt::cell ()(tt::paragraph (:font "Helvetica-Oblique" :font-size 11)
+				   (tt::put-string (description class-group))))
 			(tt::cell ()(tt::paragraph (:font-size 11)
-			       (tt::format-string "~d" (tt::find-ref-point-page-number class-group)))))))
-	  (tt::vspace 20)
+			       (tt::format-string "~d" (tt::find-ref-point-page-number class-group))))))))
+	     (tt::vspace 20)
 ;********************
 	  (tt::table (:col-widths '(100 350) :splittable-p t)
 	     (tt::header-row ()
@@ -635,7 +696,7 @@
 	  (tt::table (:col-widths '(100 315 35) :splittable-p t)
 	     (tt::header-row ()
 		     (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
-		       (tt::paragraph () "Liste des fichiers sources")))
+			       (tt::paragraph () "Liste des fichiers sources")))
 	     (tt::header-row (:background-color '(0.6 0.6 0.9))
 		     (tt::cell ()(tt::paragraph () "Nom"))
 		     (tt::cell ()(tt::paragraph () "Description"))
@@ -647,16 +708,26 @@
 					    (tt::put-string (description file))))
 		 (tt::cell ()(tt::paragraph (:font-size 11)
 			       (tt::format-string "~d" (tt::find-ref-point-page-number file)))))))
-	  (tt::vspace 20)
+	  :eop
+	  (tt::mark-ref-point :file-graph)
+	  :hfill (tt::graph-box (gen-file-graph-layout project)) :hfill
+	  (tt::vspace 10)
+	  (tt::user-drawn-box :dx 200 :dy 12 :stroke-fn 'draw-file-graph-legend) :eol
+	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 16 :top-margin 6)
+			 "File dependency graph." #+nil "Graphe des dépendances de fichier.")
 ;********************	  
-	  :fresh-page)))
+	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
-;  (when pdf:*page* (tt::finalize-page pdf:*page*))
 
-  (dolist (group (subseq (class-groups project) 0))
-    (gen-doc-content group))
-  (dolist (file (subseq (files project) 0))
-    (gen-doc-content file))
+  (dolist (group (class-groups project))
+    (when (print-in-doc group)
+      (gen-doc-content group)))
+
+  (when (print-source-files project)
+    (dolist (file (files project))
+      (when (print-in-doc file)
+	(gen-doc-content file))))
+  
   (when pdf:*page* (tt::finalize-page pdf:*page*))
   (setf *index* (remove-duplicates (sort *index* #'string<= :key #'first) :test #'equal))
   (let ((content

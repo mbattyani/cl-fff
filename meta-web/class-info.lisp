@@ -53,7 +53,7 @@
       (:slot-table name user-name description comment class-status guid version sql-name
 		   direct-superclasses
 		   instanciable visible visible-groups use-memory-store short-description))
-     ("Attributs"
+     ("Slots"
       ((:table :class "dvt")
        ((:tr :class "dvr")
 	((:td :class "dvch2" :colspan "2")
@@ -98,7 +98,7 @@
       (:slot-table name user-name description comment class-status guid version sql-name
 		   direct-superclasses
 		   instanciable visible visible-groups use-memory-store short-description))
-     ("Attributes"
+     ("Slots"
       ((:table :class "dvt")
        ((:tr :class "dvr")
 	((:td :class "dvch2" :colspan "2")
