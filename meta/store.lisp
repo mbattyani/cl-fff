@@ -371,6 +371,7 @@
 (defmethod read-object-data-from-store ((store ascii-store) object)
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
 	(*read-eval* nil)
+        (*default-store* store)
 	(*package* (find-package "COMMON-LISP-USER")))
     (with-open-file (s filename :direction :input)
       (init-object-from-sexpr object (read s nil nil)))))
