@@ -135,6 +135,7 @@
 	   (loop for slot-name in slots
 		 for slot = (ensure-slot slot-name class)
 		 for user-name = (list :translate (meta::user-name slot))
+		 for unit = (when (meta::unit slot) (concatenate 'string " (" (meta::unit slot) ")"))
 		 when (or (meta::visible slot)(meta::visible-groups slot))
 		 collect
 		 (append (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
@@ -143,14 +144,14 @@
 		   ((meta::list-of-values slot)
 		    (case (meta::view-type slot)
 		      (:list-val
-		       `((:tr :class "dvr")((:td :class "dvch") ,user-name)
+		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
 			 ((:td :class "dvcv")
 			  ((:slot-list ,(clos:slot-definition-name slot)
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
 					  '(:col-fn std-list-col-fn :class "dvl" :height "60px")))))))
 		      (:pick-mval
-		       `((:tr :class "dvr")((:td :class "dvch") ,user-name)
+		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
 			 ((:td :class "dvcv")
 			  ((:slot-pick-mval ,(clos:slot-definition-name slot)
 					    ,@(html:merge-attributes
@@ -163,7 +164,7 @@
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
 					  '(:col-fn std-list-col-fn :class "dvl")))
-			   (:table (:tr ((:td :class "dvch2") ,user-name)))))))))
+			   (:table (:tr ((:td :class "dvch2") ,user-name ,unit)))))))))
 		   ((meta::fc-class-p (meta::value-type slot))
 		    (case (meta::view-type slot)
 		      ((:embed t)
@@ -182,15 +183,15 @@
 					      ,(clos:slot-definition-name slot) :class "dvcve"
 					      ,@(meta::html-tag-attributes slot))))))
 		   ((meta::get-object-func slot)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
+		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
 		      ((:td :class "dvcv")((:slot-pick-val ,(clos:slot-definition-name slot) :class "dvcved"
 							   ,@(meta::html-tag-attributes slot))))))
 		   ((meta::choices slot)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
+		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
 		      ((:td :class "dvcv") ((:slot-combo ,(clos:slot-definition-name slot)
 							 ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) 'string)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
+		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
 		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
 					      ,(clos:slot-definition-name slot) :class "dvcve"
 					      ,@(meta::html-tag-attributes slot))))))
@@ -206,7 +207,7 @@
 		   ((eq (meta::value-type slot) 'boolean)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
 		      ((:td :class "dvcv") ((:slot-check-box ,(clos:slot-definition-name slot))))))
-		   (t `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
+		   (t `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
 			((:td :class "dvcv") ((:slot-edit ,(clos:slot-definition-name slot) :class "dvcve"
 							  ,@(meta::html-tag-attributes slot)))))))))))))
 

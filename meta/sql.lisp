@@ -6,6 +6,7 @@
   (ecase (value-type slot)
     (boolean "BOOLEAN")
     (integer "INTEGER")
+    (ip-address "INET")
     (float   "FLOAT")
     (string   (if (and (sql-length slot)(> (sql-length slot) 1))
 		(format nil "VARCHAR(~d)" (sql-length slot))
