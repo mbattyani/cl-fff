@@ -108,7 +108,7 @@
 ;;; CSS classes dv => default view + t = table, t2 = sub obj table,
 ;;; r = row, ch = slot name column, cv = value column
 
-(defun std-list-col-fn (index object item length)
+(defun std-list-col-fn (index object item length container-obj)
   (html:html
    ((:td :class "dvcv") index):crlf
    (:when (modifiable-p (slot item))
@@ -125,7 +125,7 @@
        ((:img :border "0" :src "/k.gif" :width "13" :height "13")))))
    ((:td :class "dvcv") 
     ((:a :href (encode-object-url object))
-     (html:esc (meta::short-description object))))))
+     (html:esc (meta:list-description object container-obj))))))
 
 (defun make-std-object-slots-view (class slots no-table)
   (setf class (ensure-class class))

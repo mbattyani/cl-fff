@@ -210,11 +210,11 @@ rankdir=LR;
       (format s "~%" (package-name *package*)))
     (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
 
-(defun view-group-classes-source (group)
+(defun view-group-classes-source (group &optional pathname)
   (let* ((*package* (ensure-package (project-package (project group))))
 	 (*print-right-margin* 2000)
 	 (file-id (interface::make-session-id))
-	 (src-file (concatenate 'string *graph-file-prefix* file-id ".lisp")))
+	 (src-file (or pathname (concatenate 'string *graph-file-prefix* file-id ".lisp"))))
     (with-open-file (s src-file :direction :output :if-exists :supersede)
       (format s "(in-package ~s)~%" (package-name *package*))
       (format s "
@@ -228,7 +228,24 @@ rankdir=LR;
       (dolist (class (classes group))
 	(print-class-source s class))
       (format s "~%"))
-    (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
+      (unless pathname
+        (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id)))))
+
+(defmethod gen-lisp-files ((group class-group))
+  (view-group-classes-source
+   group
+   (concatenate 'string
+		(or (and (> (length (sources-directory group)) 0)
+			 (sources-directory group))
+		    (sources-directory (meta::parent group)))
+		(name group) "-classes.lisp")))
+
+(defmethod gen-lisp-files ((proj project))
+  (map nil 'gen-lisp-files (class-groups proj))
+  (make-update-project-fn proj nil
+			  (concatenate 'string
+				       (sources-directory proj)
+				       "upgrade-database.lisp")))
 
 (defun get-project-values-tables (obj)
   (values-tables (project obj)))

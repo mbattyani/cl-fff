@@ -201,7 +201,8 @@
 	 (pdffile (concatenate 'string *graph-file-prefix* file-id ".pdf")))
       (gen-sub-graph projet classes depth dotfile)
       (sys:call-system
-       (format nil #+win32 "D:\\Program Files\\ATT\\Graphviz\\bin\\dot.exe -Tps2 ~s -o ~s"
+       (format nil
+	       #+win32 "D:\\Program Files\\ATT\\Graphviz\\bin\\dot.exe -Tps2 ~s -o ~s"
 	       #+linux "dot -Tps2 ~s -o ~s"
 	       dotfile psfile) :wait t)
       (sys:call-system (format nil "ps2pdf.cmd ~s ~s" psfile pdffile) :wait t)

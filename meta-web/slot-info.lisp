@@ -135,12 +135,13 @@
 		   choices-table choices ))
      ("Valeur"
       (:slot-table value-type object-type other-type list-of-values new-objects-first linked-value
-		   nb-decimals unit can-create-new-object create-new-object get-object-fn get-value-sql
+		   nb-decimals unit can-create-new-object create-new-object get-object-fn
+		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("Vue"
       (:slot-table view-type html-tag-attributes pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
-		   modifiable modifiable-groups visible visible-groups))
+		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Règles"
       (:slot-table indexed unique-p null-allowed duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))
@@ -156,12 +157,13 @@
 		   choices-table choices ))
      ("Value"
       (:slot-table value-type object-type other-type list-of-values new-objects-first linked-value
-		   nb-decimals unit can-create-new-object create-new-object get-object-fn get-value-sql
+		   nb-decimals unit can-create-new-object create-new-object get-object-fn
+		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("View"
       (:slot-table view-type html-tag-attributes pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
-		   modifiable modifiable-groups visible visible-groups))
+		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Rules"
       (:slot-table indexed unique-p null-allowed duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))

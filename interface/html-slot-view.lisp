@@ -365,7 +365,7 @@
 			   (loop for value in (nthcdr start list)
 				 for nb from 1 to max-nb
 				 for index from (1+ start) do
-				 (html:html (:tr (funcall (col-fn item) index value item length)))))))))))
+				 (html:html (:tr (funcall (col-fn item) index value item length *object*)))))))))))
 
 ;;;css-classes suffixes:
 ;;; "" =  global

@@ -157,7 +157,7 @@
   (setf *save-database* t))
 
 
-(defun make-update-project-fn (proj &optional from-version)
+(defun make-update-project-fn (proj &optional from-version pathname)
   (let* ((*package* (ensure-package (project-package proj)))
 	 (*print-right-margin* 150)
 	 (*project-version* (version proj))
@@ -165,7 +165,7 @@
 	 (fn-names ())
 	 (classes ())
 	 (file-id (interface::make-session-id))
-	 (src-file (concatenate 'string *graph-file-prefix* file-id ".lisp")))
+	 (src-file (or pathname (concatenate 'string *graph-file-prefix* file-id ".lisp"))))
     (with-open-file (s src-file :direction :output :if-exists :supersede)
       (format s "(in-package ~s)~%" (package-name *package*))
       (map-all-classes proj #'(lambda (class)

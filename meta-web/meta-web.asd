@@ -18,6 +18,7 @@
 	       (:file "sql-list" :depends-on ("class-info"))
 	       (:file "project-info" :depends-on ("class-info"))
 	       (:file "upgrade" :depends-on ("project-info"))
+	       (:file "upgrade-meta" :depends-on ("project-info"))
 	       (:file "pages" :depends-on ("style")))
   :depends-on (:interface :utility :clsql :clsql-postgresql)
   )

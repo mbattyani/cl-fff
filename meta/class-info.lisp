@@ -181,6 +181,10 @@
 (defmethod long-description (obj)
   (short-description obj))
 
+(export 'list-description)
+(defmethod list-description (obj container-obj)
+  (short-description obj))
+
 (defmethod cl::print-object ((object root-object) stream)
   (format stream "<FC-Object ~A ~A (~A)>"
 	  (class-name (class-of object))
