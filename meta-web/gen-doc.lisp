@@ -805,6 +805,7 @@
 			  "/tmp/")
 		      (name project)))
 	(*margins* '(72 72 72 50))
+	(pdf::*max-number-of-pages* 2000)
 	(*index* nil)
 	(*package* (ensure-package (project-package project))))
     (tt::with-document ()
