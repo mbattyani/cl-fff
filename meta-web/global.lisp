@@ -18,10 +18,19 @@
 
 (defvar *database-pool* nil); (clsql:find-or-create-connection-pool '("213.11.22.163" "MetaStore" "lisp" "") :postgresql))
 (defvar *meta-store* nil); (make-instance 'meta::psql-store :db-pool *database-pool*))
+(defvar *save-database* t)
+(defvar *in-store-timer* nil)
 
 (defun meta-store-timer-fn ()
-  (when *meta-store*
-    (meta::save-modified-objects *meta-store*)))
+  (unless *in-store-timer*
+    (setf *in-store-timer* t)
+    (unwind-protect
+	 (when (and *meta-store* *save-database*)
+	   (setf *save-database* nil)
+	   (util:with-logged-errors (:ignore-errors t)
+	     (meta::save-modified-objects *meta-store*))
+	   (setf *save-database* t))
+      (setf *in-store-timer* nil))))
 
 (defun start-meta-store-timer ()
   (let ((timer (mp:make-timer 'meta-store-timer-fn)))

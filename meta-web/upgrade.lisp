@@ -135,9 +135,12 @@
   (funcall (lambda-form update-fn) (store (project update-fn))))
 
 (defun make-new-project-version  (project)
+  (setf *save-database* nil)
   (incf (version project))
   (let ((*project-version* (version project)))
-    (map-all-classes project 'make-new-class-version)))
+    (map-all-classes project 'make-new-class-version))
+  (setf *save-database* t))
+
 
 (defun make-update-project-fn (proj &optional from-version)
   (let* ((*package* (ensure-package (project-package proj)))
