@@ -182,9 +182,10 @@
   (short-description obj))
 
 (defmethod cl::print-object ((object root-object) stream)
-  (format stream "<FC-Object ~A ~A>"
-	      (class-name (class-of object))
-	      (id object)))
+  (format stream "<FC-Object ~A ~A (~A)>"
+	  (class-name (class-of object))
+	  (id object)
+	  (ignore-errors (short-description obj))))
 #+nil (if *print-redably*
       (write-string (short-description object) stream)
       (format stream "<FC-Object ~A ~A>"

@@ -273,6 +273,7 @@
   (let* ((*object* object)
 	 (*user-groups* (dynamic-groups *user* object *user-groups*))
 	 (view (when name (gethash name *all-object-views*))))
+    (meta::load-object-data *object*)
     (when (and view (not (eq (class-of object) (object-class view))))
       (setf view nil))
     (unless view
