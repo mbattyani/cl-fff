@@ -109,10 +109,14 @@
 	   (class (class-of object))
 	   (data-object (create-data-object object))
 	   (id (id object)))
-      #+nil
-      (unless sql-data (format t "~%object not found ~a (~a)~%" id (class-name (class-of object)))
-	      (loop for obj = (meta::parent object) then (meta::parent obj)
-		    while obj do (format t "  ~s" (ignore-errors (short-description obj)))))
+      (unless sql-data
+	(util:with-logged-errors (:ignore-errors t)
+	  (error (with-output-to-string (s)
+		   (format s "~%object not found ~a (~a)~%" id (class-name (class-of object)))
+		   (loop for obj = (meta::parent object) then (meta::parent obj)
+			 while obj do (format s " =>  ~a (~a, ~s)"
+					      (meta::id obj) (class-name (class-of obj))
+					      (ignore-errors (short-description obj))))))))
       (when sql-data
 	(when parent-id
 	  (setf (parent object) (read-object-from-store store parent-id)))

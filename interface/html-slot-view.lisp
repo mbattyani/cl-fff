@@ -39,12 +39,14 @@
       (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot))
 	     (name nil)
 	     (fire nil))
-	`(html:html (:when (modifiable-p ,slot)
-		      ((:input :type "text" :id ,(name edit) :style "display:'none'" :insert-string
-			       ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit) (name edit))
-			       ,@attrs))
-		      ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
-	  ((:span :id ,(concatenate 'string (name edit) "d"))))))))
+	`(html:html (:if (modifiable-p ,slot)
+			 (:progn
+			   ((:input :type "text" :id ,(name edit) :style "display:'none'" :insert-string
+				    ,(format nil "onchange='fire_onchange(~s,~a.value);'"
+					     (name edit) (name edit))
+				    ,@attrs))
+			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-edit 'slot-edit-tag)
 
@@ -62,13 +64,14 @@
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	`(html:html (:when (modifiable-p ,slot)
-		      ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:'none'"
-				  :cols ,(getf attrs :rows "30") :insert-string
-				  ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
-				  ,@attrs))
-		      ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
-	  ((:span :id ,(concatenate 'string (name edit) "d"))))))))
+	`(html:html (:if (modifiable-p ,slot)
+			 (:progn
+			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:'none'"
+				       :cols ,(getf attrs :rows "30") :insert-string
+				       ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
+				       ,@attrs))
+			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-medit 'slot-medit-tag)
 
@@ -104,15 +107,16 @@
 				 :show-time (getf attrs :show-time))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :show-time)
-	`(html:html (:when (modifiable-p ,slot)
-		      ((:input :type "text" :id ,(name edit) :insert-string
-			       ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
-			       ,@attrs))
-		      ((:a :id ,(concatenate 'string (name edit) "l")
-			   :href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
-					  (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
-		      ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
-	  ((:span :id ,(concatenate 'string (name edit) "d"))))))))
+	`(html:html (:if (modifiable-p ,slot)
+			 (:progn
+			   ((:input :type "text" :id ,(name edit) :insert-string
+				    ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
+				    ,@attrs))
+			   ((:a :id ,(concatenate 'string (name edit) "l")
+				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
+					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
+			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
 
