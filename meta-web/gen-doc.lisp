@@ -5,6 +5,83 @@
 (defvar *margins* nil)
 (defparameter *color1* '(0.2 0.2 0.8))
 
+(defun make-class-node-box (graph class-info &key class-type)
+  (make-instance 'tt::graph-node :graph graph :dx 70 :data
+		 (tt::make-filled-vbox
+		  (tt::compile-text ()
+  		     (tt::paragraph (:h-align :center :font "Helvetica-Oblique"
+					      :font-size 12 :color '(0 0 0))
+				    (tt::put-string (name class-info))
+				    :eol
+				    (tt::with-style (:font "Times-Italic" :font-size 9)
+				      (tt::put-string (description class-info)))))
+		  70 tt::+huge-number+)
+		 :background-color (case class-type
+				     (t '(1.0 1.0 1.0)))))
+
+(defun gen-class-graph-layout (project classes depth)
+  (let* ((g (make-instance 'tt::graph
+			   :dot-attributes '(("rankdir" "LR")("nodesep" "0.3")("ranksep" "0.8"))
+			   :max-dx 440 :max-dy 550 :border-width nil))
+	 (nodes (make-hash-table))
+	 (all-classes (get-project-classes project))
+	 (new-classes classes)
+	 (next-new-classes ()))
+    (loop while new-classes
+          repeat depth do
+	  (loop for class in all-classes
+		unless (member class classes) do
+		(loop for super in (direct-superclasses class) do
+		      (when (member super new-classes)
+			(pushnew class next-new-classes)
+			(pushnew class classes)))
+		(loop for slot in (direct-slots class)
+		      for object-type = (object-type slot) do
+		      (when (and (eq (value-type slot) :object)
+				  (member object-type new-classes))
+			(pushnew class next-new-classes)
+			(pushnew class classes))))
+	  (loop for class in new-classes do
+		(loop for super in (direct-superclasses class) do
+		      (unless (member super classes)
+			(pushnew super next-new-classes)
+			(pushnew super classes)))
+		(loop for slot in (direct-slots class)
+		      for object-type = (object-type slot) do
+		      (when (and (eq (value-type slot) :object)
+				 (not (member object-type classes)))
+			(pushnew object-type next-new-classes)
+			(pushnew object-type classes))))
+	  (setf new-classes next-new-classes
+		next-new-classes ()))
+    (dolist (class classes)
+      (setf (gethash class nodes)(make-class-node-box g class)))
+    (let ((members-by-value-class (make-hash-table))
+	  (old-classes ()))
+      (dolist (class classes)
+	(push class old-classes)
+	(loop for super in (direct-superclasses class) do
+	      (when (member super classes)
+		(make-instance 'tt::graph-edge  :graph g
+			       :head (gethash super nodes) :tail (gethash class nodes)
+			       :label "sub-class" :label-color '(0.0 0.0 0.6)
+			       :color '(0.0 0.0 0.6) :width 2)))
+	(loop for slot in (direct-slots class)
+	      for object-type = (object-type slot) do
+	      (when (and (eq (value-type slot) :object)(member object-type classes))
+		(push slot (gethash object-type members-by-value-class))))
+	(maphash #'(lambda(val-class slots)
+		     (make-instance 'tt::graph-edge  :graph g
+				    :head (gethash class nodes) :tail (gethash val-class nodes) 
+				    :label (if (< (length slots) 3)
+					       (format nil "~{~a~^\\n~}" (mapcar 'name slots))
+					       (format nil "~{~a~^\\n~}..." (mapcar 'name (subseq slots 0 2))))
+				    :label-color '(0.0 0.0 0.0)
+				    :color '(0.0 0.0 0.0) :width 2))
+		 members-by-value-class)))
+    (tt::compute-graph-layout g)
+    g))
+
 (defun draw-doc-wavelet-rule (box x0 y0)
   (let ((dx/2 (* (tt::dx box) 0.5))
 	(dy/2 (* (tt::dy box) 0.5)))
@@ -42,11 +119,8 @@
 				     (tt::put-string (name user)) " "))
 		 )))
 	 (tt::vspace 10)
-	 
-	 
 	 :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)
-    
     ))
 
 ;DESCRIPTION DETAILLEE D'UNE CLASSE :
@@ -61,7 +135,7 @@
 	  (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
 		(name-value-table "Caractéristiques générales"
 			(list
-			 "Nom du champ" (french (user-name class))
+			 "Nom de la classe" (french (user-name class))
 			 "Description" (description class)
 			 "Commentaire" (comment class)
 			 "Hérite des classes" (dolist (info (direct-superclasses class))
@@ -72,7 +146,11 @@
 					     (tt::put-string (name user)) " "))
 			 "Info. pour les listes" (short-description class)
 			 )))
-	  (tt::vspace 10)
+	  (tt::vspace 20)
+	  :hfill (tt::graph-box (gen-class-graph-layout (project class) (list class) 1)) :hfill
+	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 11)
+			 "Graphe des classes voisines.")
+	  (tt::vspace 20)
 	  (tt::table (:col-widths '(100 150 200) :splittable-p t)
 		     (tt::header-row ()
 			 (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
@@ -87,7 +165,6 @@
 				(tt::cell ()(tt::paragraph ()
 						(tt::put-string (meta::translated-choice-value 'value-type slot))))
 				(tt::cell ()(tt::paragraph () (tt::put-string (french (user-name slot))))))))
-
 	  (tt::vspace 10)
 	  (tt::table (:col-widths '(100 150 200) :splittable-p t)
 		     (tt::header-row ()
@@ -105,13 +182,8 @@
 			   (tt::cell ()(tt::paragraph () (if (visible fonc) "tous"
 							     (dolist (user (visible-groups fonc))
 							       (tt::put-string (name user)) " ")))))))
-
-
-
-	  
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)
-    
     (dolist (slot (direct-slots class))
       (gen-doc-content slot))))
 
@@ -145,10 +217,6 @@
 			(tt::cell ()(tt::paragraph () (tt::put-string (name class))))
 			(tt::cell ()(tt::paragraph () (tt::put-string (french (user-name class)) ))))))
 	  (tt::vspace 20)
-
-
-
-	  
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)
     

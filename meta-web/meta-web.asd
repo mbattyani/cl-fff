@@ -21,5 +21,5 @@
 	       (:file "upgrade-meta" :depends-on ("project-info"))
 	       (:file "gen-doc" :depends-on ("meta-classes"))
 	       (:file "pages" :depends-on ("style")))
-  :depends-on (:interface :utility :clsql :clsql-postgresql :cl-typesetting)
+  :depends-on (:interface :utility :clsql :clsql-postgresql :cl-typesetting :cl-typegraph)
   )

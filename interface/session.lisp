@@ -401,7 +401,8 @@
       (loop for session = (read s nil nil)
 	    while session
 	    do
-	    (when (and (string/= (third session) "213.11.22.164")
+	    (when (and (string/= (third session) "192.168.2.10")
+		       (string/= (third session) "192.168.2.200")
 		       (not (member (first session) *cookies-to-remove* :test #'string=)))
 	      (format r "~%~%Cookie: ~a~%Browser: ~a~%Adresse IP: ~a~%"
 		      (first session)(second session)(third session))
