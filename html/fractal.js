@@ -87,7 +87,7 @@ function f825foc(name)
 }
 
 var v684=3651;var v683=3651; var v686=''; var v688; var v685=''; var v687=0;  var FrameNb = 12; var v689; var v690;
-function F6541(){v684++;};
+function F6541(){v684++;window.status = '  ';};
 function F5641(v856, v857){v686=v856;v689=v857;};
 function F5614(v856){v688=v856;};
 function F5164(v856){v687=v856;};
