@@ -132,9 +132,9 @@
      (tt::paragraph (:h-align :center :font "Helvetica"
 			      :font-size 10 :color '(0 0 0))
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 0.7) :border-width 0.5)
-		    " User file, "
+		    (trans-string :en " User file, " :fr " Fichier utilisateur, ")
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 0.7 0.7) :border-width 0.5)
-		    " Generated file"))
+		    (trans-string :en " Generated file" :fr " Fichier généré, ")))
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun make-file-node-box (graph source-file)
@@ -581,12 +581,18 @@
 	     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
 			   (trans-string :en "Table of Contents" :fr "Table des matières"))
 	     (tt:hrule :dy 2)
+	     (tt::vspace 20)
+	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
+				  :left-margin 25 :right-margin 25)
+			(trans-string :fr "Description de la documentation"
+				      :en "Description of the documentation") (tt::dotted-hfill)
+			(tt::format-string "~d" (tt::find-ref-point-page-number :help)))
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				  :left-margin 25 :right-margin 25)
 			"Paramètres généraux" (tt::dotted-hfill)
 			(tt::format-string "~d" (tt::find-ref-point-page-number project)))
-	     (tt::vspace 20)
+	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :left :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				  :left-margin 25 :right-margin 25)
 			"Goupes de classes")
@@ -617,7 +623,7 @@
 	       (tt::vspace 10))
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				  :left-margin 25 :right-margin 25)
-			    "Fichiers sources" (tt::dotted-hfill))
+			    "Fichiers sources" )
 	     (tt::vspace 10)
 	     (dolist (file (files project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 12 :color '(0.0 0 0.4)
@@ -639,7 +645,24 @@
 				      :left-margin 25 :right-margin 25)
 			    "Fin" (tt::dotted-hfill)
 			    (tt::format-string "~d" (tt::find-ref-point-page-number :the-end)))
+	     (when (other-documents project)
+	       (tt::vspace 20)
+	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
+					:left-margin 25 :right-margin 25)
+			      "Annexes")
+	       (tt::vspace 10)
+	       (dolist (doc (other-documents project))
+		 (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 12 :color '(0.0 0 0.4)
+					  :left-margin 35 :right-margin 25)
+				(tt::put-string (title doc))
+				(when (page-number doc)
+				  (tt::dotted-hfill)
+				  (tt::put-string (page-number doc))))))
+
 	     :eop
+	     (if (eq meta::*country-language* :fr)
+		 (french-doc-help project)
+		 (english-doc-help project))
 	     (tt::vspace 10)
 	     (tt::mark-ref-point project)
 	     (tt:paragraph (:h-align :left :font "Helvetica-Bold" :font-size 16 :top-margin 20 :color *color1*)
@@ -783,13 +806,13 @@
 		      (name project)))
 	(*margins* '(72 72 72 50))
 	(*index* nil)
-	(*package* (ensure-package (project-package project)))
-	#+nil (meta::*country-language* :fr))
+	(*package* (ensure-package (project-package project))))
     (tt::with-document ()
       (let* ((print-stamp (multiple-value-bind (second minute hour date month year)
-			      (get-decoded-time)
-			    (format nil #T(:en "Printed on ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D"
-					   :fr "Imprimé le ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D")
+			      (decode-universal-time (version-date project))
+			    (format nil #T(:en "Version ~a of ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D"
+					   :fr "Version ~a du ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D")
+				    (project-version project)
 				    date month year hour minute second)))
 	     (*header* #'(lambda(pdf:*page*)
 			   (tt::compile-text ()
@@ -815,3 +838,90 @@
 	(gen-doc-content project)
 	(when (tt::final-pass-p)
 	  (pdf:write-document file))))))
+
+(defun french-doc-help (project)
+  (tt::with-text-compilation ()
+    (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 16 :top-margin 20)
+		  "Description de la documentation")
+    (tt::mark-ref-point :help)
+    (tt:hrule :dy 2)
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :top-margin 20)
+		  "Cette documentation contient la description de l'intégralité des éléments constituant le projet "
+		  (tt::put-string (name project))"." :eol
+		  (tt::vspace 10)
+		  "Ces éléments sont:")
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les paramètres généraux du projet: Nom, description, version, date, groupes d'utilisateurs, groupes de classes, liste des fichiers sources avec leurs descriptions et le graphe des dépendance des fichiers entre eux, etc."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les groupes de classes d'objets avec leur listes de classes."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les classes d'objets avec, pour chacune des classes, leurs propriétés, le graphes des classes ayant un rapport avec cette classe, (super-classes, sous-classes, classes utilisées par et classes utilisant cette classe), les définitions SQL des tables dans la base de données et la description des slots (attributs) directs et hérités pour cette classe."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les descriptions détaillés des slots des objets avec tous leurs propriétés, les contraintes sur les valeurs, les prédicats de sésactivation, etc."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les fichiers sources sont inclus dans leur intégralité avec une colorisation syntaxique (keywords en rouge, commentaire en italique bleu, symboles standards en bleu foncé, etc.)"
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Un index permet de retrouver tous les noms des classes, des slots (avec leur classe) et des fonctions (aussi avec leur classe)."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les autres documents tels que les cahiers des charges et les descriptions fonctionnelles sont aussi inclus à la fin de cette documentation."
+		  )
+
+    (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :left-margin 0 :top-margin 20)
+		  "Définition des propriétés des slots.")
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 0 :top-margin 10)
+		  "Les slots sont décrits dans une table de propriété du type de celle ci-dessous. Dans cette table les valeurs sont remplacées par une description de ces propriétés."
+		  )
+
+    (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 10)
+		  (name-value-table (format nil "Caractéristiques générales d'un slot ")
+	    (append
+	     (list
+	      "Nom de l'attribut" "Nom informatique du slot (fonction accessor)"
+	      "Nom français" "Nom français présenté à l'utilisateur"
+	      "Nom anglais" "Nom anglais présenté à l'utilisateur"
+	      "Nom dans la table SQL" "Le nom de la colone SQL dans la table associée à l'objet"
+	      "Description" "La description du slot"
+	      "Commentaire" "Les commentaires sur ce slot"
+	      "Type" "Le type Lisp du slot"
+	      "Type d'objet" "La classe du l'objet (si le type du slot est objet)"
+	      "Texte FR si vide" "Le texte français à mettre en l'abscence d'objet (si le type du slot est objet)"
+	      "Texte EN si vide" "Le texte anglais à mettre en l'abscence d'objet (si le type du slot est objet)"
+	      "Peux créer nouvel obj." "l'utilisateur habilité peux créer un nouvel objet dans ce slot (si le type du slot est objet)"
+	      "Créer objet valeur" "Le système cré automatiquement l'objet contenu dans ce slot (si le type du slot est objet)"
+	      "Fn pour obtenir obj." "La fonction à appeller pour obtenir l'objet à mettre dans ce slot (si le type du slot est objet)"
+	      "Fn à appeler sur new obj." "La fonction à appeller (si elle est précisée) pour traiter l'objet retourné par la fonction précédente avant de mettre l'objet dans le slot. (si le type du slot est objet)"
+	      "Titre FR pour dialog box de sélection" "Le titre français à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
+	      "Titre EN pour dialog box de sélection" "Le titre anglais à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
+	      "Texte FR pour dialog box de sélection" "Le texte français à mettre dans la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
+	      "Texte EN pour dialog box de sélection" "Le texte anglais à mettre dans la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
+	      "Fn de génération HTML" "La fontion à appeler pour générer l'interface HTML de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
+	      "Autre type" "Le nom du type Lisp de la valeur à mettre dans le slot (si le type du slot est autre type"
+	      "Enregistré dans base" "La valeur du slot doit être stockée dans la base de données"
+	      "Dans proxy" "La valeur du slot doit être stockée dans le proxy d'interface entre l'objet et sa représentation dans la base de données."
+	      "Indexé" "La colonne représantant le slot dans la base de donnée SQL doit être indexé"
+	      "Unique" "La colonne représantant le slot dans la base de donnée SQL doit être unique"
+	      "Ne pas afficher nuls" "Les valeurs nulle ne seront pas affichées (le champ sera vide dans l'interface)"
+	      "Valeur par défaut" "La valeur par défaut du slot au moment de la création d'un objet"
+	      "Unité" "L'unité de la valeur contenue dans le slot"
+	      "Visible par" "La liste des groupes d'utilisateurs habilités à voir ce slot"
+	      "Modifiable par" "La liste des groupes d'utilisateurs habilités à voir ce slot"
+	      "Liste d'objets" "Le slot contient une liste de valeurs"
+	      "Nouveaux objets en haut" "Les nouvelles valeurs sont rajoutées en début de liste (si le slot est une liste)"
+	      "Type de vue" "Le type de vue HTML utilisée pour représenter le slot dans l'interface"
+	      "Attribut HTML" "Les attributs HTML à utiliser pour la représentation HTML de l'objet"
+	      "Dupl. valeur si copie" "En cas de copie de l'objet, la valeur du slot doit être dupliquée"
+	      "Ajouter \"Copie de\"" "En cas de copie de l'objet rajouter \"Copie de\" devant la valeur contenue dans le slot (valable pour les strings seulement)"
+	      "Fn pour dupliquer valeur" "La fonction à utiliser pour dupliquer la valeur contenue dans le slot"))))
+    
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 0 :top-margin 10)
+		  "La description du slot comporte aussi éventuellement la liste des valeurs possibles ainsi que le prédicat pour désactivation (code source Lisp) et la contrainte sur la valeur du slot (code source Lisp).")
+    :fresh-page))
+
+(defun english-doc-help (project)
+  (french-doc-help project))

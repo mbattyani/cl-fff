@@ -1,7 +1,7 @@
 (in-package "META-WEB")
 
 (defun create-util-classes (store)
-  (dolist (class '(source-file test))
+  (dolist (class '(source-file test other-document))
      (meta::create-class-table store (find-class class))))
 
 
@@ -17,4 +17,10 @@
                  (:user-name (make-instance 'meta-level:translated-string :en "source file" :fr "fichier source" :de "" :sp "" :it "") :guid 13849674944659178753520734794 :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :functions (list) :visible t :visible-groups 'nil :instanciable t :short-description '(if (generated object) (concatenate 'string (name object) " (generated)") (name object)))))
 
 (prog1 (defclass test nil nil (:user-name (make-instance 'meta-level:translated-string :en "Test" :fr "Test" :de "" :sp "" :it "") :guid 54592917637391414033769107868 :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :functions (list) :visible t :visible-groups 'nil :instanciable t)))
+
+(prog1 (defclass other-document
+                 nil
+                 ((title :value-type string :user-name (make-instance 'meta-level:translated-string :en "Title" :fr "Titre" :de "" :sp "" :it "") :description "" :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :choices (list) :visible t :visible-groups 'nil :modifiable t :modifiable-groups 'nil :stored t :in-proxy nil :indexed nil :unique nil :null-allowed t :list-of-values nil :new-objects-first nil :linked-value nil :modifiable t :duplicate-value t :make-copy-string nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :sql-length 0 :value-to-string-fn nil :nb-decimals 0 :void-link-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :can-create-new-object nil :create-new-object nil :get-value-sql "" :html-tag-attributes 'nil :dont-display-null-value nil :view-type :default)
+                  (page-number :value-type string :user-name (make-instance 'meta-level:translated-string :en "Page number" :fr "N° de page" :de "" :sp "" :it "") :description "" :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :choices (list) :visible t :visible-groups 'nil :modifiable t :modifiable-groups 'nil :stored t :in-proxy nil :indexed nil :unique nil :null-allowed t :list-of-values nil :new-objects-first nil :linked-value nil :modifiable t :duplicate-value t :make-copy-string nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :sql-length 0 :value-to-string-fn nil :nb-decimals 0 :void-link-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :can-create-new-object nil :create-new-object nil :get-value-sql "" :html-tag-attributes 'nil :dont-display-null-value nil :view-type :default))
+                 (:user-name (make-instance 'meta-level:translated-string :en "other document" :fr "document annexe" :de "" :sp "" :it "") :guid 12148755115583526910572654057 :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :functions (list) :visible t :visible-groups 'nil :instanciable t :short-description 'title)))
 

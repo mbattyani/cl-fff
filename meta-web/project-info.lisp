@@ -296,8 +296,8 @@ rankdir=LR;
      (:tr
       (:td ((:tab :class "tabf")
 	    ("Description"
-	     (:slot-table name project-package description version sources-directory
-			  application-ip application-port class-groups))
+	     (:slot-table name project-package description version project-version version-date
+			  sources-directory application-ip application-port class-groups))
 	    ("User&nbsp;Groups"
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
@@ -314,8 +314,12 @@ rankdir=LR;
 		((:slot-medit asdf-directives :class "dvcve" :rows "4" :cols "100" :style "width:440px"))))
 	      ((:tr :class "dvr")
 	       ((:td :class "dvch2" :colspan "2")
-		((:slot-list files :height "500px" :col-fn interface::std-list-col-fn :class "dvl")
-		 (:table (:tr ((:td :class "dvch2") "Source files"))))))))
+		((:slot-list files :height "400px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "Source files"))))))
+	      ((:tr :class "dvr")
+	       ((:td :class "dvch2" :colspan "2")
+		((:slot-list other-documents :height "200px" :col-fn interface::std-list-col-fn :class "dvl")
+		 (:table (:tr ((:td :class "dvch2") "Other Documents"))))))))
 	    ("SQL&nbsp;Lists"
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
@@ -353,4 +357,3 @@ rankdir=LR;
     (format s ")~%")
     (write-string (asdf-directives project) s)
     (format s "    :depends-on (~a))~%" (used-lisp-modules project))))
-

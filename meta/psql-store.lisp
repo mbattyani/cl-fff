@@ -122,6 +122,7 @@
 	  (setf (parent object) (read-object-from-store store parent-id)))
 	(loop for slot in (class-slots class)
 	      for sql-to-value-fn = (sql-to-value-fn slot)
+	      for linked-value = (linked-value slot)
 	      do
 	      (when (stored slot)
 		(if (list-of-values slot)
@@ -134,7 +135,8 @@
 			    (let ((proxy (read-object-proxy-from-store store child-id)))
 			      (when proxy
 ;				(read-object-data-from-store store proxy)
-				(setf (parent proxy) object)
+				(unless linked-value
+				  (setf (parent proxy) object))
 				(push proxy list))))
 			  (clsql:do-query ((value)
 					   (format nil "SELECT value FROM ~a_~a WHERE parentid = ~d ORDER BY ordernb DESC"
