@@ -181,6 +181,23 @@
 				   (sql-name (class-of object))(id object))))
   (remhash (id object) (loaded-objects store)))
 
+(defmethod gen-slot-aux-tables-sql (class slot)
+  (with-output-to-string (s)
+    (when (or (list-of-values slot)(indexed slot))
+      (format s "Informations supplémentaires pour le slot ~a~%~%" (slot-definition-name slot)))
+    (if (list-of-values slot)
+	(progn
+	  (format s "CREATE TABLE ~a_~a (parentid BIGINT NOT NULL, ~a ~a NOT NULL, ordernb INTEGER) WITHOUT OIDS~%~%"
+		  (sql-name class)(sql-name slot)
+		  (if (subtypep (value-type slot) 'root-object) "id" "value")
+		  (compute-sql-type slot))
+	  (format s "CREATE INDEX ~a_~a_idx ON ~a_~a(parentid)"
+		  (sql-name class)(sql-name slot)(sql-name class)(sql-name slot)))
+	(when (indexed slot)
+	  (format s "CREATE ~a INDEX ~a_~a_vidx ON ~a(~a)~%~%"
+		  (if (unique slot) "UNIQUE" "")
+		  (sql-name class)(sql-name slot)(sql-name class)(sql-name slot))))))
+
 (defmethod add-slot-aux-tables ((store psql-store) class slot)
   (if (list-of-values slot)
       (progn

@@ -22,6 +22,7 @@
     ((t) "TEXT"))))
 
 (defun gen-sql-for-slot (slot stream)
+  (write-string "     " stream)
   (write-string (sql-name slot) stream)
   (write-char #\Space stream)
   (write-string (compute-sql-type slot) stream)
@@ -34,7 +35,7 @@
     (write-string "CREATE TABLE " stream)
     (write-string (sql-name class) stream)
     (write-line " (" stream)
-    (write-line " id BIGINT NOT NULL PRIMARY KEY, parentid BIGINT" stream)
+    (format stream "~%     id BIGINT NOT NULL PRIMARY KEY,~%     parentid BIGINT")
     (loop for slot in (class-slots class)
 	  do (when (and (stored slot)(not (list-of-values slot)))
 	       (write-line "," stream)

@@ -5,7 +5,14 @@
 (defvar *margins* nil)
 (defparameter *color1* '(0.2 0.2 0.8))
 
-(defun make-class-node-box (graph class-info &key class-type)
+
+(defun edge-color (color)
+  (list 
+   (+ (first color) (* (random 2000) 0.0002) -0.0001)
+   (+ (second color) (* (random 2000) 0.0002) -0.0001)
+   (+ (third color) (* (random 2000) 0.0002) -0.0001)))
+
+(defun make-class-node-box (graph class-info class-type)
   (make-instance 'tt::graph-node :graph graph :dx 70 :data
 		 (tt::make-filled-vbox
 		  (tt::compile-text ()
@@ -17,6 +24,11 @@
 				      (tt::put-string (description class-info)))))
 		  70 tt::+huge-number+)
 		 :background-color (case class-type
+				     (:start-class '(0.7 1.0 0.7))
+				     (:to-class '(0.7 0.7 1.0))
+				     (:from-class '(0.7 1.0 1.0))
+				     (:super-class '(1.0 0.7 0.7))
+				     (:sub-class '(1.0 1.0 0.7))
 				     (t '(1.0 1.0 1.0)))))
 
 (defun gen-class-graph-layout (project classes depth)
@@ -27,60 +39,67 @@
 	 (all-classes (get-project-classes project))
 	 (new-classes classes)
 	 (next-new-classes ()))
-    (loop while new-classes
-          repeat depth do
-	  (loop for class in all-classes
-		unless (member class classes) do
-		(loop for super in (direct-superclasses class) do
-		      (when (member super new-classes)
-			(pushnew class next-new-classes)
-			(pushnew class classes)))
-		(loop for slot in (direct-slots class)
-		      for object-type = (object-type slot) do
-		      (when (and (eq (value-type slot) :object)
-				  (member object-type new-classes))
-			(pushnew class next-new-classes)
-			(pushnew class classes))))
-	  (loop for class in new-classes do
-		(loop for super in (direct-superclasses class) do
-		      (unless (member super classes)
-			(pushnew super next-new-classes)
-			(pushnew super classes)))
-		(loop for slot in (direct-slots class)
-		      for object-type = (object-type slot) do
-		      (when (and (eq (value-type slot) :object)
-				 (not (member object-type classes)))
-			(pushnew object-type next-new-classes)
-			(pushnew object-type classes))))
-	  (setf new-classes next-new-classes
-		next-new-classes ()))
-    (dolist (class classes)
-      (setf (gethash class nodes)(make-class-node-box g class)))
-    (let ((members-by-value-class (make-hash-table))
-	  (old-classes ()))
+    (flet ((add-class-node (class type)
+	     (unless (gethash class nodes)
+	       (setf (gethash class nodes)(make-class-node-box g class type)))))
       (dolist (class classes)
-	(push class old-classes)
-	(loop for super in (direct-superclasses class) do
-	      (when (member super classes)
-		(make-instance 'tt::graph-edge  :graph g
-			       :head (gethash super nodes) :tail (gethash class nodes)
-			       :label "sub-class" :label-color '(0.0 0.0 0.6)
-			       :color '(0.0 0.0 0.6) :width 2)))
-	(loop for slot in (direct-slots class)
-	      for object-type = (object-type slot) do
-	      (when (and (eq (value-type slot) :object)(member object-type classes))
-		(push slot (gethash object-type members-by-value-class))))
-	(maphash #'(lambda(val-class slots)
-		     (make-instance 'tt::graph-edge  :graph g
-				    :head (gethash class nodes) :tail (gethash val-class nodes) 
-				    :label (if (< (length slots) 3)
-					       (format nil "~{~a~^\\n~}" (mapcar 'name slots))
-					       (format nil "~{~a~^\\n~}..." (mapcar 'name (subseq slots 0 2))))
-				    :label-color '(0.0 0.0 0.0)
-				    :color '(0.0 0.0 0.0) :width 2))
-		 members-by-value-class)))
-    (tt::compute-graph-layout g)
-    g))
+	(add-class-node class :start-class))
+      (loop while new-classes
+	repeat depth do
+	(loop for class in all-classes
+	      unless (member class classes) do
+	      (loop for super in (direct-superclasses class) do
+		    (when (member super new-classes)
+		      (add-class-node class :sub-class)
+		      (pushnew class next-new-classes)
+		      (pushnew class classes)))
+	      (loop for slot in (direct-slots class)
+		    for object-type = (object-type slot) do
+		    (when (and (eq (value-type slot) :object)
+			       (member object-type new-classes))
+		      (add-class-node class :to-class)
+		      (pushnew class next-new-classes)
+		      (pushnew class classes))))
+	(loop for class in new-classes do
+	      (loop for super in (direct-superclasses class) do
+		    (unless (member super classes)
+		      (add-class-node super :super-class)
+		      (pushnew super next-new-classes)
+		      (pushnew super classes)))
+	      (loop for slot in (direct-slots class)
+		    for object-type = (object-type slot) do
+		    (when (and (eq (value-type slot) :object)
+			       (not (member object-type classes)))
+		      (add-class-node object-type :from-class)
+		      (pushnew object-type next-new-classes)
+		      (pushnew object-type classes))))
+	(setf new-classes next-new-classes
+	      next-new-classes ()))
+      (let ((members-by-value-class (make-hash-table))
+	    (old-classes ()))
+	(dolist (class classes)
+	  (push class old-classes)
+	  (loop for super in (direct-superclasses class) do
+		(when (member super classes)
+		  (make-instance 'tt::graph-edge  :graph g
+				 :head (gethash super nodes) :tail (gethash class nodes)
+				 :label "sub-class" :label-color '(0.0 0.0 0.6)
+				 :color (edge-color '(0.7 0.3 0.3)) :width 2)))
+	  (loop for slot in (direct-slots class)
+		for object-type = (object-type slot) do
+		(when (and (eq (value-type slot) :object)(member object-type classes))
+		  (push slot (gethash object-type members-by-value-class))))
+	  (maphash #'(lambda(val-class slots)
+		       (make-instance 'tt::graph-edge  :graph g
+				      :head (gethash class nodes) :tail (gethash val-class nodes) 
+				      :label (if (< (length slots) 3)
+						 (format nil "~{~a~^\\n~}" (mapcar 'name slots))
+						 (format nil "~{~a~^\\n~}..." (mapcar 'name (subseq slots 0 2))))
+				      :label-color '(0.0 0.0 0.0)
+				      :color (edge-color '(0.3 0.3 0.7)) :width 2))
+		   members-by-value-class)))
+      (tt::compute-graph-layout g)
+      g)))
 
 (defun draw-doc-wavelet-rule (box x0 y0)
   (let ((dx/2 (* (tt::dx box) 0.5))
@@ -125,7 +144,8 @@
 
 ;DESCRIPTION DETAILLEE D'UNE CLASSE :
 (defmethod gen-doc-content ((class class-info))
-  (let ((content
+  (let* ((real-class (gethash class *class-info-to-class*))
+	 (content
 	 (tt::compile-text
 	  ()
 	  (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
@@ -135,7 +155,9 @@
 	  (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
 		(name-value-table "Caractéristiques générales"
 			(list
-			 "Nom de la classe" (french (user-name class))
+			 "Nom français" (french (user-name class))
+			 "Nom anglais" (english (user-name class))
+			 "Nom de la table SQL" (meta::sql-name real-class)
 			 "Description" (description class)
 			 "Commentaire" (comment class)
 			 "Hérite des classes" (dolist (info (direct-superclasses class))
@@ -144,7 +166,9 @@
 					   "tous"
 					   (dolist (user (visible-groups class))
 					     (tt::put-string (name user)) " "))
-			 "Info. pour les listes" (short-description class)
+			 "Description courte" (if (short-description class)
+						  (short-description class)
+						  "voir sources et super-classes")
 			 )))
 	  (tt::vspace 20)
 	  :hfill (tt::graph-box (gen-class-graph-layout (project class) (list class) 1)) :hfill
@@ -153,8 +177,8 @@
 	  (tt::vspace 20)
 	  (tt::table (:col-widths '(100 150 200) :splittable-p t)
 		     (tt::header-row ()
-			 (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
-				   (tt::paragraph () "Liste résumée des attributs (slots)")))
+				     (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
+					       (tt::paragraph () "Liste résumée des attributs directs (slots)")))
 		     (tt::header-row (:background-color '(0.6 0.6 0.9))
 			 (tt::cell ()(tt::paragraph () "Nom"))
 			 (tt::cell ()(tt::paragraph () "Type"))
@@ -182,6 +206,20 @@
 			   (tt::cell ()(tt::paragraph () (if (visible fonc) "tous"
 							     (dolist (user (visible-groups fonc))
 							       (tt::put-string (name user)) " ")))))))
+	  (tt::vspace 10)
+	  (tt:paragraph (:font "Helvetica-Bold" :font-size 14 :top-margin 20)
+			"Description des tables SQL pour la classe :"
+			(tt::put-string (name class)))
+	  (tt::vspace 10)
+	  (tt::paragraph (:h-align :left :top-margin 15
+				   :left-margin 5 :right-margin 5 :font "courier" :font-size 10)
+			 (tt::verbatim
+			  (meta::gen-sql-create-table real-class))
+			 (loop for slot in (clos:class-slots real-class)
+			       when (meta::stored slot) do
+			       (tt::vspace 10)
+			       (tt::verbatim
+				(meta::gen-slot-aux-tables-sql real-class slot))))
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)
     (dolist (slot (direct-slots class))
@@ -326,10 +364,11 @@
 	  :eop))))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
   ;;; 2 groupes pour les tests
-  (dolist (group (subseq (class-groups project) 0 2))
+  (dolist (group (subseq (class-groups project) 0 3))
     (gen-doc-content group)))
   
 (defun gen-doc (project)
+  (create-project-classes project)
   (let ((file (format nil "~a~a-documentation.pdf"
 		      (or (and (> (length (sources-directory project)) 0)
 			       (sources-directory project))

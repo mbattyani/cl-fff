@@ -1,5 +1,7 @@
 (in-package meta-web)
 
+(defvar *class-info-to-class* (make-hash-table))
+
 (defmethod project ((obj project))
   obj)
 
@@ -74,8 +76,11 @@
 ;    (handler-case
        (progn
          (dolist (group (class-groups proj))
-	   (dolist (class (classes group))
-	     (push (eval (make-defclass class)) classes)))
+	   (loop for class-info in (classes group)
+		 for class = (eval (make-defclass class-info))
+		 do
+		 (setf (gethash class-info *class-info-to-class*) class)
+		 (push class classes)))
 	 (setf result t))
 #+ignore      (condition (c)
          (interface::send-message-to-interface
