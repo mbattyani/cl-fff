@@ -111,7 +111,7 @@
 (defun std-list-col-fn (index object item length container-obj)
   (html:html
    ((:td :class "dvcv") index):crlf
-   (:when (modifiable-p (slot item))
+   (:when (modifiable-p *dispatcher*);(slot item))
      ((:td :class "dvcv")
       (:when (> index 1)
 	((:a :href "#" :fformat (:onclick "fire_onclick('~a', ~d);" (name item)(+ index 10000)))

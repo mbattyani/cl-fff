@@ -12,8 +12,7 @@
    (dirty-status :accessor dirty-status :initform nil)))
 
 (defclass slot-dispatcher (object-dispatcher)
-  ((interface :accessor interface :initarg :interface)
-   (object :accessor object :initarg :object)
+  ((object :accessor object :initarg :object)
    (modifiable-p :accessor modifiable-p :initform nil)
    (slot  :accessor slot :initform nil)
    (get-value-fn :accessor get-value-fn :initform nil)

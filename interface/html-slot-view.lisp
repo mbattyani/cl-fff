@@ -351,21 +351,22 @@
 
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
   (when (col-fn item)
-    (html:fast-format nil "parent.document.all.~a.innerHTML='~a';" (name item)
-		      (html:quote-javascript-string
-		       (html:html-to-string
-			((:table :class (table-class item))
-			 (let ((length (length list))
-			       (max-nb (max-nb *dispatcher*))
-			       (start (start *dispatcher*)))
-			   (when (> start (- length 4))
-			     (setf start (* max-nb (truncate length max-nb))))
-			   (when (< start 0) (setf start 0))
-			   (setf (start *dispatcher*) start)
-			   (loop for value in (nthcdr start list)
-				 for nb from 1 to max-nb
-				 for index from (1+ start) do
-				 (html:html (:tr (funcall (col-fn item) index value item length *object*)))))))))))
+    (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
+      (html:fast-format nil "parent.document.all.~a.innerHTML='~a';" (name item)
+			(html:quote-javascript-string
+			 (html:html-to-string
+			  ((:table :class (table-class item))
+			   (let ((length (length list))
+				 (max-nb (max-nb *dispatcher*))
+				 (start (start *dispatcher*)))
+			     (when (> start (- length 4))
+			       (setf start (* max-nb (truncate length max-nb))))
+			     (when (< start 0) (setf start 0))
+			     (setf (start *dispatcher*) start)
+			     (loop for value in (nthcdr start list)
+				   for nb from 1 to max-nb
+				   for index from (1+ start) do
+				   (html:html (:tr (funcall (col-fn item) index value item length *object*))))))))))))
 
 ;;;css-classes suffixes:
 ;;; "" =  global
