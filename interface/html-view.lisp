@@ -116,7 +116,7 @@
 						     (fc-function item)) interface)
       (setf (dirty-status dispatcher) nil))))
 
-(defmethod fire-action ((dispatcher html-fn-link-dispatcher) value)
+(defmethod fire-action ((dispatcher html-fn-link-dispatcher) value click-str)
   (let* ((*dispatcher* dispatcher)
 	 (*object* (object dispatcher))
 	 (item (item dispatcher))

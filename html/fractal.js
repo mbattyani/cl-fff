@@ -125,6 +125,19 @@ function F6451()
     window.frames['Lisp1'].document.location.replace(v686);v683=v684;
 };
 
+function f854(name, id)
+{
+ var s = "";
+ for (var i = 0; i < 25; i++)
+   {var item=document.getElementById(name+'c'+i)
+     if (item && item.checked)
+	 s=s+'t';
+     else
+	 s=s+'n';
+   }
+ return id+'='+s;
+}
+
 function open1(url, dx, dy, item)
 {
  if (event)

@@ -7,7 +7,7 @@
 			       :modifiable :modifiable-groups :visible :visible-groups :sql-name
 			       :unit :disable-predicate :new-objects-first
 			       :value-constraint :sql-length :nb-decimals
-			       :void-link-text :pathname-filter
+			       :void-link-text :pathname-filter :list-format
 			       :make-copy-string :duplicate-value-fn
 			       :get-value-html-fn :get-value-title :get-value-text :get-value-sql
 			       :value-to-string-fn :string-to-value-fn :value-to-sql-fn :sql-to-value-fn
@@ -31,6 +31,7 @@
    (initform      :initarg :initform :initform nil :accessor initform)
    (choices       :type list :initarg :choices :initform nil :accessor choices)
    (list-of-values :type symbol :initarg :list-of-values :initform nil :accessor list-of-values)
+   (list-format   :type string :initarg :list-format :initform nil :accessor list-format)
    (value-type    :type symbol :initarg :value-type :initform t :accessor value-type)
    (linked-value  :type t :initarg :linked-value :initform nil :accessor linked-value) ;t nil :anonymous
    (modifiable     :type boolean :initarg :modifiable :initform nil :accessor modifiable)

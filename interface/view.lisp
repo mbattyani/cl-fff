@@ -3,6 +3,7 @@
 (defvar *layout-stream* t)
 (defvar *root-item* nil)
 (defvar *all-object-views* (make-hash-table :test #'equal))
+(defvar *all-list-formats* (make-hash-table :test #'equal))
 (defvar *current-class* nil)
 
 (defun find-object-view (name &optional instance)
@@ -108,25 +109,6 @@
 ;;; CSS classes dv => default view + t = table, t2 = sub obj table,
 ;;; r = row, ch = slot name column, cv = value column
 
-(defun std-list-col-fn (index object item length container-obj)
-  (html:html
-   ((:td :class "dvcv") index):crlf
-   (:when (modifiable-p *dispatcher*);(slot item))
-     ((:td :class "dvcv")
-      (:when (> index 1)
-	((:a :href "#" :fformat (:onclick "fire_onclick('~a', ~d);" (name item)(+ index 10000)))
-	 ((:img :border "0" :src "/up.gif" :width "13" :height "15")))))
-     ((:td :class "dvcv")
-      (:when (< index length)
-	((:a :href "#" :fformat (:onclick "fire_onclick('~a', ~d);" (name item)(+ index 20000)))
-	 ((:img :border "0" :src "/d.gif" :width "13" :height "15")))))
-     ((:td :class "dvcv")
-      ((:a :href "#" :fformat (:onclick "fire_onclick('~a', ~d);" (name item)(+ index 30001)))
-       ((:img :border "0" :src "/k.gif" :width "13" :height "13")))))
-   ((:td :class "dvcv") 
-    ((:a :href (encode-object-url object))
-     (html:esc (meta:list-description object container-obj))))))
-
 (defun make-std-object-slots-view (class slots no-table)
   (setf class (ensure-class class))
   (unless slots (setf slots (clos::class-slots class)))
@@ -149,7 +131,7 @@
 			  ((:slot-list ,(clos:slot-definition-name slot)
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
-					  '(:col-fn std-list-col-fn :class "dvl" :height "60px")))))))
+					  '(:class "dvl" :height "60px")))))))
 		      (:pick-mval
 		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
 			 ((:td :class "dvcv")
@@ -163,7 +145,7 @@
 			  ((:slot-list ,(clos:slot-definition-name slot)
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
-					  '(:col-fn std-list-col-fn :class "dvl")))
+					  '(:class "dvl")))
 			   (:table (:tr ((:td :class "dvch2") ,user-name ,unit)))))))))
 		   ((meta::fc-class-p (meta::value-type slot))
 		    (case (meta::view-type slot)
@@ -265,9 +247,7 @@
 			(or (not (user-groups v))
 			    (intersection user-groups (user-groups v))))
 	       (return-from find-best-view v)))
-    (if view
-      view
-      (make-std-object-view class country-language user-groups))))
+    (make-std-object-view class country-language user-groups)))
 
 (defun %process-view (name object)
   (setf name (or name (getf (session-params *request*) :view)))
@@ -298,4 +278,67 @@
 
 ;syntax :connect-views
 (html:add-func-tag :connect-views 'connect-views-tag)
+
+;;;**** list-format ***************************
+;;;
+
+(defclass slot-list-format ()
+  ((name   :initform ""  :accessor name :initarg :name)
+   (object-class :initform nil  :accessor object-class :initarg :object-class)
+   (special-format :initform nil  :accessor special-format :initarg :special-format)
+   (country-languages  :initform nil :accessor country-languages :initarg :country-languages)
+   (user-groups  :initform nil :accessor user-groups :initarg :user-groups)
+   (list-format-fn :initform nil :accessor list-format-fn :initarg :list-format-fn)))
+
+(defmethod initialize-instance :after ((format slot-list-format) &rest init-options
+				       &key &allow-other-keys)
+  (setf (gethash (name format) *all-list-formats*) format)
+  (setf (object-class format)(when (object-class format) (ensure-class (object-class format)))))
+
+(defun find-list-format (name)
+  (gethash name *all-list-formats*))
+
+(defun find-best-list-format (class country-language user-groups)
+  (when class (setf class (ensure-class class)))
+  (let ((formats (iterate (for (name format) in-hashtable *all-list-formats*) 
+			  (when (eq class (object-class format)) (collect format)))))
+    (loop for f in formats
+	  do (when (and (not (special-format f))
+			(find country-language (country-languages f))
+			(intersection user-groups (user-groups f)))
+	       (return-from find-best-list-format f)))
+    (loop for f in formats
+	  do (when (and (not (special-format f))
+			(find country-language (country-languages f))
+			(or (not (user-groups f))
+			    (intersection user-groups (user-groups f))))
+	       (return-from find-best-list-format f)))
+    (find-list-format "default-format")))
+
+(defun std-list-checkbox (index start-index)
+  (when (modifiable-p *dispatcher*)
+    (decf index start-index)
+    (html::html ((:input :type "checkbox" 
+			 :fformat (:name "~aC~d" (name (item *dispatcher*)) index)
+			 :optional (:checked (and (find index (selected-objects-idx *dispatcher*)) "true")))))))
+
+(defun std-list-format-fn (start objects max-nb total-length)
+  (html:html
+    ((:table :class (table-class (item *dispatcher*)))
+     (loop repeat max-nb 
+           for object in objects
+   	   for index from start
+   	   for index1 = (1+ index) do
+	  (html:html
+	    (:tr
+	     ((:td :class "dvcv") index1)
+	     (:when (modifiable-p *dispatcher*)
+	       ((:td :class "dvcv") (std-list-checkbox index start)))
+	     ((:td :class "dvcv")
+	      ((:a :href (encode-object-url object))
+	       (html:esc (meta:list-description object *object*))))))))))
+
+(make-instance 'slot-list-format :name "default-format"
+	       :header-fn #'(lambda (container-obj))
+	       :list-format-fn 'std-list-format-fn)
 

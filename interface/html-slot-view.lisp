@@ -293,32 +293,57 @@
 
 (defclass html-slot-list (html-item)
   ((action-func  :initform nil :accessor action-func :initarg :action-fn)
-   (col-fn     :initform nil :accessor col-fn)
+   (list-format :accessor list-format :initform nil)
    (table-class  :initform ""  :accessor table-class)))
 
 (defclass html-slot-list-dispatcher (slot-dispatcher)
   ((start :accessor start :initform 0)
    (max-nb :accessor max-nb :initform 25)
-   (object-to-delete :accessor object-to-delete :initform nil)
+   (list-format :accessor list-format :initform nil)
+   (objects-to-delete :accessor objects-to-delete :initform nil)
+   (selected-objects-idx :accessor selected-objects-idx :initform '())
    (sub-classes :accessor sub-classes :initform nil)))
 
 (defmethod make-dispatcher (interface object (item html-slot-list))
-  (make-instance 'html-slot-list-dispatcher :interface interface :object object :item item))
+  (let ((dispatcher (make-instance 'html-slot-list-dispatcher :interface interface :object object :item item)))
+    (setf (list-format dispatcher)
+	  (or (list-format item)
+	      (find-best-list-format (meta::value-type (slot dispatcher)) *country-language* *user-groups*)))
+    dispatcher))
 
 (defmethod make-set-status-javascript ((item html-slot-list) status slot)
   "")
 
-(defmethod slot-list-action-fn (object value)
-  (let ((slot (slot *dispatcher*))
-	(list (funcall (get-value-fn *dispatcher*) object)))
+(defun collect-selected-objects-idx (select-string)
+  (setf (selected-objects-idx *dispatcher*)
+	(when select-string
+	  (loop for index from 0
+	     for c across select-string
+	     when (char= c #\t)
+	     collect index))))
+
+(defun collect-list-idx ()
+  (let ((start (start *dispatcher*)))
+    (mapcar #'(lambda (x) (+ start x)) (selected-objects-idx *dispatcher*))))
+
+(defun collect-list-objects (list)
+  (setf list (nthcdr (start *dispatcher*) list))
+  (loop for idx in (selected-objects-idx *dispatcher*)
+     collect (elt list idx)))
+
+(defmethod slot-list-action-fn (object value click-str)
+  (let* ((slot (slot *dispatcher*))
+	 (list (funcall (get-value-fn *dispatcher*) object))
+	 (list-length (length list)))
+    (collect-selected-objects-idx (when (find #\= click-str) (subseq click-str (1+ (position #\= click-str)))))
     (if (<= -4 value -1)
 	(let ((start (start *dispatcher*))
 	      (max-nb (max-nb *dispatcher*)))
 	  (case value
 	    (-1 (setf start 0))
 	    (-2 (setf start (max 0 (- start max-nb))))
-	    (-3 (when (< (+ start max-nb) (length list))(incf start max-nb)))
-	    (-4 (setf start (* max-nb (truncate (length list) max-nb)))))
+	    (-3 (when (< (+ start max-nb) list-length)(incf start max-nb)))
+	    (-4 (setf start (* max-nb (truncate list-length max-nb)))))
 	  (when (/= start (start *dispatcher*))
 	    (setf (start *dispatcher*) start)
 	    (mark-dirty-value *dispatcher*)))
@@ -345,48 +370,45 @@
 		 (send-to-interface
 		  (html:fast-format nil "parent.open1('/asp/obj-new.html', '250px', '250px', '~a');"
 				    (name (item *dispatcher*))))))
-	    ((< value 20000)
-	     (decf value 10001)
-	     (when (> value 0)
-	       (rotatef (elt list (1- value))(elt list value))
-	       (funcall (set-value-fn *dispatcher*) list object)))
-	    ((< value 30000)
-	     (decf value 20001)
-	     (when (< value (1- (length list)))
-	       (rotatef (elt list (1+ value))(elt list value))
-	       (funcall (set-value-fn *dispatcher*) list object)))
+	    ((= value -5) ; (not (find 0 (selected-objects-idx *dispatcher*))))
+	     (dolist (idx (collect-list-idx))
+	       (unless (<= idx 0)
+		 (rotatef (elt list (1- idx))(elt list idx))))
+	     (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1- x)) (selected-objects-idx *dispatcher*))
+	     (funcall (set-value-fn *dispatcher*) list object))
+	    ((= value -6) ; (not (find 0 (selected-objects-idx *dispatcher*))))
+	     (dolist (idx (nreverse (collect-list-idx)))
+	       (unless (>= (1+ idx)  list-length)
+		 (rotatef (elt list (1+ idx))(elt list idx))))
+	     (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1+ x)) (selected-objects-idx *dispatcher*))
+	     (funcall (set-value-fn *dispatcher*) list object))
 	    ((= value 30000)
-	     (when (object-to-delete *dispatcher*)
-	       (funcall (set-value-fn *dispatcher*)
-			(delete (object-to-delete *dispatcher*) list :count 1) object)))
+	     (dolist (object (objects-to-delete *dispatcher*))
+	       (setf list (delete object list :count 1)))
+	     (setf (selected-objects-idx *dispatcher*) nil)
+	     (funcall (set-value-fn *dispatcher*) list object)
+	     (setf (objects-to-delete *dispatcher*) nil))
 	    ((= value 30001)
-	     (setf (object-to-delete *dispatcher*) nil))
-	    ((< value 40000)
-	     (decf value 30002)
-	     (when (< value (length list))
-	       (setf (object-to-delete *dispatcher*)(elt list value))
-	       (send-to-interface
-		(html:fast-format nil "parent.open1('/asp/obj-del.html', '250px', '250px', '~a');"
-				  (name (item *dispatcher*)))))))))))
+	     (setf (objects-to-delete *dispatcher*) nil))
+	    ((= value -7)
+	     (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
+	     (send-to-interface
+	      (html:fast-format nil "parent.open1('/asp/obj-del.html', '250px', '250px', '~a');"
+				(name (item *dispatcher*))))))))))
 
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
-  (when (col-fn item)
-    (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
+  (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
+    (let ((length (length list))
+	  (max-nb (max-nb *dispatcher*))
+	  (start (start *dispatcher*)))
+      (when (> start (- length 4))
+	(setf start (* max-nb (truncate length max-nb))))
+      (when (< start 0) (setf start 0))
+      (setf (start *dispatcher*) start)
       (html:fast-format nil "parent.document.all.~a.innerHTML='~a';" (name item)
-			(html:quote-javascript-string
-			 (html:html-to-string
-			  ((:table :class (table-class item))
-			   (let ((length (length list))
-				 (max-nb (max-nb *dispatcher*))
-				 (start (start *dispatcher*)))
-			     (when (> start (- length 4))
-			       (setf start (* max-nb (truncate length max-nb))))
-			     (when (< start 0) (setf start 0))
-			     (setf (start *dispatcher*) start)
-			     (loop for value in (nthcdr start list)
-				   for nb from 1 to max-nb
-				   for index from (1+ start) do
-				   (html:html (:tr (funcall (col-fn item) index value item length *object*))))))))))))
+	(html:quote-javascript-string
+	 (html:html-to-string
+	  (funcall (list-format-fn (list-format *dispatcher*)) start (nthcdr start list) max-nb length)))))))
 
 ;;;css-classes suffixes:
 ;;; "" =  global
@@ -395,20 +417,19 @@
 ;;; "b" = buttons 
 
 (defun slot-list-tag (attributes forms)
-  (destructuring-bind (slot-name &key (height "100px") (width "100%") (class "stdlist") col-fn add-fn-only) attributes
+  (destructuring-bind (slot-name &key (height "100px") (width "100%") (class "stdlist") add-fn-only) attributes
     (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-slot-list :tooltip (meta::tooltip slot) :slot slot
-				 :action-fn 'slot-list-action-fn))
+				 :action-fn 'slot-list-action-fn :list-format (meta::list-format slot)))
 	    (sub-obj-name (format nil #T(:en "Add ~a" :fr "Ajouter ~a")
 				  (meta::translate (meta::user-name (find-class (meta::value-type slot)))))))
-	(setf (col-fn item) col-fn)
 	(setf (table-class item) (concatenate 'string class "t"))
 	(if add-fn-only
 	    `(html:html
-	      ,@(when t;(meta::get-object-func slot)
-		      `("hello"(:when t; (modifiable-p ,slot)
+	      ,@(when t
+		      `((:when t; (modifiable-p ,slot)
 			  ((:span :align "right")
 			   ((:a :href ,(format nil "javascript:open1('/asp/obj-pick2.html', '250px', '500px', '~a');"
 					 (name item)))
@@ -423,14 +444,27 @@
 	       ((:table :class ,(concatenate 'string class "h") :align "left" :width "100%")
 		(:tr
 		 (:td
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -1);" (name item)))
-		   ((:img :border "0" :src "/sl1.gif" :width "16" :height "16")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -2);" (name item)))
-		   ((:img :border "0" :src "/sl2.gif" :width "16" :height "16")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -3);" (name item)))
-		   ((:img :border "0" :src "/sl3.gif" :width "16" :height "16")))
-		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -4);" (name item)))
-		   ((:img :border "0" :src "/sl4.gif" :width "16" :height "16"))))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -1);" (name item)(name item)))
+		   ((:img :border "0" :src "/sl1.jpg" :width "22" :height "18" :alt "First Page")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -2);" (name item)(name item)))
+		   ((:img :border "0" :src "/sl2.jpg" :width "22" :height "18" :alt "Previous Page")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -3);" (name item)(name item)))
+		   ((:img :border "0" :src "/sl3.jpg" :width "22" :height "18" :alt "Next Page")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', -4);" (name item)(name item)))
+		   ((:img :border "0" :src "/sl4.jpg" :width "22" :height "18" :alt "Last Page")))
+		  ((:img :border "0" :src "/v.jpg" :width "22" :height "18" :alt ""))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-5));" (name item)(name item)))
+		   ((:img :border "0" :src "/up.jpg" :width "22" :height "18" :alt "Move Up")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-6));" (name item)(name item)))
+		   ((:img :border "0" :src "/d.jpg" :width "22" :height "18" :alt "Move Down")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-7));" (name item)(name item)))
+		   ((:img :border "0" :src "/k.jpg" :width "22" :height "18" :alt "Remove")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-8));" (name item)(name item)))
+		   ((:img :border "0" :src "/cu.jpg" :width "22" :height "18" :alt "Cut")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-9));" (name item)(name item)))
+		   ((:img :border "0" :src "/cp.jpg" :width "22" :height "18" :alt "Copy")))
+		  ((:a :href ,(format nil "javascript:fire_onclick('~a', f854('~a',-10));" (name item)(name item)))
+		   ((:img :border "0" :src "/p.jpg" :width "22" :height "18" :alt "Paste"))))
 		 ((:td :align "right")
 		  ,@(when (meta::get-object-func slot)
 			  `((:when (modifiable-p ,slot)
@@ -442,8 +476,7 @@
 			  `((:when (modifiable-p ,slot)
 			      ((:span :align "right")
 			       ((:a :href ,(format nil "javascript:f825foc('~a');" (name item)))
-				,sub-obj-name))))))))
-	       )))))))
+				,sub-obj-name)))))))))))))))
 
 (interface::add-named-url "/asp/obj-pick2.html"
   #'(lambda (request)
@@ -534,13 +567,16 @@
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
-	       #+nil(:h1 (:translate '(:en "Confirm Delete" :fr "Confirmation suppression")))
 	       (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
 			 "window.close();};")
-	       (:h1 (:translate '(:en "Do you want to remove this object:"
-				  :fr "Voulez vous vraiment supprimer cet objet:"))
-		    (:h1
-		     (html:esc (meta:short-description (object-to-delete dispatcher)))))
+	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
+			 (:translate '(:en "Do you want to remove these objects:"
+				       :fr "Voulez vous vraiment supprimer ces objets:"))
+			 (:translate '(:en "Do you want to remove this object:"
+				       :fr "Voulez vous vraiment supprimer cet objet:"))))
+	       (:p
+		(dolist (object (objects-to-delete dispatcher))
+		  (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
 	       ((:div :align "center")
 		((:a :class "call" :href "javascript:f42('30000');" )
 		 (:translate '(:en "Yes" :fr "Oui")))
@@ -549,6 +585,7 @@
 		 (:translate '(:en "No" :fr "Non")))
 		))))))
 	t)))
+
 
 (html:add-func-tag :slot-list 'slot-list-tag)
 ;;;syntax ((:slot-list :class "css" :width width :height height)
@@ -961,7 +998,7 @@ function fh(name)
 	(write-string "';" s))
       (html:fast-format nil "parent.document.all.~a.innerHTML='';" (name item))))
 
-(defmethod html-pick-multi-val-action-fn (object value)
+(defmethod html-pick-multi-val-action-fn (object value click-str)
   (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
 	 (list (funcall (get-value-fn *dispatcher*) object)))
     (if (plusp value)

@@ -140,7 +140,7 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("Vue"
-      (:slot-table view-type html-tag-attributes pathname-filter value-to-string-func string-to-value-func
+      (:slot-table view-type html-tag-attributes list-format pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Règles"
@@ -158,11 +158,11 @@
 		   choices-table choices ))
      ("Value"
       (:slot-table value-type object-type other-type list-of-values new-objects-first linked-value
-		   nb-decimals unit can-create-new-object create-new-object get-object-fn
+		   list-format nb-decimals unit can-create-new-object create-new-object get-object-fn
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("View"
-      (:slot-table view-type html-tag-attributes pathname-filter value-to-string-func string-to-value-func
+      (:slot-table view-type html-tag-attributes list-format pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Rules"
@@ -284,6 +284,7 @@
     ,@(%add-slot-w% html-tag-attributes slot-info :read t :quote t :list t)
     ,@(%add-slot% dont-display-null-value slot-info)
     ,@(%add-slot% view-type slot-info)
+    ,@(%add-slot-w% list-format slot-info)
     ,@(progn (setf *current-slot* nil *current-slot-attribute* nil) nil)
     ))
 

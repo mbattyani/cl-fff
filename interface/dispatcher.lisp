@@ -99,11 +99,11 @@
 (defmethod try-change-slot ((dispatcher slot-dispatcher) value)
   (funcall (set-value-fn dispatcher) value (object dispatcher)))
 
-(defmethod fire-action (dispatcher value)
+(defmethod fire-action (dispatcher value click-str)
   (let* ((*dispatcher* dispatcher)
 	 (*object* (object dispatcher))
 	 (function (action-func (item dispatcher))))
-    (when function (funcall function *object* value))))
+    (when function (funcall function *object* value click-str))))
 
 (defmethod fire-add-to-list ((dispatcher slot-dispatcher) value)
   (let ((object (object dispatcher)))

@@ -145,7 +145,7 @@
 					    (:head)
 					    (:body
 					     (:fformat "Error : ~a~%" e) :br
-					     (:format "Backtrace:<br>~{ ~S <br>~}" (nreverse bt))))))))	      ))))
+					     (:format "Backtrace:<br>~{ ~S <br>~}" (nreverse bt))))))))))))
 	      (funcall action-func *http-link* name value)))))))
   (process-http-link-pull request t))
 
@@ -190,7 +190,7 @@
   (let ((dispatcher (gethash item-name (dispatchers link)))
 	(click-id (parse-integer click-id-str :junk-allowed t)))
     (log-message (format nil "dispatcher ~s~%" dispatcher))
-    (when dispatcher (fire-action dispatcher click-id))))
+    (when dispatcher (fire-action dispatcher click-id click-id-str))))
 
 (add-action-func "8" 'fire-click)
 
