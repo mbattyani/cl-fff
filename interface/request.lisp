@@ -189,7 +189,7 @@
 (defun http-message (message request &key (color "red")(log-error t))
   (with-output-to-request (request)
     (html::html-to-stream *request-stream*
-			  "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+			  "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
 			  (:html (:head)
 				 (:body
 				  ((:table "border" "1" "bgcolor" "#c0c0c0")
@@ -202,7 +202,7 @@
   (log-message (format nil "http-debug-request ~%"))
   (with-output-to-request (request)
     (html::html-to-stream *request-stream*
-			  "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+			  "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
 			  (:html (:head)
 				 (:body
 				  ((:table "bgcolor" "#c0c0c0")
