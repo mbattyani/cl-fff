@@ -45,7 +45,7 @@ set to the right path before compiling or loading the system.")
     (unless (probe-file *clsql-uffi-library-filename*)
       (error "Unable to find uffi.so"))
     (if (uffi:load-foreign-library *clsql-uffi-library-filename* 
-				   :module "clsql-uffi" 
+				   :module "uffi" 
 				   :supporting-libraries 
 				   *clsql-uffi-supporting-libraries*)
 	(setq *uffi-library-loaded* t)
