@@ -68,7 +68,7 @@ as type and sets speed to 3 with safety 0 within its scope."
 
 (defun write-javascript-string (string &optional (stream *html-stream*) (start 0) end)
   (flet ((%token-spec-for-special-char (char)
-	   (case char (#\' (quote ("\\'" . 2))) (#\" (quote ("\\\"" . 2)))
+	   (case char (#\\ (quote ("\\\\" . 2)))(#\' (quote ("\\'" . 2))) (#\" (quote ("\\\"" . 2)))
 		 (#\Newline (quote ("\\n" . 2)))(#\Return (quote ("\\r" . 2))) (t nil)))
 ;           #.`(case char
 ;                ,.(loop for (char . string) in html::*javascript-character-translation-alist*
