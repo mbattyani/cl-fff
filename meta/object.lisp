@@ -63,24 +63,28 @@
 
 (defmethod update-instance-for-different-class :before ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)
-  (load-object-data old-object))
+  (when (slot-boundp old-object 'data-object)
+    (load-object-data old-object)))
   
 (defmethod update-instance-for-different-class :after ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)
-  (change-class (data-object new-object) (data-class (class-of new-object)))
-  (initialize-unbound-slots new-object)
-  (initialize-disable-predicates new-object))
+  (when (and (slot-boundp instance 'data-object)(data-object new-object))
+    (change-class (data-object new-object) (data-class (class-of new-object)))
+    (initialize-unbound-slots new-object)
+    (initialize-disable-predicates new-object)))
 
 (defmethod update-instance-for-redefined-class :before ((instance root-object)
 							added-slots discarded-slots property-list
 							&rest initargs &key &allow-other-keys)
-  (load-object-data instance))
+  (when (slot-boundp instance 'data-object)
+    (load-object-data instance)))
 
 (defmethod update-instance-for-redefined-class :after ((instance root-object)
 						       added-slots discarded-slots property-list
 						       &rest initargs &key &allow-other-keys)
-  (initialize-unbound-slots instance)
-  (initialize-disable-predicates instance))
+  (when (slot-boundp instance 'data-object)
+    (initialize-unbound-slots instance)
+    (initialize-disable-predicates instance)))
 
 (defun %free-object% (object)
   (when (typep object 'root-object)

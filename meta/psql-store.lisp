@@ -266,3 +266,7 @@
 ;(setf *default-store* (make-instance 'psql-store :db-pool *pool*))
 ;(setf clsql-uffi::*clsql-uffi-library-filename* "/cvs/clsql/interfaces/clsql-uffi/clsql-uffi.dll")
 ;(clsql-uffi::load-uffi-foreign-library)
+
+(defun load-clsql-uffi ()
+  (clsql-uffi::load-uffi-foreign-library t)
+  (postgresql::load-postgresql-foreign-library t))
