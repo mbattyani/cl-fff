@@ -86,11 +86,8 @@
 	(let ((j-value (if (show-time item)
 			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
 			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
-	  (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');")
-	  #+nil
-	  (if (modifiable-p *dispatcher*)
-	      (concatenate 'string "parent.f826svi('" (name item) "', '" j-value "');")
-	      (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');"))))))
+	  (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');")))
+      (concatenate 'string "parent.f826si('" (name item) "', '');")))
 
 (defmethod make-set-status-javascript ((item html-date) status slot)
   (when (modifiable-p *dispatcher*)
@@ -150,7 +147,7 @@
   (let ((first-week-day (first-week-day month year))
 	(last-day (last-day month year)))
     (html:html
-     (:jscript "function f42(d){window.opener.fire_onchange('" item "',d+'/" month "/" year "');"
+     (:jscript "function f42(d){if (d == '') window.opener.fire_onchange('" item "','nil');else window.opener.fire_onchange('" item "',d+'/" month "/" year "');"
 	       "window.close();};")
      ((:table :class "calt" :align "center")
       (:tr ((:th :class "calh") "Di")((:th :class "calh") "Lu")((:th :class "calh") "Ma")
@@ -167,13 +164,15 @@
 (interface::add-named-url "/asp/calendar.html"
   #'(lambda (request)
       (decode-posted-content request)
-      (let* ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+      (let* ((link-name (cdr (assoc "link" (posted-content request) :test 'string=)))
+	     (link (gethash link-name *http-links*))
 	     (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-;	     (when link (setf link (gethash link *http-links*)))
-;	     (when (and link item) (setf *dispatcher* (gethash item (dispatchers link))))
 	     (year (cdr (assoc "year" (posted-content request) :test 'string=)))
-	     (month (cdr (assoc "month" (posted-content request) :test 'string=))))
-;	(setf slot-value (funcall (get-value-fn dispatcher) object))
+	     (month (cdr (assoc "month" (posted-content request) :test 'string=)))
+	     (dispatcher (when link (gethash item (dispatchers link))))
+	     (*session* (session link))
+	     (*user* (user *session*))
+	     (*country-language* (country-language *session*)))
 	(setf year  (when year (parse-integer year)))
 	(setf month (when month (parse-integer month)))
 	(unless (and year month)
@@ -194,7 +193,7 @@
 	     ((:form :name "go" :method "post" :action "/asp/calendar.html")
 	      ((:input :name "item" :type "hidden" :value item))
 	      ((:div :align "center")
-	       ((:input :name "link" :type "hidden" :value link))
+	       ((:input :name "link" :type "hidden" :value link-name))
 	       ((:select :name "month" :onchange "document.forms['go'].submit();")
 		(loop for m from 1 to 12
 		      for name in *month-fr*
@@ -208,8 +207,14 @@
 			   (html:ffmt "<option value=~d SELECTED>~d" a a)
 			   (html:ffmt "<option value=~d>~d" a a)))))
 	       (html-month item month year)
-	      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				      (:translate '(:en "Close" :fr "Fermer"))))
+	      
+	      ((:div :align "center")
+	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
+		 (html:html "&nbsp;&nbsp;"
+			    ((:a :href "javascript:f42('');")
+			     (:translate '(:en "No date" :fr "Aucune date"))) :br))
+	       ((:a :class "call" :href "javascript:window.close();")
+		(:translate '(:en "Close" :fr "Fermer"))))
 	      ))))))
       t))
 
@@ -429,7 +434,8 @@
 	  (setf link (gethash link *http-links*))
 	  (when (and link item)
 	    (let* ((*session* (session link))
-		   (*user* (user *session*)))
+		   (*user* (user *session*))
+		   (*country-language* (country-language *session*)))
 	      (setf dispatcher (gethash item (dispatchers link)))
 	      (with-output-to-request (request)
 		(html::html-to-stream
@@ -461,27 +467,30 @@
 	    (dispatcher nil))
 	(when link (setf link (gethash link *http-links*)))
 	(when (and link item) (setf dispatcher (gethash item (dispatchers link))))
-	(with-output-to-request (request)
-	  (html::html-to-stream
-	   *request-stream*
-	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-	   (:html
-	    (:head
-	     (:title (:translate '(:en "Type of object" :fr "Type d'objet")))
-	     ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
-	    (:body
-	     :br
-	     (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-	     (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
-		       "window.close();};")
-	     (loop for object in (when dispatcher (sub-classes dispatcher))
-		   for i from 1
-		   do (html:html "&nbsp;&nbsp;"
-				 ((:a :fformat (:href "javascript:f42('~a');" i))
-				  (html:esc (meta::translate (meta::user-name object)))) :br))
-	     ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				     (:translate '(:en "Close" :fr "Fermer")))))))))
-      t))
+	(let* ((*session* (session link))
+	       (*user* (user *session*))
+	       (*country-language* (country-language *session*)))
+	  (with-output-to-request (request)
+	    (html::html-to-stream
+	     *request-stream*
+	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+	     (:html
+	      (:head
+	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet à ajouter")))
+	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	      (:body
+	       :br
+	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
+	       (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
+			 "window.close();};")
+	       (loop for object in (when dispatcher (sub-classes dispatcher))
+		     for i from 1
+		     do (html:html "&nbsp;&nbsp;"
+				   ((:a :fformat (:href "javascript:f42('~a');" i))
+				    (html:esc (meta::translate (meta::user-name object)))) :br))
+	       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
+				       (:translate '(:en "Close" :fr "Fermer")))))))))
+	t)))
 
 (interface::add-named-url "/asp/obj-del.html"
   #'(lambda (request)
@@ -491,31 +500,34 @@
 	    (dispatcher nil))
 	(when link (setf link (gethash link *http-links*)))
 	(when (and link item) (setf dispatcher (gethash item (dispatchers link))))
-	(with-output-to-request (request)
-	  (html::html-to-stream
-	   *request-stream*
-	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-	   (:html
-	    (:head
-	     (:title (:translate '(:en "Delete" :fr "Suppression")))
-	     ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
-	    (:body
-	     :br
-	     #+nil(:h1 (:translate '(:en "Confirm Delete" :fr "Confirmation suppression")))
-	     (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
-		       "window.close();};")
-	     (:h1 (:translate '(:en "Do you want to remove this object:"
-			       :fr "Voulez vous vraiment supprimer cet objet:"))
-		 (:h1
-		  (html:esc (meta:short-description (object-to-delete dispatcher)))))
-	      ((:div :align "center")
-	       ((:a :class "call" :href "javascript:f42('30000');" )
-		(:translate '(:en "Yes" :fr "Oui")))
-	       "&nbsp;&nbsp;&nbsp;&nbsp;"
-	       ((:a :class "call" :href "javascript:f42('30001');" )
-		(:translate '(:en "No" :fr "Non")))
-	       ))))))
-      t))
+	(let* ((*session* (session link))
+	       (*user* (user *session*))
+	       (*country-language* (country-language *session*)))
+	  (with-output-to-request (request)
+	    (html::html-to-stream
+	     *request-stream*
+	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+	     (:html
+	      (:head
+	       (:title (:translate '(:en "Delete" :fr "Suppression")))
+	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	      (:body
+	       :br
+	       #+nil(:h1 (:translate '(:en "Confirm Delete" :fr "Confirmation suppression")))
+	       (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
+			 "window.close();};")
+	       (:h1 (:translate '(:en "Do you want to remove this object:"
+				  :fr "Voulez vous vraiment supprimer cet objet:"))
+		    (:h1
+		     (html:esc (meta:short-description (object-to-delete dispatcher)))))
+	       ((:div :align "center")
+		((:a :class "call" :href "javascript:f42('30000');" )
+		 (:translate '(:en "Yes" :fr "Oui")))
+		"&nbsp;&nbsp;&nbsp;&nbsp;"
+		((:a :class "call" :href "javascript:f42('30001');" )
+		 (:translate '(:en "No" :fr "Non")))
+		))))))
+	t)))
 
 (html:add-func-tag :slot-list 'slot-list-tag)
 ;;;syntax ((:slot-list :class "css" :width width :height height)
@@ -574,7 +586,8 @@
 	  (when (and link item)
 	    (setf *dispatcher* (gethash item (dispatchers link)))
 	    (let* ((*session* (session link))
-		   (*user* (user *session*)))
+		   (*user* (user *session*))
+		   (*country-language* (country-language *session*)))
 	      (with-output-to-request (request)
 		(html::html-to-stream
 		 *request-stream*
