@@ -86,6 +86,8 @@
 	(let ((j-value (if (show-time item)
 			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
 			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
+	  (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');")
+	  #+nil
 	  (if (modifiable-p *dispatcher*)
 	      (concatenate 'string "parent.f826svi('" (name item) "', '" j-value "');")
 	      (concatenate 'string "parent.f826si('" (name item) "', '" j-value "');"))))))
@@ -93,10 +95,19 @@
 (defmethod make-set-status-javascript ((item html-date) status slot)
   (when (modifiable-p *dispatcher*)
     (if status
-	(concatenate 'string "parent.f8252h('" (name item) "');"
+	(concatenate 'string ;"parent.f8252h('" (name item) "');"
 		     "parent.document.all." (name item) "l.style.visibility='hidden';")
-	(concatenate 'string "parent.f8252s('" (name item) "');"
+	(concatenate 'string ;"parent.f8252s('" (name item) "');"
 		     "parent.document.all." (name item) "l.style.visibility='inherit';"))))
+
+;(:progn
+;			   ((:input :type "text" :id ,(name edit) :read-only "true" :insert-string 
+;				    ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
+;				    ,@attrs))
+;			   ((:a :id ,(concatenate 'string (name edit) "l")
+;				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
+;					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
+;			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
 
 (defun slot-date-edit-tag (attributes form)
   (destructuring-bind (slot-name . attrs) attributes
@@ -109,13 +120,11 @@
 	(remf attrs :show-time)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
-			   ((:input :type "text" :id ,(name edit) :insert-string
-				    ,(format nil "onchange='fire_onchange(~s,~a.value);'" (name edit)(name edit))
-				    ,@attrs))
+			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
 			   ((:a :id ,(concatenate 'string (name edit) "l")
 				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '250px', '~a')"
 					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
-			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			   )
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
@@ -165,8 +174,12 @@
 	     (year (cdr (assoc "year" (posted-content request) :test 'string=)))
 	     (month (cdr (assoc "month" (posted-content request) :test 'string=))))
 ;	(setf slot-value (funcall (get-value-fn dispatcher) object))
-	(setf year  (if year (parse-integer year) 2002))
-	(setf month (if month (parse-integer month) 1))
+	(setf year  (when year (parse-integer year)))
+	(setf month (when month (parse-integer month)))
+	(unless (and year month)
+	  (multiple-value-bind (s mn h d m y) (decode-universal-time (get-universal-time))
+	    (setf year (or year y))
+	    (setf month (or month m))))
 	(with-output-to-request (request)
 	  (html::html-to-stream
 	   *request-stream*
@@ -491,7 +504,7 @@
 	     #+nil(:h1 (:translate '(:en "Confirm Delete" :fr "Confirmation suppression")))
 	     (:jscript "function f42(d){window.opener.fire_onclick('" item "',d);"
 		       "window.close();};")
-	     (:h1 (:translate '(:en "Do you whant to remove this object:"
+	     (:h1 (:translate '(:en "Do you want to remove this object:"
 			       :fr "Voulez vous vraiment supprimer cet objet:"))
 		 (:h1
 		  (html:esc (meta:short-description (object-to-delete dispatcher)))))

@@ -100,7 +100,7 @@ function SendLink(v456, v457, v458)
   if (!v688) return;
   document.body.insertAdjacentHTML( 'afterBegin', '<span id=\"SPAN' + containerName + '\"></span>' );
   var span = document.all("SPAN" + containerName);
-  var html = '<iframe name=\"' + containerName + '\" src=\"\"></iframe>';
+  var html = '<iframe name=\"' + containerName + '\" src=\"javascript:void;\"></iframe>';
   span.innerHTML = html;
   span.style.display = 'none';
   container = window.frames[containerName];

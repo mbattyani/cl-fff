@@ -103,9 +103,9 @@
 	  (type (getf plist :value-type t)))
       (when (eq initform :no-initform)
 	(setf initform  (cond
-			  ((eq type :date) (get-universal-time))
-			  ((eq type :universal-time) (get-universal-time))
-			  ((eq type :time-of-day) (get-universal-time))
+			  ((eq type :date) '(get-universal-time))
+			  ((eq type :universal-time) '(get-universal-time))
+			  ((eq type :time-of-day) '(get-universal-time))
 			  ((eq type 'pathname) #P"")
 			  ((eq type :decimal) 0.0)
 			  ((safe-subtypep type 'string) "")

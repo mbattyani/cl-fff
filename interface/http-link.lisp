@@ -234,13 +234,14 @@
 
 (defun connect-tag (attributes forms)
   (destructuring-bind (&optional views) forms
-    `(html::optimize-progn
-      ,(html::html-gen `(:jscript "window.setInterval('F6451()', 6000);"
-			 (html:ffmt "v686=~s;"
-			  (url-pull (make-instance 'http-link :session *session* :views ,views)))))
-      ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
-			  :src "" :scrolling "0" :style "width:1px;height:1px;")))
-      ,(html::html-gen `(:jscript "F6451();")))))
+    `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
+      (html::optimize-progn
+       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 6000);"
+			  (html:ffmt "v686=~s;" http-link-url)))
+       ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
+			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
+;       ,(html::html-gen `(:jscript "F6451();"))))
+    ))))
 
 ;example : :connect
 (html::add-func-tag :connect 'connect-tag)
