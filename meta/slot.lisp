@@ -108,11 +108,11 @@
 ;; Called when the class is being made, to choose the metaclass of a
 ;; given direct slot.  It should return the class of slot definition
 ;; required.
-#-lispworks4.3
+#-(or lispworks4.3 lispworks4.4)
 (defmethod direct-slot-definition-class ((slotd fc-class) stored-specification)
   (find-class 'stored-direct-slot-definition)) ;; Use stored-direct-slot-definition
 
-#+lispworks4.3
+#+(or lispworks4.3 lispworks4.4)
 (defmethod direct-slot-definition-class ((slotd fc-class) &rest initargs)
   (find-class 'stored-direct-slot-definition))
 
@@ -142,11 +142,11 @@
 
 ;; Called then the class is being finalized, to choose the metaclass
 ;; of a given effective slot.  It should return the class of slot definition required.
-#-lispworks4.3
+#-(or lispworks4.3 lispworks4.4)
 (defmethod clos:effective-slot-definition-class ((class fc-class) direct-slot-definitions)
   (find-class 'stored-effective-slot-definition)) ;; Use stored-effective-slot-definition
 
-#+lispworks4.3
+#+(or lispworks4.3 lispworks4.4)
 (defmethod clos:effective-slot-definition-class ((class fc-class) &rest initargs)
   (find-class 'stored-effective-slot-definition))
 

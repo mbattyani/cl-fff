@@ -1,0 +1,33 @@
+-*- text -*-
+
+acl-compat is a library that implements parts of the Allegro Common
+Lisp (ACL) API for areas that are not covered by the ANSI Common Lisp
+standard itself (e.g. sockets, threading).  The motivation for
+creating and maintaining acl-compat is to get the web server
+AllegroServe (that was released by Franz Inc under the LLGPL) running
+on a wide range of Lisp implementations, with as few source changes to
+its core code as possible.
+
+acl-compat names its packages by prepending the corresponding ACL
+package name with the string "ACL-COMPAT.".  For example, the ACL
+threading API symbols are exported from the package ACL-COMPAT.MP.
+Ideally, ACL-specific code could run on any supported Lisp
+implementation only by changing package references.  
+
+Of course, the present situation is not ideal.  :( Functionality is
+only implemented on an as-needed basis, implemented functions don't
+handle all argument combinations properly, etc.  On the other hand,
+enough is implemented to support a web and application server that
+exercises a wide range of functionality (client and server sockets,
+threading, etc.).
+
+
+To load acl-compat:
+
+- install asdf (see < http://www.cliki.net/asdf >) and make sure it's
+  loaded.
+
+- load acl-compat.asd
+
+- evaluate (asdf:operate 'asdf:load-op :acl-compat)
+

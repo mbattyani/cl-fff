@@ -104,7 +104,7 @@
 	(unless (registered *http-link*) (register-http-link *http-link*))
 	(setf (last-access-time *http-link*) *session-timer-time*)
 	(html:html-to-stream s
-	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',4000)")))
+	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',2000)")))
 		     (:p "no-refresh")
 		     (:jscript (send-packets *http-link*)
 			       "parent.F6541();"
@@ -236,7 +236,7 @@
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
       (html::optimize-progn
-       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 6000);"
+       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 5000);"
 			  (html:ffmt "v686=~s;" http-link-url)))
        ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
 			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
@@ -261,7 +261,7 @@
 	(unless (registered interface) (register-http-link interface))
 	(setf (last-access-time interface) *session-timer-time*)
 	(html:html-to-stream s
-	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',3000)")))
+	     (:html ((:body :optional (:onload (unless no-refresh "setTimeout('location.reload(true)',2000)")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
 			       "parent.F6541();"

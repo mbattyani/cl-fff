@@ -97,6 +97,8 @@
   (log-message (format nil "process-apache-command ~s~%" command))
   (with-backtrace (*error-log-file*) (%process-apache-command% command)))
 
+(defvar *reply-protocol* nil)
+
 (defun %process-apache-command% (command)
   (incf *request-counter*)
   (let* ((request (make-instance 'http-request :command command))

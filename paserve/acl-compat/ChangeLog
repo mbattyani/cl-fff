@@ -1,0 +1,337 @@
+2004-02-17  Rudi Schlatte  <rudi@SLAW40.kfunigraz.ac.at>
+
+	* acl-excl-common.lisp (match-regexp): Make :return :index return
+	values same as ACL
+
+2004-02-16  Rudi Schlatte  <rudi@62-99-252-74.C-GMITTE.Xdsl-line.inode.at>
+
+	* acl-compat.asd: 
+	- Add some meta-information to system definition
+	- Fix bug: all but the first :depends-on arguments are silently
+	ignored.  :/
+
+2004-02-16  Rudi Schlatte  <rudi@constantly.at>
+
+	* packages.lisp: Remove references to nregex package.
+
+	* acl-excl-common.lisp (match-regexp, compile-regexp): Implement
+	using cl-ppcre.
+
+	* acl-compat.asd: Eliminate meta and nregex, use cl-ppcre instead.
+
+2004-02-14  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd: Make Gray streams loading on cmucl a little bit
+	saner (but only a little bit)
+
+	* chunked-stream-mixin.lisp: Don't add to *features*, remove
+	provide form.
+
+2004-02-08  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd: Introduce dependency on puri, remove meta and
+	uri.lisp
+
+2004-02-02  Rudi Schlatte  <rudi@constantly.at>
+
+	* cmucl/acl-mp.lisp (process-run-function): Give the new process
+	a run reason, so that it doesn't hang from the start.
+
+	* cmucl/acl-socket.lisp (get-fd): Added method for server-socket.
+
+2004-01-28  Rudi Schlatte  <rudi@constantly.at>
+
+	* packages.lisp: excl -> acl-compat.excl
+
+	* lispworks/acl-socket.lisp: ditto.
+
+2004-01-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* chunked-stream-mixin.lisp: replace excl: package prefix with
+	acl-compat.excl:
+
+2004-01-26  Rudi Schlatte  <rudi@constantly.at>
+
+	* mcl/acl-excl.lisp (fixnump): new function.
+
+	* packages.lisp (:acl-compat.excl): Remove "excl" nickname.
+
+	* clisp/acl-excl.lisp (fixnump): new function.
+
+2004-01-24  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-excl-common.lisp (string-to-octets): null-terminate vector
+	when asked to.
+
+	* cmucl/acl-excl.lisp, lispworks/acl-excl.lisp, mcl/acl-excl.lisp,
+	sbcl/acl-excl.lisp, scl/acl-excl.lisp: Move write-vector,
+	string-to-octets to commmon file.
+
+	* acl-excl-common.lisp: Moved write-vector, string-to-octets from
+	implementation-specific files.
+
+2004-01-19  Rudi Schlatte  <rudi@constantly.at>
+
+	* scl/acl-excl.lisp, sbcl/acl-excl.lisp, mcl/acl-excl.lisp,
+	lispworks/acl-excl.lisp, cmucl/acl-excl.lisp,
+	clisp/acl-excl.lisp: Remove common functionality from
+	implementation-specific files, dammit!
+
+	* acl-compat.asd: Added acl-excl-common.
+
+	* acl-excl-common.lisp: New file.
+
+2004-01-18  Rudi Schlatte  <rudi@62-99-252-74.C-GMITTE.Xdsl-line.inode.at>
+
+	* acl-excl-corman.lisp (intern*), sbcl/acl-excl.lisp (intern*),
+	mcl/acl-excl.lisp (intern*), lispworks/acl-excl.lisp (intern*),
+	cmucl/acl-excl.lisp (intern*), clisp/acl-excl.lisp (intern*),
+	scl/acl-excl.lisp (intern*): Don't upcase symbol before interning
+	(thanks to Marco Baringer, whose code was broken by this).  Now
+	I'm motivated to factor out common code from all the backends ...
+
+	* cmucl/acl-mp.lisp (apply-with-bindings): Fix "How did this ever
+	work" typo; thanks to Marco Baringer.
+
+2004-01-11  Rudi Schlatte  <rudi@constantly.at>
+
+	* sbcl/acl-socket.lisp (make-socket): Handle :local-port nil,
+	don't bind socket in that case (let os choose a port)
+
+2004-01-11  Rudi Schlatte  <rudi@constantly.at>
+
+	* packages.lisp (defpackage acl-compat.excl): Export some symbols
+	for mcl, too
+
+	* mcl/acl-excl.lisp (run-shell-command): Implement (largely
+	untested for now, needed for cgi support)
+
+	* mcl/acl-sys.lisp (command-line-argument,
+	command-line-arguments): Implement for OpenMCL
+
+	* mcl/acl-mp.lisp (wait-for-input-available): Implement.  Needed
+	for cgi support.
+
+	* mcl/acl-socket-openmcl.lisp (server-socket): Remove :type slot
+	argument.
+
+	* sbcl/acl-socket.lisp (make-socket): Add reuse-address argument.
+
+	* cmucl/acl-socket.lisp (make-socket): Add reuse-address argument.
+
+	* acl-compat.asd: Load sb-posix for sbcl.
+
+2003-12-15  Rudi Schlatte  <rudi@constantly.at>
+
+	NOTE: this checkin has a reasonable chance of breaking (and mcl
+	(not openmcl))
+	
+	* mcl/acl-socket-openmcl.lisp: Remove package definition,
+	implement chunked transfer encoding (accepting a speed loss in the
+	process)
+
+	* mcl/acl-excl.lisp, mcl/acl-mp.lisp, mcl/acl-sys.lisp: remove
+	package definitions
+
+	* uri.lisp: deftype also at load time; openmcl breaks otherwise
+
+	* packages.lisp: mcl doesn't have stream-(read,write)-sequence
+
+	* lw-buffering.lisp: formatting frobs.
+
+	* acl-compat.asd: Merge mcl defsystem with the others.
+
+	* sbcl/acl-socket.lisp: Use acl-compat.socket package name.
+	
+2003-12-02  Rudi Schlatte  <rudi@SLAW40.kfunigraz.ac.at>
+
+	* meta.lisp (enable-meta-syntax): Save current readtable before
+	installing *meta-readtable*.
+
+2003-12-01  Rudi Schlatte  <rudi@constantly.at>
+
+	* chunked-stream-mixin.lisp: Merge Lispworks patch from Edi Weitz
+	(paserve-help 2003-11-28)
+
+2003-11-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* chunked-stream-mixin.lisp (gray-stream:stream-fill-buffer):
+	LispWorks refill-buffer does not always return the amount of
+	bytes read (reported by Edi Weitz to paserve-discuss
+	2003-11-26).  Treat its return value as a boolean.
+
+	* lw-buffering.lisp (stream-fill-buffer): Remove cmucl-specific
+	read-n-bytes call because it does block after all :(
+
+	* chunked-stream-mixin.lisp (gray-stream:stream-fill-buffer): Fix
+	for Lispworks client mode contributed by Edi Weitz to
+	paserve-discuss list on 2003-11-25
+
+	* sbcl/acl-mp.lisp: Single-threaded "implementation" of process-name
+
+2003-09-19  Rudi Schlatte  <rudi@constantly.at>
+
+	* sbcl/acl-mp.lisp: Merged threading patch from Brian Downing
+	(posted to portableaserve-discuss 2003-09-12)
+
+	* clisp/acl-excl.lisp, clisp/acl-socket.lisp: Eliminate compile
+	failures, activate chunked support for clisp (forwarded by Kevin
+	M. Rosenberg from Debian)
+
+2003-08-31  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd: Remove old cmu-read-sequence cruft, bug is fixed
+	in reasonably recent cmucl
+
+	* lw-buffering.lisp (stream-fill-buffer): Use package-external
+	symbol that doesn't break on CVS cmucl
+
+2003-08-30  Rudi Schlatte  <rudi@62-99-252-74.C-GMITTE.Xdsl-line.inode.at>
+
+	* cmucl/acl-socket.lisp (make-socket): set reuse-address option.
+
+	* lw-buffering.lisp (stream-fill-buffer): Implement b/nb semantics
+	for cmucl as well.  client mode should now neither hang trying to
+	read closed streams nor give spurious errors for slow servers.
+
+2003-08-17  Rudi Schlatte  <rudi@constantly.at>
+
+	* sbcl/acl-mp.lisp (with-timeout): Eliminate unused-variable
+	warning.
+
+2003-05-13  Rudi Schlatte  <rudi@constantly.at>
+
+	* cmucl/acl-sys.lisp, cmucl/acl-socket.lisp, cmucl/acl-excl.lisp:
+	Use correct package names in in-package forms (Reported by Johan
+	Parin)
+
+	* packages.lisp (acl-compat.system): Add nickname acl-compat.sys,
+	remove commented-out nicknames.
+
+	* lispworks/acl-sys.lisp: push MSWINDOWS onto *features* if
+	appropriate (Thanks to Alain Picard for the report).
+
+2003-05-11  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd: Don't load read-/write-sequence patches on cmucl
+	18e.
+
+2003-05-06  Rudi Schlatte  <rudi@constantly.at>
+
+	* lw-buffering.lisp (stream-fill-buffer): Implement
+	blocking/non-blocking semantics (read at least one byte per
+	fill-buffer call).  Otherwise we'd get spurious EOFs with slow
+	servers.
+
+	* chunked-stream-mixin.lisp (gray-stream:stream-fill-buffer):
+	Return a sensible value (amount of bytes that can be read before
+	next call to fill-buffer).
+
+2003-05-03  Rudi Schlatte  <rudi@constantly.at>
+
+	* chunked-stream-mixin.lisp (gray-stream:stream-fill-buffer): Make
+	input-chunking work, refactor somewhat to make all slot changes in
+	one place.
+
+2003-05-02  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd (acl-compat): Current cmucl versions handle Gray
+	streams in (read,write)-sequence -- remove hack
+
+2003-04-30  Rudi Schlatte  <rudi@constantly.at>
+
+	* sbcl/acl-mp.lisp (with-timeout): Use timeout symbols from the
+	ext package; latest cvs exports them
+
+	* cmucl/acl-mp.lisp: Use acl-compat.mp package name.
+
+	* acl-compat.asd et al: The Great Renaming: begin move of
+	implementation-dependent files into subdirectories
+
+2003-04-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-socket-sbcl.lisp: Implemented peername lookup (by storing
+	the socket in the plist of the bivalent stream object for now)
+
+2003-04-26  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-mp-sbcl.lisp: Add initial support for multi-threaded sbcl
+
+2003-04-08  Rudi Schlatte  <rudi@constantly.at>
+
+	* uri.lisp (render-uri): Reinstate with-output-to-string logic;
+	render-uri has to handle nil as a stream value.
+
+2003-04-03  Rudi Schlatte  <rudi@constantly.at>
+
+	* uri.lisp (render-uri, print-object): Further frob printing of
+	URIs, inspired by patch of Harley Gorrell
+
+2003-04-02  Rudi Schlatte  <rudi@constantly.at>
+
+	* uri.lisp (render-uri): Fix printing URIs in the presence of #\~
+	(Thanks to Harley Gorrell)
+
+2003-03-24  Rudi Schlatte  <rudi@constantly.at>
+
+	* lw-buffering.lisp (stream-write-buffer, stream-flush-buffer):
+	Eliminate "wait" parameter to regain api-compatibility with lispworks
+	(stream-finish-output, stream-force-output): Call (finish|force)-output
+	here instead of using "wait" parameter of stream-flush-buffer
+
+	* chunked-stream-mixin.lisp: some documentation added, formatting,
+	eliminate use of "wait" parameter on stream-write-buffer etc.
+
+2003-02-28  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-socket-sbcl.lisp: 
+	(remote-host, remote-port, local-host, local-port): Change return
+	value to something convertible to an (invalid) inet address
+
+	* acl-compat.asd, packages.lisp: Support sbcl 0.7.13 single-threaded
+
+2002-12-26  Rudi Schlatte  <rudi@constantly.at>
+
+	* lw-buffering.lisp (write-elements): end argument value can be
+	nil (fix contributed by Simon Andras 2002-12-24)
+
+	* meta.lisp: Switch to new-style eval-when times
+
+	* lw-buffering.lisp: Switch to new-style eval-when times
+	(defstruct buffer-state): Add type declarations
+	(stream-fill-buffer): Remove bug for non-cmucl case (need
+	unblocking read-sequence)
+
+	* chunked-stream-mixin.lisp: Add defgeneric forms
+
+	* acl-socket-sbcl.lisp: Enable chunked transfer encoding support
+
+2002-12-23  Rudi Schlatte  <rudi@constantly.at>
+
+	* packages.lisp, acl-sys-sbcl.lisp: Various sbcl fixes
+
+2002-12-18  Rudi Schlatte  <rudi@constantly.at>
+
+	* packages.lisp: Add package definition of
+	de.dataheaven.chunked-stream-mixin, remove nicknames for
+	acl-compat.system
+
+2002-12-17  Rudi Schlatte  <rudi@constantly.at>
+
+	*  (Module): Added first stab at sbcl support (some stub
+	functions, basic page serving works)
+
+2002-12-13  Rudi Schlatte  <rudi@constantly.at>
+
+	* lw-buffering.lisp (stream-write-sequence): Make publish-multi
+	work (provide default value for start arg).
+
+	* acl-excl-cmu.lisp (write-vector): ditto.
+
+2002-12-03  Rudi Schlatte  <rudi@constantly.at>
+
+	* acl-compat.asd: load lw-buffering in every implementation except
+	lispworks
+
+	* packages.lisp: define gray-stream package for every
+	implementation

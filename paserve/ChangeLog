@@ -1,0 +1,173 @@
+2004-10-01  Kevin Rosenberg <kevin@rosenberg.net>
+	* acl-compat/mcl/acl-mp: Apply portability patch from Gary Byers
+	to fix filesys-inode for linux
+	
+2004-09-24  Kevin Rosenberg <kevin@rosenberg.net>
+	* acl-compat/sbcl/acl-mp.lisp: Apply patch from Gabor Melis
+	to fix type [portableaserve-discuss@lists.sourceforge.net].
+	
+2004-08-31  Kevin Rosenberg <kevin@rosenberg.net>
+	* Fix ipaddr-to-hostname for SBCL
+	* Fix for request-query-value for SBCL
+	
+2004-08-30  Kevin Rosenberg <kevin@rosenberg.net>
+        * Fixes for compilation on SBCL
+	* Add support for :cookie-domain for webactions
+	
+2004-08-04  Kevin Rosenberg <kevin@rosenberg.net>
+	* Commit patch from Chaskiel M Grundman <cg2v@andrew.cmu.edu>
+	for better Allegro support
+	
+2004-06-09  Kevin Rosenberg <kevin@rosenberg.net>
+	* Commit patch from Nick Levin addressing compilation on Lispworks
+	
+2004-04-26  Kevin Rosenberg <kevin@rosenberg.net>
+        * aserve/webactions: Commit patch, with modifications, from
+	Ivan Toshkov
+	* aserve/load.cl: Add implemenatation of compile-file-if-needed
+
+2004-02-16  Rudi Schlatte  <rudi@constantly.at>
+
+	* libs/cl-ppcre/: Import Edi Weitz's cl-ppcre library.
+
+	* INSTALL.lisp: load it.
+	
+	* aserve/test/t-aserve.cl (test-publish-directory): Correct
+	directory regexp (put some more leaning toothpicks in)
+
+	* aserve/main.cl: Remove meta-based date-to-universal-time
+	function; the shiny new match-regexp can handle these expressions.
+
+2004-02-08  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/webactions/webact.cl, aserve/webactions/clpage.cl,
+	aserve/test/t-aserve.cl, aserve/proxy.cl, aserve/main.cl,
+	aserve/log.cl, aserve/chat.cl, aserve/client.cl, aserve/cgi.cl:
+	Use package puri throughout.
+
+	* INSTALL.lisp: Removed warnings for loading the provided-by-us
+	versions of asdf et al.  Load puri library before acl-compat.
+	Remove MCL-specific handling.
+
+2004-01-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* INSTALL.lisp: clean up a bit, merge sbcl, cmu and lispworks
+	loading code.
+
+	* Replaced package prefix excl: with acl-compat.excl: throughout.
+	
+	* aserve/main.cl (connection-reset-error): Hackishly implement for
+	OpenMCL and conditionalize allegro-specific function call -- this
+	should fix stray hangs (caused by threads wanting to enter the
+	debugger) on all platforms.
+
+2004-01-21  Rudi Schlatte  <rudi@constantly.at>
+
+	* contrib/asdf.lisp: New upstream version.
+
+2004-01-11  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/cgi.cl: Frob package references to acl-compat ones.
+
+	* aserve/main.cl: Added setuid / setgid for sbcl.
+
+2003-12-02  Rudi Schlatte  <rudi@constantly.at>
+
+	* Update to upstream version 1.2.33
+
+2003-12-01  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/log.cl (log-request): Don't output request string via format.
+
+2003-11-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/test/t-aserve.cl: Don't assume that long-site-name
+	returns a FQDN; better fixes than just using "localhost" welcome
+	(but these will be implementation-specific, I fear...)
+
+2003-11-06  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/htmlgen/htmlgen.cl (html-standard-print): Fix bug
+	reported by Sean Ross to portableaserve-help (2003-11-06): output
+	the closing tags to the given stream, not standard-output
+
+2003-08-31  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/test/t-aserve.cl: First steps for activating test code,
+	using kmr's port of Franz's tester
+
+2003-04-27  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/parse.cl (read-headers-into-buffer): (Finally) merge
+	debug code fix from Walter C. Pelissero
+
+2003-04-02  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/example.cl: Prettified aserve/example.cl: make sensible
+	start-server, start-simple-server functions (Allegro's original
+	examples are in aserve/examples/ nowadays)
+
+2003-03-24  Rudi Schlatte  <rudi@constantly.at>
+
+	* aserve/client.cl (do-http-request): Restore :format :text
+	behavior (broke this last summer.. sorrysorrybowbow)
+
+2003-02-28  Rudi Schlatte  <rudi@constantly.at>
+
+	* INSTALL.lisp: Support sbcl 0.7.13 single-threaded
+
+2002-07-19  Rudi Schlatte  <rudi@constantly.at>
+
+	* contrib/lsp.lisp (Module): Lisp Server Pages, contributed by
+	John Wiseman via http://lemonodor.com/archives/000128.html
+
+	* contrib/session.lisp (Module): Session support, contributed by
+	Brendan Burns to Franz's opensource list
+
+2002-07-07  Rudi Schlatte  <rudi@constantly.at>
+
+* cmucl version now uses asdf instead of mk-defsystem:
+
+** Added directory contrib, contrib/asdf.lisp
+
+** Added acl-compat/acl-compat.asd, aserve/aserve.asd,
+   aserve/htmlgen/htmlgen.asd (thanks to David Lichteblau for the asd
+   files)
+
+** Updated README.cmucl, README
+
+* Changed client.cl to use http/1.0 (Remember to revert this when chunking
+  is implemented!) (Thanks to David Lichteblau for bug report & patch)
+
+Changes in Portable AllegroServe 1.2.5a (2001-08-30)
+- Chunking implemented for Lispworks.
+- Fixed problem in Lispworks port with accepting too many connections
+  (and consequently running out of file descriptors) under heavy load.
+- Incorporated changes in AllegroServe between versions 1.2.3 and 1.2.5.
+
+Changes in Portable AServe 1.2.3b (09.08.2001)
+- Fixed bug with POST requests
+- General code cleanup
+- implemented some missing ACL-COMPAT functions
+
+Changes in AServe for LW 1.2.3a (06.08.2001)
+- Rudolf Schlatte's changes for supporting CMUCL
+  merged.
+- Several critical bugs fixed (like the lockup of worker-threads
+  that occured on higher load).
+  (Thanks go to Vebjorn Ljosa for finding and fixing this and other
+   critical bugs)
+- Updated Portable AllegroServe to the changes in Franz AllegroServe 1.2.3
+
+Changes in AServe for LW 1.1.41b (02.06.2001)
+- Fixed reloading of pages
+  Wade Humeniuk kindly contributed a DATE-TO-UNIVERSAL-TIME
+  function that doesn't use MATCH-REGEXP.
+
+Changes in ACL-COMPAT (02.06.2001)
+- MATCH-REGEXP got a Keyword argument :return
+- Much improved MP:WITH-TIMEOUT using LispWorks timers and not 
+  a new process for each timer.	
+- Fixed a bug in scan-macros.lisp where complementing of charsets
+  did not really work.
+

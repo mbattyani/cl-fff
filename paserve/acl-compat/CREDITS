@@ -1,0 +1,59 @@
+-*- text -*-
+
+CREDITS; a.k.a. the history of Portable AllegroServe
+
+This was written by Rudi Schlatte, who (knowing himself) is sure he
+forgot some important contributors.  Please mail me (rudi at
+constantly.at) to point out any inconsistencies, don't be shy!
+
+* Corman Lisp
+
+The code that started it all.  Chris Double took Allegro's
+open-sourced code, got it to run on Corman Lisp and released the
+code..  After Portable AllegroServe got off the ground, he re-arranged
+his port so that it fit in the structure of acl-compat.
+
+* Xanalys LispWorks
+
+Jochen Schmidt ported Chris Double's AllegroServe port to LispWorks,
+laid the groundwork for the "Portable" part of paserve and started
+the SourceForge project.
+
+* cmucl
+
+cmucl was the third Lisp implementation to run Portable
+AllegroServe.  The port was done by Rudi Schlatte during his military
+service out of sheer boredom.
+
+* Digitool MCL 
+
+John DeSoi contributed this port and kept it working when the antics
+of other developers broke his code once again.
+
+* OpenMCL
+
+Also done by John DeSoi.  Gary Byers himself later contributed code to
+support OpenMCL's OS-level threads (OpenMCL version 14 and up) in an
+efficient way.
+
+* sbcl
+
+This port was done by Rudi Schlatte, using Daniel Barlow's sbcl
+multiprocessing code in the McCLIM GUI project as inspiration.
+
+* clisp
+
+Also by Rudi Schlatte.  Since clisp has no support for threads,
+neither does acl-compat on this platform.  Code can still be
+compiled, however.
+
+* Scieneer Common Lisp
+
+This port was contributed by Douglas Crosher.
+
+* Allegro Common Lisp
+
+It may seem strange to implement an API on top of itself, but Kevin
+Rosenberg's implementation makes it possible to run systems that use
+acl-compat on ACL itself without source changes.
+

@@ -1,10 +1,18 @@
 (in-package interface)
 
 (defun write-header-line (socket key value)
-  (write-string key socket)
-  (write-char #\NewLine socket)
-  (write-string value socket)
-  (write-char #\NewLine socket))
+  (if *reply-protocol*
+      (progn
+	(write-string key socket)
+	(write-string ": " socket)
+	(write-string value socket)
+	(write-char #\Return socket)
+	(write-char #\NewLine socket))
+      (progn
+	(write-string key socket)
+	(write-char #\NewLine socket)
+	(write-string value socket)
+	(write-char #\NewLine socket))))
 
 (defclass http-request ()
   ((command :initform nil :accessor command :initarg :command)
@@ -49,22 +57,34 @@
 
 (defun write-header (request socket)
   (unless (header-sent request)
-    (write-header-line socket "Status" (status request))
+    (if *reply-protocol*
+	(progn 
+	  (write-string "HTTP/1.0 " socket)
+	  (write-string (status request) socket)
+	  (write-char #\Return socket)
+	  (write-char #\NewLine socket))
+	(write-header-line socket "Status" (status request)))
     (write-header-line socket "Content-Type" (content-type request))
     (write-header-line socket "Connection" (if (keep-alive request) "Keep-Alive" "Close"))
     (when (cache-control request)
       (write-header-line socket "Cache-Control" (cache-control request)))
-    (when (content-length request)
-      (write-string "Content-Length" socket)
-      (write-char #\NewLine socket)
-      (html::fast-format socket "~d" (content-length request))
-      (write-char #\NewLine socket))
-    (write-header-line socket "Keep-Socket"
-		       (if (and (content-length request)(keep-socket request)) "1" "0"))
+    (unless *reply-protocol*
+      (when (content-length request)
+	(write-string "Content-Length" socket)
+	(write-char #\NewLine socket)
+	(html::fast-format socket "~d" (content-length request))
+	(write-char #\NewLine socket))
+      (write-header-line socket "Keep-Socket"
+			 (if (and (content-length request)(keep-socket request)) "1" "0")))
     (loop for (name . value) in  (header-alist request)
 	  do (write-header-line socket name value))
-    (write-string "end" socket)
-    (write-char #\NewLine socket)
+    (if *reply-protocol*
+	(progn
+	  (write-char #\Return socket)
+	  (write-char #\NewLine socket))
+	(progn
+	  (write-string "end" socket)
+	  (write-char #\NewLine socket)))
     (setf (header-sent request) t)))
 
 (defvar *requests* nil)
@@ -98,7 +118,8 @@
   (write-header request socket)
   (when (and (content-value request)(not (content-sent request)))
     (write-content-value (content-value request) socket)
-    (setf *close-apache-socket* (not (and (content-length request)(keep-socket request))))
+    (setf *close-apache-socket* (or *reply-protocol*
+				    (not (and (content-length request)(keep-socket request)))))
     (setf (content-sent request) t)))
 
 (defvar *request-stream* nil)
