@@ -107,6 +107,14 @@
 (defmethod meta::short-description ((obj named-object-mixin))
   (if (name obj) (name obj) "(Pas de nom)"))
 
+(defmethod meta::short-description ((obj slot-info))
+  (format nil "~a (~a ~a)"
+	  (if (name obj) (name obj) "<Pas de nom>")
+	  (value-type obj)
+	  (if (and (eq (value-type obj) :object)(object-type obj))
+	      (name (object-type obj))
+	      "")))
+
 (defun make-choice (c)
   `(list ,(read-from-string (choice-value c))
     ,(make-translation (name c))))
