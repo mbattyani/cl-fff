@@ -187,7 +187,7 @@
       (format s "Informations supplémentaires pour le slot ~a~%~%" (slot-definition-name slot)))
     (if (list-of-values slot)
 	(progn
-	  (format s "CREATE TABLE ~a_~a (parentid BIGINT NOT NULL, ~a ~a NOT NULL, ordernb INTEGER) WITHOUT OIDS~%~%"
+	  (format s "CREATE TABLE ~a_~a (~%     parentid BIGINT NOT NULL,~%     ~a ~a NOT NULL,~%     ordernb INTEGER) WITHOUT OIDS~%~%~%"
 		  (sql-name class)(sql-name slot)
 		  (if (subtypep (value-type slot) 'root-object) "id" "value")
 		  (compute-sql-type slot))
