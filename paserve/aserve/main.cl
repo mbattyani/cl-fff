@@ -1,4 +1,4 @@
-;; -*- mode: common-lisp; package: net.aserve -*-
+;; -*- mode: lisp; package: net.aserve -*-
 ;;
 ;; main.cl
 ;;

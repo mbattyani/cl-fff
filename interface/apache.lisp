@@ -6,7 +6,6 @@
 (defvar *apache-socket* nil)
 (defvar *apache-nb-use-socket* 0)
 (defvar *close-apache-socket* nil)
-;(defvar *error-log-file* nil);#P"~/error-log.txt") ;put nil to fire the debugger instead of writing the error
 (defvar *ignore-errors* nil)
 
 (defun make-apache-instream (handle)
@@ -58,44 +57,9 @@
 		  do (read-char *apache-socket*))))))
       header)))
 
-(defun dump-error-backtrace (e)
-  (with-standard-io-syntax
-      (with-open-file (*debug-io* *error-log-file* :direction :output
-				  :if-exists :append :if-does-not-exist :create)
-	(let ((*print-readably* nil)
-	      (*print-level* nil))
-	  (format *debug-io* "~%~%****************************************************~%")
-	  (write-standard-time :stream *debug-io*)
-	  (format *debug-io* "Error : ~a~%" e)
-	  (format *debug-io* "****************************************************~%")
-	  (dbg:with-debugger-stack ()
-	    (dbg:bug-backtrace nil :printer-bindings '((*print-level*)(*print-length* . 100))))))))
-
-(defun call/backtrace (fn &optional (backtrace t))
-  (declare (dynamic-extent fn)
-	   (type function fn))
-  (if backtrace
-      (ignore-errors
-	(handler-bind
-	    ((error #'(lambda (e)
-			(dump-error-backtrace e))))
-	  (funcall fn)))
-      (funcall fn)))
-
-(defmacro with-backtrace ((&optional (backtrace t)) &body forms)
-  `(let ((.fn. #'(lambda ()
-		   ,@forms)))
-    (declare (dynamic-extent .fn.))
-    (call/backtrace .fn. ,backtrace)))
-
 (defun process-apache-command (command)
   (log-message (format nil "process-apache-command ~s~%" command))
   (util:with-logged-errors () (%process-apache-command% command)))
-
-#+nil
-(defun process-apache-command (command)
-  (log-message (format nil "process-apache-command ~s~%" command))
-  (with-backtrace (*error-log-file*) (%process-apache-command% command)))
 
 (defvar *reply-protocol* nil)
 
