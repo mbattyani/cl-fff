@@ -213,7 +213,7 @@ rankdir=LR;
 	(dolist (class (classes group))
 	  (print-class-source s class)))
       (format s "~%" (package-name *package*)))
-    (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
+    #+nil(interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
 
 (defun view-group-classes-source (group &optional pathname)
   (let* ((*package* (ensure-package (project-package (project group))))

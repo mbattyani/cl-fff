@@ -183,4 +183,4 @@
 	      (mapcar 'name (remove-if-not 'instanciable classes)))
       (format s "~%~{(~a store :modify-tables)~%~}~%" fn-names)
       (format s "~%~{(~a store :modify-data)~%~})~%" fn-names))
-    (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
+    #+nil(interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id))))
