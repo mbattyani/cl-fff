@@ -275,7 +275,7 @@
 		 (list "Type d'objet" (name (object-type slot))
 		       "Texte FR si vide" (french (void-link-text slot))
 		       "Texte EN si vide" (english (void-link-text slot))
-		       "Peux créer nouvel obj." (yes-no (can-create-new-object slot))
+		       "Peut créer nouvel obj." (yes-no (can-create-new-object slot))
 		       "Créer objet valeur" (yes-no (create-new-object slot))
 		       "Fn pour obtenir obj." (get-object-fn slot)
 		       "Fn à appeler sur new obj." (process-new-object-fn slot)
@@ -840,36 +840,45 @@
 	  (pdf:write-document file))))))
 
 (defun french-doc-help (project)
-  (tt::with-text-compilation ()
+  (tt::with-text-compilation
     (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 16 :top-margin 20)
 		  "Description de la documentation")
     (tt::mark-ref-point :help)
     (tt:hrule :dy 2)
-    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :top-margin 20)
-		  "Cette documentation contient la description de l'intégralité des éléments constituant le projet "
+    (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :top-margin 20)
+		  "Préambule")
+    (tt:paragraph (:h-align :justified :font "Helvetica-Oblique" :font-size 12 :top-margin 15)
+		  "Le projet " (tt::put-string (name project)) " est basé sur le modèle classique des serveurs web applicatifs (modèle des trois tiers). Il se compose d'une base de données SQL (PostgreSQL), d'un framework applicatif (Plateforme applicative de Fractal Concept) et d'un serveur web (Apache 1.3). Le logiciel est utilisé par des postes clients légers (Internet Explorer). Cette documentation ne contient que les éléments spécifiques à l'application. Elle ne contient pas les documentations de la base de données, de la plateforme applicative et du serveur web.")
+    (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :top-margin 20)
+	 	  "Description")
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :top-margin 15)
+		  "Cette documentation contient la description de l'intégralité des éléments applicatifs constituant le projet "
 		  (tt::put-string (name project))"." :eol
 		  (tt::vspace 10)
 		  "Ces éléments sont:")
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les paramètres généraux du projet: Nom, description, version, date, groupes d'utilisateurs, groupes de classes, liste des fichiers sources avec leurs descriptions et le graphe des dépendance des fichiers entre eux, etc."
+		  "Les paramètres généraux du projet: Nom, description, version, date, groupes d'utilisateurs, groupes de classes, liste des fichiers sources avec leur description et le graphe des dépendance des fichiers entre eux, etc."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
 		  "Les groupes de classes d'objets avec leur listes de classes."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les classes d'objets avec, pour chacune des classes, leurs propriétés, le graphes des classes ayant un rapport avec cette classe, (super-classes, sous-classes, classes utilisées par et classes utilisant cette classe), les définitions SQL des tables dans la base de données et la description des slots (attributs) directs et hérités pour cette classe."
+		  "Les classes d'objets avec, pour chacune des classes, leurs propriétés, le graphes des classes ayant un rapport avec cette classe, (super-classes, sous-classes, classes utilisées par et classes utilisant cette classe) et la description des slots (attributs) directs et hérités pour cette classe."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les descriptions détaillés des slots des objets avec tous leurs propriétés, les contraintes sur les valeurs, les prédicats de sésactivation, etc."
+		  "Les définitions SQL des tables utilisées dans la base de données PostgresQL pour le stockage des données."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les fichiers sources sont inclus dans leur intégralité avec une colorisation syntaxique (keywords en rouge, commentaire en italique bleu, symboles standards en bleu foncé, etc.)"
+		  "Les descriptions détailleés des slots des objets avec toutes leurs propriétés, les contraintes sur les valeurs, les prédicats de désactivation, etc."
+		  )
+    (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
+		  "Les fichiers sources sont inclus dans leur intégralité avec une colorisation syntaxique (keywords en rouge, commentaires en italique bleu, symboles standard en bleu foncé, etc.)"
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
 		  "Un index permet de retrouver tous les noms des classes, des slots (avec leur classe) et des fonctions (aussi avec leur classe)."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les autres documents tels que les cahiers des charges et les descriptions fonctionnelles sont aussi inclus à la fin de cette documentation."
+		  "Les autres documents tels que les cahiers des charges et les descriptions fonctionnelles sont aussi inclus à la fin de cette documentation ou joints en tant que documents séparés."
 		  )
 
     (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :left-margin 0 :top-margin 20)
@@ -892,10 +901,10 @@
 	      "Type d'objet" "La classe du l'objet (si le type du slot est objet)"
 	      "Texte FR si vide" "Le texte français à mettre en l'abscence d'objet (si le type du slot est objet)"
 	      "Texte EN si vide" "Le texte anglais à mettre en l'abscence d'objet (si le type du slot est objet)"
-	      "Peux créer nouvel obj." "l'utilisateur habilité peux créer un nouvel objet dans ce slot (si le type du slot est objet)"
+	      "Peut créer nouvel obj." "l'utilisateur habilité peut créer un nouvel objet dans ce slot (si le type du slot est objet)"
 	      "Créer objet valeur" "Le système cré automatiquement l'objet contenu dans ce slot (si le type du slot est objet)"
 	      "Fn pour obtenir obj." "La fonction à appeller pour obtenir l'objet à mettre dans ce slot (si le type du slot est objet)"
-	      "Fn à appeler sur new obj." "La fonction à appeller (si elle est précisée) pour traiter l'objet retourné par la fonction précédente avant de mettre l'objet dans le slot. (si le type du slot est objet)"
+	      "Fn à appeler sur new obj." "La fonction à appeller (si elle est précisée) pour traiter l'objet retourné par la fonction précédente. La valeur retournée par cette fonction est mise dans le slot. (si le type du slot est objet)"
 	      "Titre FR pour dialog box de sélection" "Le titre français à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
 	      "Titre EN pour dialog box de sélection" "Le titre anglais à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
 	      "Texte FR pour dialog box de sélection" "Le texte français à mettre dans la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
@@ -904,9 +913,9 @@
 	      "Autre type" "Le nom du type Lisp de la valeur à mettre dans le slot (si le type du slot est autre type"
 	      "Enregistré dans base" "La valeur du slot doit être stockée dans la base de données"
 	      "Dans proxy" "La valeur du slot doit être stockée dans le proxy d'interface entre l'objet et sa représentation dans la base de données."
-	      "Indexé" "La colonne représantant le slot dans la base de donnée SQL doit être indexé"
-	      "Unique" "La colonne représantant le slot dans la base de donnée SQL doit être unique"
-	      "Ne pas afficher nuls" "Les valeurs nulle ne seront pas affichées (le champ sera vide dans l'interface)"
+	      "Indexé" "La colonne représentant le slot dans la base de donnée SQL doit être indexée"
+	      "Unique" "La colonne représentant le slot dans la base de donnée SQL doit être unique"
+	      "Ne pas afficher nuls" "Les valeurs nulles ne seront pas affichées (le champ sera vide dans l'interface)"
 	      "Valeur par défaut" "La valeur par défaut du slot au moment de la création d'un objet"
 	      "Unité" "L'unité de la valeur contenue dans le slot"
 	      "Visible par" "La liste des groupes d'utilisateurs habilités à voir ce slot"

@@ -122,6 +122,12 @@
 <HTML><HEAD></HEAD><BODY><H1>mod_lisp 2.0</H1><P>This is a constant html string sent by mod_lisp 2.0 + Lispworks + apache.  with content length</P></BODY></HTML>")
 	 (setf (content-length request) (length (content-value request)))))
 
+(add-named-url "/asp/aserve.html"
+   #'(lambda (request)
+	 (setf (content-value request)
+	       "<head><title>Welcome to Portable AllegroServe on LispWorks</title></head><body><center><img src=\"aservelogo.gif\"></center><h1>Welcome to Portable AllegroServe on LispWorks</h1><p>These links show off some of Portable AllegroServe's capabilities. </p><i>This server's host name is 127.0.0.1:2001</i><br>7 hits<p><b>Sample pages</b><br><a href=\"apropos\">Apropos</a><br><a href=\"pic\">Sample jpeg</a><br><a href=\"pic-redirect\">Redirect to previous picture</a><br><a href=\"pic-gen\">generated jpeg</a>- hit reload to switch images<br><a href=\"cookietest\">test cookies</a><br><a href=\"secret\">Test manual authorization</a> (name: <b>foo</b>, password: <b>bar</b>)<br><a href=\"secret-auth\">Test automatic authorization</a> (name: <b>foo2</b> password: <b>bar2</b>)<br><a href=\"local-secret\">Test source based authorization</a> This will only work if you can use http:://localhost ... to reach this page<br><a href=\"local-secret-auth\">Like the preceding but uses authorizer objects</a><br><a href=\"timeout\">Test timeout</a><br><a href=\"getfile\">Client to server file transfer</a><br><a href=\"missing-link\">Missing Link</a> should get an error when clicked</body>")
+	 (setf (content-length request) (length (content-value request)))))
+
 (add-named-url "/asp/unfixed.html"
    #'(lambda (request)
 	 (setf (content-value request)
