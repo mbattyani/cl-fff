@@ -7,6 +7,9 @@
 (defvar *index* nil)
 (defparameter *color1* '(0.2 0.2 0.8))
 
+(defun trans-string (&rest args)
+  (tt::put-string (funcall 'meta::translate args)))
+
 (defun draw-class-graph-legend (box x y)
   (tt::draw-block
    (tt::compile-text ()
@@ -17,11 +20,11 @@
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 0.7 0.7) :border-width 0.5)
 		    " super-classes, "
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 1.0 0.7) :border-width 0.5)
-		     " sub-classes, " #+nil " sous-classes, "
+		     (trans-string :en " sub-classes, " :fr " sous-classes, ")
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 0.7 1.0) :border-width 0.5)
-		    " use the class, " #+nil " utilise la classe, "
+		    (trans-string :en " use the class, " :fr " utilise la classe, ")
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 1.0) :border-width 0.5)
-		    " used by the class." #+nil " utilisé par la classe."))
+		    (trans-string :en " used by the class." :fr " utilisé par la classe.")))
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun edge-color (color)
@@ -373,7 +376,7 @@
 	  (tt::vspace 10)
 	  (tt::user-drawn-box :dx 400 :dy 12 :stroke-fn 'draw-class-graph-legend) :eol
 	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 14 :top-margin 6)
-			 "Graph of neighbor classes" #+nil "Graphe des classes voisines.")
+			 (trans-string :en "Graph of neighbor classes" :fr "Graphe des classes voisines."))
 	  (when (direct-slots class)
 	    (tt::vspace 20)
 	    (tt::table (:col-widths '(100 120 30 170 30) :splittable-p t)
@@ -573,10 +576,10 @@
 	       (tt::hrule :dy 30 :stroke-fn 'draw-doc-wavelet-rule :color *color1*)
 	       (tt::vspace 5))
 	     (tt::with-style (:font "Times-Italic" :font-size 40 :color *color1*)
-	       "Technical Documentation" #+nil "Documentation technique" :vfill))
+	       (trans-string :en "Technical Documentation" :fr "Documentation technique") :vfill))
 	     :eop
 	     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-			   "Table of Contents" #+nil "Table des matières")
+			   (trans-string :en "Table of Contents" :fr "Table des matières"))
 	     (tt:hrule :dy 2)
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -714,7 +717,7 @@
 	  (tt::vspace 10)
 	  (tt::user-drawn-box :dx 200 :dy 12 :stroke-fn 'draw-file-graph-legend) :eol
 	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 16 :top-margin 6)
-			 "File dependency graph." #+nil "Graphe des dépendances de fichier.")
+			 (trans-string :en "File dependency graph." :fr "Graphe des dépendances de fichier."))
 ;********************	  
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
@@ -781,18 +784,20 @@
 	(*margins* '(72 72 72 50))
 	(*index* nil)
 	(*package* (ensure-package (project-package project)))
-	(meta::*country-language* :fr))
+	#+nil (meta::*country-language* :fr))
     (tt::with-document ()
       (let* ((print-stamp (multiple-value-bind (second minute hour date month year)
 			      (get-decoded-time)
-			    (format nil "Printed on ~4D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D"
-				    year month date hour minute second)))
+			    (format nil #T(:en "Printed on ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D"
+					   :fr "Imprimé le ~2,'0D-~2,'0D-~4D ~2,'0D:~2,'0D:~2,'0D")
+				    date month year hour minute second)))
 	     (*header* #'(lambda(pdf:*page*)
 			   (tt::compile-text ()
 			      (tt:paragraph (:h-align :center :color '(0 0 0)
 						      :font "Helvetica-BoldOblique" :font-size 12)
 					    (tt::put-string (meta::translate (name project)))
-					    ": Documentation technique"
+					    (trans-string :fr ": Documentation technique"
+							  :en ": Technical Documentation")
 					    (tt::put-string (tt:get-contextual-variable :classe)))
 			      (tt:hrule :dy 0.5))))
 	     (*footer* (lambda (pdf:*page*)
