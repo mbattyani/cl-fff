@@ -170,7 +170,7 @@
 	     (type simple-base-string user-agent))
     (when user-agent
       (or (= (mismatch "Googlebot" user-agent) 9)
-	  (search "ZyBorg" user-agent)))))
+	  (search "Slurp" user-agent)))))
 
 (defmacro with-posted-strings ((request . params) . body)
   (let ((posted-content (gensym)))

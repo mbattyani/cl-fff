@@ -153,6 +153,13 @@
    (disable-predicate-fn :initform nil :accessor disable-predicate-fn)
    (object-help :initarg :object-help :accessor object-help)))
 
+(defclass triggered-function ()
+  ((name :initarg :name :accessor name)
+   (trigger-on-value-change :initform nil :accessor trigger-on-value-change
+			    :initarg :trigger-on-value-change)
+   (trigger-on-status-change :initform nil :accessor trigger-on-status-change
+			     :initarg :trigger-on-status-change)))
+
 (export 'short-description)
 (defmethod short-description (obj)
   (format nil "~A" obj))
