@@ -205,6 +205,7 @@
 
 (defmethod create-class-table ((store psql-store) class)
   (when (symbolp class)(setf class (find-class class)))
+  (format t "Create tables for class: ~a~%" (class-name class))
   (with-store-db (store)
     (clsql:execute-command (gen-sql-create-table class))
     (loop for slot in (class-slots class)
@@ -214,16 +215,18 @@
 (defmethod add-slot-to-class-table ((store psql-store) class slot)
   (when (symbolp class)(setf class (find-class class)))
   (setf slot (ensure-slot-def class slot))
-    (when (stored slot)
-      (with-store-db (store)
-	(clsql:execute-command
-	 (with-output-to-string (s)
-	   (format s "ALTER TABLE ~a ADD " (sql-name class))
-	   (gen-sql-for-slot slot s)))
-	(add-slot-aux-tables store class slot))))
+  (format t "Add slot ~a to class ~a~%" (clos:slot-definition-name slot)(class-name class))
+  (when (stored slot)
+    (with-store-db (store)
+      (clsql:execute-command
+       (with-output-to-string (s)
+	 (format s "ALTER TABLE ~a ADD " (sql-name class))
+	 (gen-sql-for-slot slot s)))
+      (add-slot-aux-tables store class slot))))
 
 (defmethod remove-slot-from-class-table ((store psql-store) class sql-slot-name list-of-values)
   (when (symbolp class)(setf class (find-class class)))
+  (format t "Remove slot ~a from class ~a~%" sql-slot-name (class-name class))
   (with-store-db (store)
     #+drop-col-not-supported-in-psql
     (clsql:execute-command
@@ -239,6 +242,7 @@
 
 (defmethod rename-slot-in-class-table ((store psql-store) class old-sql-slot-name new-sql-slot-name list-of-values)
   (when (symbolp class)(setf class (find-class class)))
+  (format t "Rename slot ~a to ~a in class ~a~%" old-sql-slot-name new-sql-slot-name (class-name class))
   (with-store-db (store)
     (clsql:execute-command
      (with-output-to-string (s)
@@ -249,6 +253,7 @@
 
 (defmethod drop-class-table ((store psql-store) class)
   (when (symbolp class)(setf class (find-class class)))
+  (format t "Drop tables for class: ~a~%" (class-name class))
   (with-store-db (store)
     (clsql:execute-command (format nil "DROP TABLE ~a" (sql-name class)))
     (loop for slot in (class-slots class) do
