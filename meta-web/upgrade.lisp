@@ -71,7 +71,6 @@
 		    (and (or added-slots removed-slots modified-slots)
 		    `((let* ((*package* (find-package ,(package-name *package*)))
 			     (class (find-class ',class-name)))
-			(meta::save-modified-objects store)
 			(when (eq pass :modify-tables)
 			  ,@(loop for slot in added-slots
 				  collect `(meta::add-slot-to-class-table store class

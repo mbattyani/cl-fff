@@ -145,10 +145,7 @@
 					    (:head)
 					    (:body
 					     (:fformat "Error : ~a~%" e) :br
-					     (:format "Backtrace:<br>~{ ~S <br>~}" (nreverse bt))))))))
-			      (send-to-interface
-			       (html:fast-format nil "parent.open2('~a', 400, 200);"
-						 (html:quote-javascript-string error-string)))))))
+					     (:format "Backtrace:<br>~{ ~S <br>~}" (nreverse bt))))))))	      ))))
 	      (funcall action-func *http-link* name value)))))))
   (process-http-link-pull request t))
 
