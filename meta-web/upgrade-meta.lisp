@@ -1,0 +1,83 @@
+(in-package "META-WEB")
+
+(defun update-class-slot-info-0-to-1 (store pass)
+  (let* ((*package* (find-package "META-WEB")) (class (find-class 'slot-info)))
+    (when (eq pass :modify-tables)
+      (meta-level::add-slot-to-class-table store class 'can-delete)
+      (meta-level::add-slot-to-class-table store class 'can-delete-groups)
+      (meta-level::add-slot-to-class-table store class 'process-new-object-fn))
+    (when (eq pass :modify-data)
+      (clsql-sys:with-database (nil nil :pool *database-pool*)
+        (clsql-sys:do-query ((object-id) "SELECT id  FROM slot_info" :types :auto)
+          (let ((object (meta-level:load-object object-id store)))
+            (when object
+              (let ((data-object (meta-level::load-object-data object)))
+                (slot-makunbound data-object 'can-delete)
+                (slot-makunbound data-object 'can-delete-groups)
+                (slot-makunbound data-object 'process-new-object-fn)
+                (meta-level::initialize-unbound-slots object)
+                (meta-level::mark-object-as-modified object))))))))
+  (meta-level::save-modified-objects store))
+
+
+(defun update-class-function-info-0-to-1 (store pass)
+  (let* ((*package* (find-package "META-WEB")) (class (find-class 'function-info)))
+    (when (eq pass :modify-tables)
+      (meta-level::add-slot-to-class-table store class 'process-new-object-fn)
+      )
+    (when (eq pass :modify-data)
+      (clsql-sys:with-database (nil nil :pool *database-pool*)
+        (clsql-sys:do-query ((object-id) "SELECT id  FROM function_info" :types :auto)
+          (let ((object (meta-level:load-object object-id store)))
+            (when object
+              (let ((data-object (meta-level::load-object-data object)))
+                (slot-makunbound data-object 'process-new-object-fn)
+                (meta-level::initialize-unbound-slots object)
+                (meta-level::mark-object-as-modified object))))))))
+  (meta-level::save-modified-objects store))
+
+
+(defun update-class-class-group-0-to-1 (store pass)
+  (let* ((*package* (find-package "META-WEB")) (class (find-class 'class-group)))
+    (when (eq pass :modify-tables) (meta-level::add-slot-to-class-table store class 'sources-directory))
+    (when (eq pass :modify-data)
+      (clsql-sys:with-database (nil nil :pool *database-pool*)
+        (clsql-sys:do-query ((object-id) "SELECT id  FROM class_group" :types :auto)
+          (let ((object (meta-level:load-object object-id store)))
+            (when object
+              (let ((data-object (meta-level::load-object-data object)))
+                (slot-makunbound data-object 'sources-directory)
+                (meta-level::initialize-unbound-slots object)
+                (meta-level::mark-object-as-modified object))))))))
+  (meta-level::save-modified-objects store))
+
+
+(defun update-class-project-0-to-1 (store pass)
+  (let* ((*package* (find-package "META-WEB")) (class (find-class 'project)))
+    (when (eq pass :modify-tables) (meta-level::add-slot-to-class-table store class 'sources-directory))
+    (when (eq pass :modify-data)
+      (clsql-sys:with-database (nil nil :pool *database-pool*)
+        (clsql-sys:do-query ((object-id) "SELECT id  FROM project" :types :auto)
+          (let ((object (meta-level:load-object object-id store)))
+            (when object
+              (let ((data-object (meta-level::load-object-data object)))
+                (slot-makunbound data-object 'sources-directory)
+                (meta-level::initialize-unbound-slots object)
+                (meta-level::mark-object-as-modified object))))))))
+  (meta-level::save-modified-objects store))
+
+
+(defun convert-base-from-version-0-to-1 (store)
+  (dolist (class 'nil)
+     (meta::create-class-table store (find-class class)))
+(ignore-errors (update-class-project-0-to-1 store :modify-tables))
+(ignore-errors (update-class-class-group-0-to-1 store :modify-tables))
+(ignore-errors (update-class-function-info-0-to-1 store :modify-tables))
+(ignore-errors (update-class-slot-info-0-to-1 store :modify-tables))
+
+
+(ignore-errors (update-class-project-0-to-1 store :modify-data))
+(ignore-errors (update-class-class-group-0-to-1 store :modify-data))
+(ignore-errors (update-class-function-info-0-to-1 store :modify-data))
+(ignore-errors (update-class-slot-info-0-to-1 store :modify-data))
+)
