@@ -54,7 +54,7 @@
 	(let ((id (create-new-object-id store (id (class-of object)))))
 	  (when (gethash id (loaded-objects store)) (error "Object is already there loaded"))
 	  (setf (id object) id)))
-      (setf (data-object object) (apply 'make-instance (data-class (class-of object)) init-options))
+      (setf (data-object object) (apply 'make-instance (data-class (class-of object)) (append init-options '(:allow-other-keys t))))
       (unless no-init-forms
 	(call-next-method object)
 	(initialize-disable-predicates object))))
