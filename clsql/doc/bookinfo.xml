@@ -1,0 +1,56 @@
+<?xml version='1.0' ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY % myents SYSTEM "entities.inc">
+%myents;
+]>
+
+<bookinfo>
+  <title>&clsql; Users' Guide</title>
+  <authorgroup>
+  <author>
+    <firstname>Kevin</firstname>
+    <othername>M.</othername>
+    <surname>Rosenberg</surname>
+    <affiliation><jobtitle>Maintainer of CLSQL</jobtitle></affiliation>
+  </author>
+  <author>
+    <firstname>Pierre</firstname>
+    <othername>R.</othername>
+    <surname>Mai</surname>
+    <affiliation><jobtitle>Author of Original MaiSQL Code</jobtitle></affiliation>
+  </author>
+  </authorgroup>
+  <printhistory>
+    <simpara>$Date: 2003-11-21 06:44:46 +0100 (Fri, 21 Nov 2003) $</simpara>
+    <simpara>$Id: bookinfo.xml 976 2003-11-21 05:44:46Z kevin $</simpara>
+  </printhistory>
+  <legalnotice>
+    <itemizedlist>
+      <listitem>
+	<para>&clsql; is Copyright &copy; 2002-2003 by Kevin M. Rosenberg and
+	Copyright &copy; 1999-2001 by Pierre R. Mai.</para>
+       </listitem>
+       <listitem>
+	 <para><application>Allegro CL</application>&reg; is a registered
+	   trademark of Franz Inc.</para>
+	</listitem>
+	<listitem>
+          <para><application>Common SQL</application>,
+	      <application>LispWorks</application> and
+	<application>Xanalys</application> are trademarks or
+	registered trademarks of Xanalys Inc.</para>
+      </listitem>
+      <listitem>
+        <para><application>Microsoft
+	  Windows</application>&reg; is a registered trademark of
+	  Microsoft Inc.</para>
+      </listitem>
+      <listitem>
+        <para>Other brand or
+	    product names are the registered trademarks or trademarks of
+	    their respective holders.</para>
+      </listitem>
+    </itemizedlist>
+  </legalnotice>
+</bookinfo>

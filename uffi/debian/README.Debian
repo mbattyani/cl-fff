@@ -1,0 +1,7 @@
+The Debian Package CL-UFFI
+--------------------------
+
+This is the UFFI Common Lisp system packaged for Debian by
+Kevin M. Rosenberg <kmr@debian.org>, April 2002.
+
+The home page for UFFI is http://uffi.med-info.com/

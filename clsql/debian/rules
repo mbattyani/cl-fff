@@ -1,0 +1,228 @@
+#!/usr/bin/make -f
+
+plain-pkg	:= clsql
+
+pkg		:= cl-sql
+pkg-base	:= cl-sql-base
+pkg-uffi	:= cl-sql-uffi
+pkg-mysql	:= cl-sql-mysql
+pkg-pg		:= cl-sql-postgresql
+pkg-pg-socket	:= cl-sql-postgresql-socket
+pkg-aodbc	:= cl-sql-aodbc
+pkg-tests	:= cl-sql-tests
+all-pkgs	:= $(pkg) $(pkg-base) $(pkg-uffi) $(pkg-mysql) $(pkg-pg) $(pkg-pg-socket) $(pkg-aodbc) $(pkg-tests)
+
+
+UPSTREAM_VER	:= $(shell sed -n -e "s/${pkg} (\(.*\)-[0-9A-Za-z\.]).*/\1/p" < debian/changelog |head -1)
+
+## Lisp sources
+srcs		:= $(wildcard sql/*.lisp) clsql.asd
+srcs-base	:= $(wildcard base/*.lisp) 
+srcs-uffi	:= $(wildcard uffi/*.lisp) $(wildcard uffi/*.c)
+srcs-uffi-so	:= $(wildcard uffi/*.so)
+srcs-mysql	:= $(wildcard db-mysql/*.lisp) $(wildcard db-mysql/*.c)
+srcs-mysql-so	:=  $(wildcard db-mysql/*.so)
+srcs-pg		:= $(wildcard db-postgresql/*.lisp)
+srcs-pg-socket	:= $(wildcard db-postgresql-socket/*.lisp)
+srcs-aodbc	:= $(wildcard db-aodbc/*.lisp)
+srcs-tests	:= $(wildcard tests/*.lisp)
+
+clc-base	:= usr/share/common-lisp
+clc-source	:= $(clc-base)/source
+clc-systems	:= $(clc-base)/systems
+doc-dir		:= usr/share/doc/cl-sql
+
+clc-clsql	:= $(clc-source)/$(plain-pkg)
+
+clc-sql		:= $(clc-source)/clsql
+lispdir-sql	:= $(clc-sql)/sql
+clc-base	:= $(clc-source)/clsql-base
+lispdir-base	:= $(clc-base)/base
+clc-uffi	 := $(clc-source)/clsql-uffi
+lispdir-uffi 	:= $(clc-uffi)/uffi
+sodir-uffi 	:= usr/lib/clsql
+clc-mysql	:= $(clc-source)/clsql-mysql
+lispdir-mysql	:= $(clc-mysql)/db-mysql
+sodir-mysql	:= usr/lib/clsql
+clc-pg		:= $(clc-source)/clsql-postgresql
+lispdir-pg	:= $(clc-pg)/db-postgresql
+clc-pg-socket 	:= $(clc-source)/clsql-postgresql-socket
+lispdir-pg-socket := $(clc-pg-socket)/db-postgresql-socket
+clc-aodbc	:= $(clc-source)/clsql-aodbc
+lispdir-aodbc	:= $(clc-aodbc)/db-aodbc
+clc-tests	:= $(clc-source)/clsql-tests
+lispdir-tests	:= $(clc-tests)/tests
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+	touch configure-stamp
+
+
+build-arch: configure-stamp build-arch-stamp
+build-arch-stamp:
+	dh_testdir
+	# Add here commands to compile the package.
+	$(MAKE)
+	touch build-arch-stamp
+
+build-indep: configure-stamp  build-indep-stamp
+build-indep-stamp:
+	dh_testdir
+	# Add here command to compile/build the arch indep package.
+	# It's ok not to do anything here, if you don't need to build
+	#  anything for this package.
+	#/usr/bin/docbook-to-man debian/#PACKAGE#.sgml > #PACKAGE#.1
+	touch build-indep-stamp
+
+build: build-arch build-indep
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp configure-stamp
+	# Add here commands to clean up after the build process.
+	-$(MAKE) clean
+	find . -type f -and -name \*~ -or -name .\*~ -exec rm -f {} \;
+	dh_clean
+
+install: DH_OPTIONS=
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	# Add here commands to install the package into debian/uffi.
+	dh_installdirs --all  $(clc-systems) $(clc-source)
+	dh_installdirs -p $(pkg) $(lispdir-sql)
+	dh_installdirs -p $(pkg-base) $(lispdir-base)
+	dh_installdirs -p $(pkg-uffi) $(lispdir-uffi) $(sodir-uffi)
+	dh_installdirs -p $(pkg-pg) $(lispdir-pg)
+	dh_installdirs -p $(pkg-pg-socket) $(lispdir-pg-socket)
+	dh_installdirs -p $(pkg-mysql) $(lispdir-mysql) $(sodir-mysql)
+	dh_installdirs -p $(pkg-aodbc) $(lispdir-aodbc)
+	dh_installdirs -p $(pkg-tests) $(lispdir-tests)
+
+	# Main package
+	dh_install -p $(pkg) $(srcs) $(lispdir-sql)
+	dh_install -p $(pkg) clsql.asd $(clc-clsql)
+
+	# Base
+	dh_install -p $(pkg-base) $(srcs-base) $(lispdir-base)
+	dh_install -p $(pkg-base) clsql-base.asd $(clc-base)
+
+	# UFFI
+	dh_install -p $(pkg-uffi) $(srcs-uffi) $(lispdir-uffi)
+	dh_install -p $(pkg-uffi) $(srcs-uffi-so) $(sodir-uffi)
+	dh_install -p $(pkg-uffi) clsql-uffi.asd $(clc-uffi)
+
+	# Backends
+	dh_install -p $(pkg-mysql) $(srcs-mysql) $(lispdir-mysql)
+	dh_install -p $(pkg-mysql) clsql-mysql.asd $(clc-mysql)
+	dh_install -p $(pkg-mysql) $(srcs-mysql-so) $(sodir-mysql)
+	dh_install -p $(pkg-pg) $(srcs-pg) $(lispdir-pg)
+	dh_install -p $(pkg-pg) clsql-postgresql.asd $(clc-pg)
+	dh_install -p $(pkg-pg-socket) $(srcs-pg-socket) $(lispdir-pg-socket)
+	dh_install -p $(pkg-pg-socket) clsql-postgresql-socket.asd $(clc-pg-socket)
+	dh_install -p $(pkg-aodbc) $(srcs-aodbc) $(lispdir-aodbc)
+	dh_install -p $(pkg-aodbc) clsql-aodbc.asd $(clc-aodbc)
+
+	dh_install -p $(pkg-tests) $(srcs-tests) $(lispdir-tests)
+	dh_install -p $(pkg-tests) clsql-tests.asd $(clc-tests)
+
+	# CLC Systems
+	dh_link -p $(pkg) $(clc-clsql)/clsql.asd $(clc-systems)/clsql.asd
+	dh_link -p $(pkg-base) $(clc-base)/clsql-base.asd $(clc-systems)/clsql-base.asd
+	dh_link -p $(pkg-uffi) $(clc-uffi)/clsql-uffi.asd $(clc-systems)/clsql-uffi.asd
+	dh_link -p $(pkg-mysql) $(clc-mysql)/clsql-mysql.asd $(clc-systems)/clsql-mysql.asd
+	dh_link -p $(pkg-pg) $(clc-pg)/clsql-postgresql.asd $(clc-systems)/clsql-postgresql.asd
+	dh_link -p $(pkg-pg-socket) $(clc-pg-socket)/clsql-postgresql-socket.asd $(clc-systems)/clsql-postgresql-socket.asd
+	dh_link -p $(pkg-aodbc) $(clc-aodbc)/clsql-aodbc.asd $(clc-systems)/clsql-aodbc.asd
+	dh_link -p $(pkg-tests) $(clc-tests)/clsql-tests.asd $(clc-systems)/clsql-tests.asd
+
+	# Documentation
+	rm -rf doc/html
+	(cd doc; tar xzf html.tar.gz; cd ..)
+	dh_install -p $(pkg) doc/html $(doc-dir)
+	rm -rf doc/html
+	cp doc/clsql.pdf doc/cl-sql.pdf
+	rm -f doc/cl-sql.pdf.gz
+	gzip doc/cl-sql.pdf
+	dh_install -p $(pkg) doc/cl-sql.pdf.gz $(doc-dir)
+	rm -f doc/cl-sql.pdf.gz
+
+	set -e ;\
+	for p in $(all-pkgs); do \
+                echo "processing maintainer scripts for $$p" ;\
+		l=`echo $$p | sed -e "s/^cl-/cl/;"` ;\
+		sed -e "s/%%/$$l/;" debian/preinst.template > debian/$$p.preinst ;\
+		sed -e "s/%%/$$l/;" debian/prerm.template > debian/$$p.prerm ;\
+		sed -e "s/%%/$$l/;" debian/postinst.template > debian/$$p.postinst ;\
+		chown root.root debian/$$p.prerm debian/$$p.prerm debian/$$p.preinst; \
+		chmod +x debian/$$p.prerm debian/$$p.prerm debian/$$p.preinst; \
+	done
+
+
+# Build architecture-independent files here.
+# Pass -i to all debhelper commands in this target to reduce clutter.
+binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+#	dh_installdebconf -i
+	dh_installdocs -i
+	dh_installexamples -i
+	dh_installmenu -i
+#	dh_installlogrotate -i
+#	dh_installemacsen -i
+#	dh_installpam -i
+#	dh_installmime -i
+#	dh_installinit -i
+	dh_installcron -i
+#	dh_installman -i
+	dh_installinfo -i
+#	dh_undocumented -i
+	dh_installchangelogs ChangeLog -i
+	dh_link -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+#	dh_perl -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir -a
+	dh_testroot -a
+#	dh_installdebconf -a
+	dh_installdocs -a
+	dh_installexamples -a
+	dh_installmenu -a
+#	dh_installlogrotate -a
+#	dh_installemacsen -a
+#	dh_installpam -a
+#	dh_installmime -a
+#	dh_installinit -a
+	dh_installcron -a
+#	dh_installman -a
+	dh_installinfo -a
+#	dh_undocumented -a
+	dh_installchangelogs ChangeLog -a
+	dh_strip -a
+	dh_link -a
+	dh_compress -a
+	dh_fixperms -a
+#	dh_makeshlibs -a
+	dh_installdeb -a
+#	dh_perl -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+
+.PHONY: build clean binary-indep binary-arch binary install configure
+
