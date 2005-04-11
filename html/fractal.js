@@ -217,6 +217,6 @@ function SLk(v456, v457, v458, v459)
     }
   }
   x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  x.send ("v654="+v456+"&v645="+v457+"&v465="+v458+"&v564=1");
+  x.send ("v654="+v456+"&v645="+v457+"&v465="+encodeURIComponent(v458)+"&v564=1");
 };
 

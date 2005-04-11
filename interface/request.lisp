@@ -21,7 +21,7 @@
    (content-type :initform "text/html; charset=iso-8859-1" :accessor content-type)
    (content-length :initform nil :accessor content-length)
    (content-value :initform "" :accessor content-value)
-   (date   :initform (get-universal-time) :accessor date)
+   (date :initform (get-universal-time) :accessor date)
    (cache-control :initform "no-cache" :accessor cache-control)
    (keep-alive :initform t :accessor keep-alive)
    (keep-socket :initform t :accessor keep-socket)

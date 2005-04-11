@@ -152,9 +152,9 @@
 (add-named-func "lpull" 'process-http-link-pull)
 ;(add-named-func "lpull" #'(lambda (r) (process-http-link-pull r t)))
 
-(defun process-http-link-push (request)
+(defun process-http-link-push (request) 
   (with-posted-strings (request (action "v654")(name "v645")(value "v465")(*xml-http* "v564"))
-    (log-message (format nil "process-http-link-push ~s~%" (posted-content request)))
+    (log-message (format nil "process-http-link-push ~s~%" (posted-content request))) (setf %req% request) 
     (let ((action-func (gethash action *action-funcs*)))
       (when action-func
 	(let* ((link-id (getf (session-params request) :link ))
