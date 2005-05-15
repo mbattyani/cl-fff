@@ -55,8 +55,9 @@
 		  (:de (german tr-string))
 		  (:sp (spanish tr-string))
 		  (:it (italian tr-string)))))
-    (or (check-string string) (translate default)
-	(check-string (english tr-string))(check-string (french tr-string)))))
+    (or (check-string string) (check-string (translate default))
+	(check-string (english tr-string))(check-string (french tr-string))
+	(check-string (german tr-string)))))
 
 (defun translated-name (obj)
   (translate (user-name obj)))
