@@ -87,7 +87,7 @@ function f825foc(name)
 {
   f825h(name);
   f825s(name+'d');
-  Fck(name, 0);
+  Fck(name, '0');
 }
 
 var v684=3651;var v683=3651; var v686=''; var v688; var v685=''; var v687=0;  var FrameNb = 12; var v689; var v690;
@@ -162,10 +162,10 @@ function close()
   }
 };
 
-function Fch(Name, val){SLk('4', Name, val, v688);};
-function Fad(Name, val){SLk('12', Name, val, v688);};
-function Fck(Name, val){SLk('8', Name, val, v688);};
-function Fcl(Name, val){SLk('13', Name, val, v688);};
+function Fch(Name, val){SLk('4', Name, ''+val, v688);};
+function Fad(Name, val){SLk('12', Name, ''+val, v688);};
+function Fck(Name, val){SLk('8', Name, ''+val, v688);};
+function Fcl(Name, val){SLk('13', Name, ''+val, v688);};
 
 
 function open2(text, dx, dy)
