@@ -126,10 +126,10 @@
 (defmethod make-set-value-javascript ((item combo-box) value slot)
   (let ((position (position value (meta::choices slot) :key #'first)))
     (unless position (setf position -1))
-    (html:fast-format nil "parent.fgt('~a').selectedIndex='~a';" (name item) position)))
+    (html:fast-format nil "x_.fgt('~a').selectedIndex='~a';" (name item) position)))
 
 (defmethod make-set-value-javascript ((item check-box-button) value slot)
-  (html:fast-format nil "parent.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
+  (html:fast-format nil "x_.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
 (defmethod write-construction ((item image) container (language (eql :html)))
   (when (click-map item) )
@@ -150,16 +150,16 @@
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (html:quote-javascript-string
 		  (if (stringp value) value (write-to-string value)))))
-    (concatenate 'string "parent.f826svi('" (name item) "', '" j-value "');")))
+    (concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")))
 
 (defmethod make-set-status-javascript ((item html-item) status slot)
   (when (or (not slot) (modifiable-p *dispatcher*))
     (if status
-	(concatenate 'string "parent.fgt('" (name item) "').disabled=true;")
-	(concatenate 'string "parent.fgt('" (name item) "').disabled=false;"))))
+	(concatenate 'string "x_.fgt('" (name item) "').disabled=true;")
+	(concatenate 'string "x_.fgt('" (name item) "').disabled=false;"))))
 
 (defmethod make-show-error-javascript ((item ui-item) error-text slot)
-  (format nil "parent.fgt('~a').style.backgroundColor='red';" (name item)))
+  (format nil "x_.fgt('~a').style.backgroundColor='red';" (name item)))
 
 (defmethod write-interface (item (language (eql :html)))
   (html:html "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\"> "

@@ -202,6 +202,68 @@ function getxh()
   return x;
 }
 
+function encPar(wide) 
+{
+    var narrow= encUtf8(wide);
+    var enc= '';
+    for (var i= 0; i<narrow.length; i++) 
+    {
+	if (encPar_OK.indexOf(narrow.charAt(i))==-1)
+	    enc= enc+encHex2(narrow.charCodeAt(i));
+	else
+	    enc= enc+narrow.charAt(i);
+    }
+    return enc;
+}
+
+var encPar_OK= 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*@-_./';
+
+function encHex2(v) 
+{
+    return '%'+encHex2_DIGITS.charAt(v>>>4)+encHex2_DIGITS.charAt(v&0xF);
+}
+var encHex2_DIGITS= '0123456789ABCDEF';
+
+function encUtf8(wide) 
+{
+    var c, s;
+    var enc= '';
+    var i= 0;
+    while(i<wide.length) 
+    {
+	c= wide.charCodeAt(i++);
+	// handle UTF-16 surrogates
+	if (c>=0xDC00 && c<0xE000) continue;
+	if (c>=0xD800 && c<0xDC00) 
+	{
+	    if (i>=wide.length) continue;
+	    s= wide.charCodeAt(i++);
+	    if (s<0xDC00 || c>=0xDE00) continue;
+	    c= ((c-0xD800)<<10)+(s-0xDC00)+0x10000;
+	}
+	// output value
+	if (c<0x80) enc+=
+	    String.fromCharCode(c);
+	else if (c<0x800) enc+=
+	    String.fromCharCode(0xC0+(c>>6),0x80+(c&0x3F));
+	else if (c<0x10000) enc+=
+	    String.fromCharCode(0xE0+(c>>12),0x80+(c>>6&0x3F),0x80+(c&0x3F));
+	else enc+=
+	    String.fromCharCode(0xF0+(c>>18),0x80+(c>>12&0x3F),
+        0x80+(c>>6&0x3F),0x80+(c&0x3F));
+    }
+    return enc;
+}
+
+try
+{
+    encodeURIComponent('a');
+}
+catch (e)
+{
+    encodeURIComponent = encPar;
+}
+
 function SLk(v456, v457, v458, v459)
 {
   var x = getxh();
