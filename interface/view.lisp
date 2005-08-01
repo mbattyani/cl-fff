@@ -159,6 +159,11 @@
 		      (t
 		       `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
 			 ((:td :class "dvcv")((:slot-obj-link ,(clos:slot-definition-name slot) :class "dvcv")))))))
+		   ((eq (meta::view-type slot) :named-slot-view)
+		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
+		      ((:td :class "dvcv") ((,(meta::slot-view-name slot)
+					      ,(clos:slot-definition-name slot)
+					      ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) :color)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
 		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)

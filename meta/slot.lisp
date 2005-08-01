@@ -12,7 +12,7 @@
 			       :get-value-html-fn :get-value-title :get-value-text :get-value-sql
 			       :value-to-string-fn :string-to-value-fn :value-to-sql-fn :sql-to-value-fn
 			       :can-create-new-object :create-new-object :get-object-func :process-new-object-fn
-			       :dont-display-null-value :view-type :duplicate-value
+			       :dont-display-null-value :view-type :slot-view-name :duplicate-value
 			       :html-tag-attributes)))
 
 ;; ------------------------------------------------------------------------
@@ -70,6 +70,7 @@
    (new-objects-first       :initform t   :accessor new-objects-first :initarg :new-objects-first)
    (dont-display-null-value :initform nil :accessor dont-display-null-value :initarg :dont-display-null-value)
    (view-type               :initform nil :accessor view-type :initarg :view-type)
+   (slot-view-name          :initform nil :accessor slot-view-name :initarg :slot-view-name)
    ))
 
 (defmethod initialize-instance :after ((slot fc-slot-definition-mixin) &rest init-options &key &allow-other-keys)

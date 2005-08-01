@@ -276,6 +276,7 @@ function SLk(v456, v457, v458, v459)
   x.onreadystatechange = function() { 
     if(x.readyState == 4) { 
       eval(x.responseText);
+      x.onreadystatechange = function() {};
     }
   }
   x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");

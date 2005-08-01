@@ -134,7 +134,7 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("Vue"
-      (:slot-table view-type html-tag-attributes list-format 
+      (:slot-table view-type slot-view-name html-tag-attributes list-format 
 		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
@@ -158,7 +158,7 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("View"
-      (:slot-table view-type html-tag-attributes list-format 
+      (:slot-table view-type slot-view-name html-tag-attributes list-format 
 		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
@@ -196,11 +196,12 @@
   (let* ((type (value-type object))
 	 (choices (meta::choices (interface::slot interface::*dispatcher*)))
 	 (keywords (cond
-		     ((list-of-values object) '(:default :list :list-val :list2 :list2-val :pick-mval))
-		     ((eq type :object) '(:default :link :embed :embed-val :on-off))
-		     ((eq type :string) '(:default :medit :edit))
-		     ((eq type :color) '(:default :pick-color :edit))
-		     (t '(:default)))))
+		     ((list-of-values object) '(:default :named-slot-view 
+						:list :list-val :list2 :list2-val :pick-mval))
+		     ((eq type :object) '(:default :named-slot-view :link :embed :embed-val :on-off))
+		     ((eq type :string) '(:default :named-slot-view :medit :edit))
+		     ((eq type :color) '(:default :named-slot-view :pick-color :edit))
+		     (t '(:default :named-slot-view)))))
     (loop for keyword in keywords
 	  for position = (position keyword choices :key #'first)
 	  for text = (meta::translate (second (assoc keyword choices)))
@@ -282,6 +283,7 @@
     ,@(%add-slot-w% html-tag-attributes slot-info :read t :quote t :list t)
     ,@(%add-slot% dont-display-null-value slot-info)
     ,@(%add-slot% view-type slot-info)
+    ,@(%add-slot-w% slot-view-name slot-info :read t :quote t)
     ,@(%add-slot-w% list-format slot-info)
     ,@(progn (setf *current-slot* nil *current-slot-attribute* nil) nil)
     ))

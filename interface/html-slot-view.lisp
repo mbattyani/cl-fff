@@ -46,9 +46,35 @@
 					     (name edit) (name edit))
 				    ,@attrs))
 			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
-			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
+			 ((:span :id ,(concatenate 'string (name edit) "d") ,@attrs))))))))
 
 (html:add-func-tag :slot-edit 'slot-edit-tag)
+
+;;;***** slot span **************
+
+(defclass html-span (html-item)
+  ())
+
+(defmethod make-set-value-javascript ((item html-span) value slot)
+  (when (meta::choices slot)
+    (setf value (meta::translate (second (assoc value (meta::choices slot))))))
+  (let ((j-value (html:quote-javascript-string
+		  (if (stringp value) value (write-to-string value)))))
+    (concatenate 'string "x_.fgt('" (name item) "').innerHTML='" j-value "';")))
+
+
+(defmethod make-set-status-javascript ((item html-span) status slot)
+  )
+
+(defun slot-span-tag (attributes form)
+  (destructuring-bind (slot-name . attrs) attributes
+    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
+		      :test #'string= :key #'clos:slot-definition-name)))
+      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (let* ((edit (make-instance 'html-span :tooltip (meta::tooltip slot) :slot slot)))
+	`(html:html ((:span :id ,(name edit) ,@attrs)))))))
+
+(html:add-func-tag :slot-span 'slot-span-tag)
 
 ;;**** Multiline Edit ***************************
 
