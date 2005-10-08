@@ -10,6 +10,8 @@
   :long-description "General HTML interface for the Framework"
   :components ((:file "defpackage")
 	       (:file "specials" :depends-on ("defpackage"))
+	       (:file "clipboard" :depends-on ("html-slot-view" "view"))
+	       (:file "localize" :depends-on ("specials"))
 	       (:file "sql-lists" :depends-on ("session" "dispatcher"))
 	       (:file "request" :depends-on ("apache" "http"))
 	       (:file "session" :depends-on ("request"))
@@ -20,7 +22,7 @@
 	       (:file "dispatcher" :depends-on ("ui-desc"))
 	       (:file "ui-html" :depends-on ("ui-desc"))
 	       (:file "html-view" :depends-on ("ui-html" "dispatcher"))
-	       (:file "html-slot-view" :depends-on ("html-view"))
+	       (:file "html-slot-view" :depends-on ("html-view" "process-url"))
 	       (:file "http" :depends-on ("specials"))
 	       (:file "rpc" :depends-on ("specials"))
 	       (:file "std-web" :depends-on ("specials"))

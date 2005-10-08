@@ -182,7 +182,8 @@
 (add-named-func "lpush" 'process-http-link-push)
 
 (defun register-http-link (link)
-  (let ((dispatchers (make-hash-table :test #'equal)))
+  (let ((dispatchers (make-hash-table :test #'equal))
+        (dispatcher-list ()))
     (log-message (format nil "register-http-link ~s ~%" link))
     (setf (dispatchers link) dispatchers)
     (loop for (view *object*) in (views link)
@@ -193,8 +194,10 @@
 			 (when (visible-p item)
 			   (let ((dispatcher (make-dispatcher link *object* item)))
 			     (setf (gethash name dispatchers) dispatcher)
-			     (update-dispatcher-item dispatcher t))))
-		     (all-items view)))))
+                             (push dispatcher dispatcher-list))))
+		     (all-items view))))
+  (dolist (dispatcher dispatcher-list)
+		     (update-dispatcher-item dispatcher t)))
   (setf (registered link) t))
 
 (defun unregister-http-link (link)

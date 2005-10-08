@@ -17,6 +17,7 @@
 (defvar *language* nil)
 
 (defvar *object* nil)
+(defvar *object-stack* nil)
 (defvar *page-root* nil)
 (defvar *user* nil)
 (defvar *user-groups* nil)
@@ -25,3 +26,4 @@
 (defvar *dispatcher* nil)
 (defvar *fired-action-value* nil)
 (defvar *xml-http* nil)
+

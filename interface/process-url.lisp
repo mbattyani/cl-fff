@@ -63,6 +63,11 @@
 (defmethod groups (user)
   nil)
 
+(defmethod process-page-fn (user page-fn request)
+  (if page-fn
+      (funcall page-fn request)
+      (process-asp-url request)))
+
 (defun process-http-request (request)
   (log-message (format nil "process-http-request  ~%" ))
   (let* ((command (command request))
@@ -88,20 +93,18 @@
 		(setf (country-language *session*) *country-language*
 		      (country-language-id *session*) *country-language-id*)
 					;	(setf (search-params request) search-params)
-		(let ((page-func (or (gethash (getf session-params :func) *named-funcs*)
-				     (gethash (getf session-params :page) *named-pages*)
-				     (gethash  (%command-param "Host" command) *web-404*))))
+		(let ((page-fn (or (gethash (getf session-params :func) *named-funcs*)
+				   (gethash (getf session-params :page) *named-pages*)
+				   (gethash  (%command-param "Host" command) *web-404*))))
 		(log-message (format nil "process-http-request4 ~s session-params ~s page-func ~s ~%"
-				     url session-params page-func))
-		    (if page-func
-		      (funcall page-func request)
-		      (process-asp-url request))
-		    ))
+				     url session-params page-fn))
+		    (process-page-fn *user* page-fn request)))
 	      (let ((session (create-session request)))
 		(setf (getf session-params :session) (id session))
 		(interface::redirect-to (interface::encode-session-url nil session-params) request)))))))))
 
 (defun process-asp-url (request)
+  (break)
   (let* ((session-params (session-params request))
 	 (user-id (getf session-params :user))
 	 (view-id (getf session-params :view))

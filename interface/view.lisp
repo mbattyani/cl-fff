@@ -256,7 +256,8 @@
 
 (defun %process-view (name object)
   (setf name (or name (getf (session-params *request*) :view)))
-  (let* ((*object* object)
+  (let* ((*object-stack* (when *object* (cons *object* *object-stack*)))
+         (*object* object)
 	 (*user-groups* (dynamic-groups *user* object *user-groups*))
 	 (view (when name (gethash name *all-object-views*))))
     (meta::load-object-data *object*)
@@ -321,7 +322,7 @@
     (find-list-format "default-format")))
 
 (defun std-list-checkbox (index start-index)
-  (when (modifiable-p *dispatcher*)
+  (when t ;(modifiable-p *dispatcher*)
     (decf index start-index)
     (html::html ((:input :type "checkbox" 
 			 :fformat (:id "~aC~d" (name (item *dispatcher*)) index)

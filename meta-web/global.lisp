@@ -9,7 +9,7 @@
 (in-package meta-web)
 
 (defparameter *graph-file-prefix*
-  #+win32 "d:/program files/Apache Group/Apache/htdocs/fractal/"
+  #+win32 "d:/sources/web-sites/fractal/"
   #+linux "/var/www/html/fractal/")
 
 (defvar *current-class* nil)
@@ -50,11 +50,7 @@
     (:p
      (html:ffmt "(~a ~a)"
       (meta::translated-class-name interface::*object*) (meta::id interface::*object*)) :br
-     (:when (meta::parent interface::*object*)
-       "Inclus dans : " ((:a :href (interface::encode-object-url (meta::parent interface::*object*)))
-			 (html:ffmt "~a (~a)"
-				    (meta::short-description (meta::parent interface::*object*))
-				    (meta::translated-class-name (meta::parent interface::*object*))))))
+     (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
 (defparameter *default-object-page-en*
@@ -63,11 +59,7 @@
     (:p 
      (html:ffmt "(~a ~a)"
       (meta::translated-class-name interface::*object*) (meta::id interface::*object*)) :br
-     (:when (meta::parent interface::*object*)
-       "Included in : " ((:a :href (interface::encode-object-url (meta::parent interface::*object*)))
-			 (html:ffmt "~a (~a)"
-				    (meta::short-description (meta::parent interface::*object*))
-				    (meta::translated-class-name (meta::parent interface::*object*))))))
+     (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
 (defparameter *inspect-object-page-fr*

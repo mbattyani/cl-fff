@@ -141,3 +141,5 @@
 		       value
 		       (duplicate-object value))))))
 
+(defmethod duplicate-object-for-paste (object &key parent store)
+  (duplicate-object object :parent parent :store store))
