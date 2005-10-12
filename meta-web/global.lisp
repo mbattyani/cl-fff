@@ -46,19 +46,19 @@
 
 (defparameter *default-object-page-fr*
   '((prev-page-link) :br
-    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*)))
-    (:p
-     (html:ffmt "(~a ~a)"
-      (meta::translated-class-name interface::*object*) (meta::id interface::*object*)) :br
+;    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*)))
+    (:p 
+     (:esc
+      (meta::translated-class-name interface::*object*))
      (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
 (defparameter *default-object-page-en*
   '((prev-page-link) :br
-    (:h2 "Object : " (html:esc (meta::short-description interface::*object*)))
+;    (:h2 "Object : " (html:esc (meta::short-description interface::*object*)))
     (:p 
-     (html:ffmt "(~a ~a)"
-      (meta::translated-class-name interface::*object*) (meta::id interface::*object*)) :br
+     (:esc
+      (meta::translated-class-name interface::*object*))
      (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
