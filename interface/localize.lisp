@@ -4,9 +4,9 @@
   (let ((descriptions (localize obj)))
     (html:html 
      (:on-off ((:a :href "#")
-               (:translate '(:fr " Masquer les liens" :en " Close the links")))
+               (:translate '(:fr " Masquer les liens de navigation" :en " Hide navigation links")))
               ((:a :href "#")
-               (:translate '(:fr " Afficher les liens (localisation)" :en " Show the links (localazation)")) :br)
+               (:translate '(:fr " Afficher les liens de navigation" :en " Show the navigation links")) :br)
               ((:table :border "0")
                (:tr ((:td :colspan "20") 
                      ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home")))))

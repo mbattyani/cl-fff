@@ -749,7 +749,7 @@
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .ic  {height:16px; width:16px; border:0;}
-.sp  {position:absolute;}
+.sp  {position:relative;}
 ")
        (:jscript
 	"function fs(name)
@@ -898,12 +898,16 @@ function fh(name)
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
 				     :html-fn (or (meta::get-value-html-fn slot) 'std-pick-obj-html-fn))))
-	`(html:html ((:a :href "" :id ,(name obj-link) ,@attrs)) "&nbsp;"
+	`(html:html ((:a :href "" :id ,(name obj-link) ,@attrs)) 
 	  ,@(when (action-link obj-link)
-		  `((:when (modifiable-p ,slot)
-		      ((:a :id ,(action-link obj-link)
+		  `((:when (modifiable-p ,slot) ;"&nbsp; "
+		      #+nil((:a :id ,(action-link obj-link)
 			   :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a')"
-					  (name obj-link))) (:translate '(:en "Change" :fr "Changer")))))))))))
+					  (name obj-link))) (:translate '(:en "Change" :fr "Changer")))
+                      ((:a :id ,(action-link obj-link)
+			   :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a')"
+					  (name obj-link)))
+                       ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "middle" :alt "Changer")))))))))))
 
 (html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
 
@@ -1266,10 +1270,10 @@ function fh(name)
 (defparameter *tree* (make-tree 2 0))
 
 (defmethod leaf-node-p ((node list))
-  (cddr node))
+  (not (cdr node)))
 
 (defmethod non-leaf-node-p ((node list))
-  (cddr node))
+  (cdr node))
 
 (defmethod map-sub-nodes (fn (node list))
   (loop for (sub-node . rest) on (cdr node)

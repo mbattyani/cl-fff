@@ -316,7 +316,9 @@
 	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Slot name")
 	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "List")
 	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Type")
-	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Linked")))
+	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Linked")
+             ((:td :class "dvcv":style "background-color:#c0c0d0;") "Stored")
+             ((:td :class "dvcv":style "background-color:#c0c0d0;") "Copy")))
 	  (loop repeat max-nb
 	     for object in objects
 	     for index from start
@@ -337,5 +339,9 @@
 				     (name (object-type object))
 				     (value-type object)))))
 		  ((:td :class "dvcv")
-		   (:p (:if (linked-value object) "linked" ""))))))))))
+		   (:p (:if (linked-value object) "linked" "")))
+                  ((:td :class "dvcv")
+		   (:p (:if (stored object) "stored" "")))
+                  ((:td :class "dvcv")
+		   (:p (:if (duplicate-value object) "copy" ""))))))))))
 
