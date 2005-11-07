@@ -237,3 +237,12 @@
     (push-header "Log-Error" (html::fast-format nil "request ~s not processed." (url request)) request)
     ))
 
+(defun reload-opener-and-close (request)
+  (interface::with-output-to-request (request)
+    (html::html-to-stream
+     interface::*request-stream*
+     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+     (:html
+      (:head
+       (:body
+        (:jscript "window.opener.location.reload(true);window.close();")))))))

@@ -120,14 +120,15 @@
       new-object))
 
 (defmethod duplicate-slot-value (object slot value)
-  (let ((*duplication-root* nil))
+  (let* ((previous-duplication-root *duplication-root*)
+         (*duplication-root* nil))
     (etypecase value
       (boolean value)
       (integer value)
       (pathname (merge-pathnames value ""))
       (float   value)
-      (string  (if (and *duplication-root* (make-copy-string slot))
-		   (format nil "copy (~d) of ~a" 1 value)
+      (string  (if (and previous-duplication-root (make-copy-string slot))
+		   (concatenate 'string (translate '(:fr "copie de " :en "copy of ")) value)
 		   (copy-seq value)))
       (symbol  value)
       (array   (let ((new-array (make-array (array-dimensions value)))

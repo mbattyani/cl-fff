@@ -49,7 +49,7 @@
 ;    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*)))
     (:p 
      (:esc
-      (meta::translated-class-name interface::*object*))
+      (meta::translated-class-name interface::*object*)) :br
      (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
@@ -58,7 +58,7 @@
 ;    (:h2 "Object : " (html:esc (meta::short-description interface::*object*)))
     (:p 
      (:esc
-      (meta::translated-class-name interface::*object*))
+      (meta::translated-class-name interface::*object*)) :br
      (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
