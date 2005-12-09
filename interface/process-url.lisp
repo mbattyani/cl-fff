@@ -104,19 +104,7 @@
 		(interface::redirect-to (interface::encode-session-url nil session-params) request)))))))))
 
 (defun process-asp-url (request)
-  (break)
-  (let* ((session-params (session-params request))
-	 (user-id (getf session-params :user))
-	 (view-id (getf session-params :view))
-	 (obj-id  (getf session-params :object))
-	 (view (gethash view-id *all-object-views*)))
-    (if view
-      (with-output-to-request (request)
-	(write-html view *request-stream*)
-	t)
-      (if session-params		 
-	(http-message (format nil "the view <B>~a</B> does not exists" view-id) request)
-	(http-debug-request request)))))
+  )
 
 (add-named-url "/asp/fixed.html"
    #'(lambda (request)

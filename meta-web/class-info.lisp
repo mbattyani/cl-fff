@@ -135,7 +135,7 @@
     (:obj-fn-table)
     :br
     ))
-
+x
 (defun defclass-info (name supers slot-specifiers options)
   `(make-instance 'class-info :name ,name :direct-superclasses ,supers
 	 :direct-slots ,(mapcar 'defslot-info slot-specifiers)

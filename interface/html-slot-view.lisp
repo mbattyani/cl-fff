@@ -41,11 +41,11 @@
 	     (fire nil))
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
-			   ((:input :type "text" :id ,(name edit) :style "display:'none'" :insert-string
+			   ((:input :type "text" :id ,(name edit) :style "display:none;" :insert-string
 				    ,(format nil "onchange='Fch(~s,~a.value);'"
 					     (name edit) (name edit))
 				    ,@attrs))
-			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
 			 ((:span :id ,(concatenate 'string (name edit) "d") ,@attrs))))))))
 
 (html:add-func-tag :slot-edit 'slot-edit-tag)
@@ -92,11 +92,11 @@
 	(remf attrs :force-visible)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
-			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:'none'"
+			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:none;"
 				       :cols ,(getf attrs :rows "30") :insert-string
 				       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit))
 				       ,@attrs))
-			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:'none'")))
+			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-medit 'slot-medit-tag)
@@ -757,8 +757,7 @@
   var item;
   item=document.getElementById(name);
   if (item)
-     item.style.display = '';
-  event.returnValue = false;
+     item.style.display = 'inline';
 }
     
 function fh(name)
@@ -767,7 +766,6 @@ function fh(name)
   item=document.getElementById(name);
   if (item)
      item.style.display = 'none';
-  event.returnValue = false;
 }
 ")
        (:body
@@ -834,8 +832,7 @@ function fh(name)
   var item;
   item=document.getElementById(name);
   if (item)
-     item.style.display = '';
-  event.returnValue = false;
+     item.style.display = 'inline';
 }
     
 function fh(name)
@@ -844,7 +841,6 @@ function fh(name)
   item=document.getElementById(name);
   if (item)
      item.style.display = 'none';
-  event.returnValue = false;
 }
 ")
        (:body
@@ -1155,8 +1151,7 @@ function fh(name)
   var item;
   item=document.getElementById(name);
   if (item)
-     item.style.display = '';
-  event.returnValue = false;
+     item.style.display = 'inline';
 }
     
 function fh(name)
@@ -1165,7 +1160,6 @@ function fh(name)
   item=document.getElementById(name);
   if (item)
      item.style.display = 'none';
-  event.returnValue = false;
 }
 ")
        (:body
@@ -1354,7 +1348,7 @@ function fh(name)
 	 (span-o (format nil "D~d" (incf *div-id*)))
 	 (div-o (format nil "D~d" (incf *div-id*)))
 	 (pos (* level 16))
-	 (display (if opened-node "display:'';" "display:none;")))
+	 (display (if opened-node "display:inline;" "display:none;")))
     (setf first (and first (zerop level)))
     (if non-leaf-node
 	(html:html
@@ -1368,7 +1362,7 @@ function fh(name)
 		  :class "ic" :align "top" :fformat (:onclick "fs('~a');fs('~a');fh('~a');"
 							      div-o span-o span-c)))
 	   ((:img :src "/fc.gif" :class "ic" :align "top")))
-	  ((:span :class "sp" :id span-o :fformat (:style "display:'none';left:~dpx;" pos))
+	  ((:span :class "sp" :id span-o :fformat (:style "display:none;left:~dpx;" pos))
 	   ((:img :src
 		  (if last
 		      (if first "/m1.gif" "/m2.gif")

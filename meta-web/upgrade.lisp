@@ -13,7 +13,8 @@
       (push old-class (previous-versions class-info)))))
 
 (defun find-current-class-version (class-info)
-  (if (current-version class-info)
+  (if (or (current-version class-info)
+          (not (typep (meta::parent class-info) 'class-info)))
       class-info
       (find-current-class-version (meta::parent class-info))))
 
@@ -52,7 +53,7 @@
     (when (and class-info (instanciable class-info))
       (let* ((obj (unless stream (make-instance 'update-sql-table-function :store meta::*memory-store*)))
 	     (parent-class base-class-info)
-	     (*package* (ensure-package (project-package (project class-info))))
+	     (*package* (find-package "META-WEB"));(ensure-package (project-package (project class-info))))
 	     (class-name (read-from-string (name parent-class))))
 	(if (current-version class-info)
 	    (unless stream (setf (description obj) "it is already the latest version of the class"))
@@ -87,6 +88,7 @@
 		    `((let* ((*package* (find-package ,(package-name *package*)))
 			     (class (find-class ',class-name)))
 			(when (eq pass :modify-tables)
+                          (format t "Modifying tables for ~a~%" ',class-name)
 			  ,@(loop for slot in added-slots
 				  collect `(meta::add-slot-to-class-table store class
 					    ',(read-from-string (name slot))))
@@ -105,6 +107,7 @@
 				  collect `(meta::add-slot-to-class-table store class
 					    ',(read-from-string (name slot)))))
 			(when (eq pass :modify-data)
+                          (format t "Modifying data for ~a~%" ',class-name)
 			  (clsql:with-database (nil nil :pool *database-pool*)
 			    (clsql:do-query ((object-id
 					      ,@(mapcar #'(lambda(x) (read-from-string (name x))) modified-slots))
@@ -161,7 +164,7 @@
   (let* ((*package* (ensure-package (project-package proj)))
 	 (*print-right-margin* 150)
 	 (*project-version* (version proj))
-	 (*from-project-version* (or from-version (1- *project-version*)))
+	 (*from-project-version* 14);(or from-version (1- *project-version*)))
 	 (fn-names ())
 	 (classes ())
 	 (file-id (interface::make-session-id))
@@ -169,7 +172,7 @@
     (with-open-file (s src-file :direction :output :if-exists :supersede)
       (format s "(in-package ~s)~%" (package-name *package*))
       (map-all-classes proj #'(lambda (class)
-				(if (and (previous-versions class)
+				(if (and (find-class-version class *from-project-version*)
 					 (= (mismatch (name class)(name (first (previous-versions class))))
 					    (length (name class))))
 				    (let ((fn-name (make-update-class-fn class s)))

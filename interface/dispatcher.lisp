@@ -107,6 +107,8 @@
 
 (defmethod fire-add-to-list ((dispatcher slot-dispatcher) value)
   (let ((object (object dispatcher)))
+    (when (meta::process-new-object-fn (slot dispatcher))
+      (setf value (funcall (meta::process-new-object-fn (slot dispatcher)) value object)))
     (funcall (set-value-fn dispatcher) (cons value (funcall (get-value-fn dispatcher) object)) object)))
 
 (defclass button-group-dispatcher (slot-dispatcher)

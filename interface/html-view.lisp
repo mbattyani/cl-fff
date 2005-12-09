@@ -159,7 +159,7 @@
       (remf attrs :force-visible)
       `(html:html
 	((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
-	  :style "display:'none'" ,@attrs) ,@form)
+	  :style "display:none;" ,@attrs) ,@form)
 	((:a :id ,(name item)
 	  :insert-string ,(if (choices-fn item)
 			      (format nil "HREF=\"javascript:open1('/asp/pick-val.html','250px','500px','~a');\"" (name item))
@@ -224,11 +224,19 @@
 
 (html::add-func-tag :obj-fn 'obj-fn-tag)
 
-;;; **** when-group *****
+;;; **** when-groups *****
 (defun when-group-tag (attributes forms)
   `(html:html
     (:when (intersection *user-groups* ,(car forms))
       ,@(cdr forms))))
 
 (html::add-func-tag :when-groups 'when-group-tag)
+
+;;; **** unless-groups *****
+(defun unless-group-tag (attributes forms)
+  `(html:html
+    (:when (not (intersection *user-groups* ,(car forms)))
+      ,@(cdr forms))))
+
+(html::add-func-tag :unless-groups 'unless-group-tag)
 
