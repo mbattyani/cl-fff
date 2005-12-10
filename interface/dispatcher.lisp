@@ -2,6 +2,7 @@
 
 (defclass dispatcher ()
   ((interface :accessor interface :initarg :interface)
+   (view :accessor view :initarg :view)
    (item :accessor item :initarg :item)
    (item-state  :accessor item-state :initform nil)
    (item-state2 :accessor item-state2 :initform nil)))

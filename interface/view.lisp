@@ -5,6 +5,7 @@
 (defvar *all-object-views* (make-hash-table :test #'equal))
 (defvar *all-list-formats* (make-hash-table :test #'equal))
 (defvar *current-class* nil)
+(defvar *view* nil)
 
 (defun find-object-view (name &optional instance)
   (gethash name *all-object-views*))
@@ -42,6 +43,7 @@
 
 (defclass object-view ()
   ((name   :initform ""  :accessor name :initarg :name)
+   (id :accessor id :initform (make-session-id))
    (object-class :initform nil  :accessor object-class :initarg :object-class)
    (special-view   :initform nil  :accessor special-view :initarg :special-view)
    (country-languages  :initform nil :accessor country-languages :initarg :country-languages)
@@ -268,7 +270,8 @@
     (when view
       (setf view (get-view-instance view))
       (push (cons view object) *request-views*)
-      (funcall (html-func view)))))
+      (let ((*view* view))
+        (funcall (html-func view))))))
 
 (defun object-view-tag (attributes form)
   (destructuring-bind (&key name object-tag object) form

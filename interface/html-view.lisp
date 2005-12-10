@@ -171,6 +171,33 @@
 
 (html:add-func-tag :fn-link 'fn-link-tag)
 
+(defun fn-link-tag2 (attributes form)
+  (destructuring-bind (fc-function . attrs) attributes
+    (when (symbolp fc-function)
+      (setf fc-function (find fc-function (meta::effective-functions *current-class*) :key 'meta::name)))
+    (let* ((fn-name (meta::name fc-function))
+	   (item (make-instance 'html-fn-link
+				:choices-fn (meta::get-object-func fc-function)
+				:html-fn (or (meta::get-value-html-fn fc-function) 'std-fn-pick-obj-html-fn)
+				:action-fn fn-name
+				:force-visible (getf attrs :force-visible)
+				:fc-function fc-function)))
+      (setf attrs (copy-list attrs))
+      (remf attrs :force-visible)
+      `(html:html
+	((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
+	  :style "display:none;" ,@attrs) ,@(first form))
+	((:a :id ,(name item)
+	  :insert-string ,(if (choices-fn item)
+			      (format nil "HREF=\"javascript:open1('/asp/pick-val.html','250px','500px','~a');\"" (name item))
+			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
+	  ,@attrs) ,@(second form))))))
+
+;((:a :href "" :id ,(name item)
+;     :insert-string ,(format nil "onclick='f825foc(~s);'" (name item)) ,@attrs) ,@form)
+
+(html:add-func-tag :fn-link2 'fn-link-tag2)
+
 (defun std-fn-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
 	 (item-name (name item))

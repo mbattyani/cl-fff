@@ -36,9 +36,11 @@
     (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot))
+      (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot
+                                  :force-visible (getf attrs :force-visible)))
 	     (name nil)
 	     (fire nil))
+	(remf attrs :force-visible)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:input :type "text" :id ,(name edit) :style "display:none;" :insert-string
@@ -93,7 +95,7 @@
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:none;"
-				       :cols ,(getf attrs :rows "30") :insert-string
+				       :cols ,(getf attrs :cols "50") :insert-string
 				       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit))
 				       ,@attrs))
 			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))

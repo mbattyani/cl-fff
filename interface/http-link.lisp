@@ -193,6 +193,7 @@
 	    (maphash #'(lambda (name item)
 			 (when (visible-p item)
 			   (let ((dispatcher (make-dispatcher link *object* item)))
+                             (setf (view dispatcher) view)
 			     (setf (gethash name dispatchers) dispatcher)
                              (push dispatcher dispatcher-list))))
 		     (all-items view))))
