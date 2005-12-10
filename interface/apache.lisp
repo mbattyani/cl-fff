@@ -63,11 +63,24 @@
 
 (defvar *reply-protocol* nil)
 
+(defvar *banned-ips* (make-hash-table :test #'equal))
+
+(defun ban-ip (ip)
+  (setf (gethash ip *banned-ips*) ip))
+
+(defun un-ban-ip (ip)
+  (remhash ip *banned-ips*))
+
+(defun banned-ip-p (ip)
+  (gethash ip *banned-ips*))
+
 (defun %process-apache-command% (command)
   (incf *request-counter*)
   (let* ((request (make-instance 'http-request :command command))
 	 (*request-id* (encode-integer *request-counter*)))
-    (unless (process-http-request request)
-      (http-debug-request request))
+    (if (banned-ip-p (%command-param "remote-ip-addr" command))
+        (http-message "Blocked IP Address<br>Contact the web site administrator" request)
+        (unless (process-http-request request)
+          (http-debug-request request)))
     (write-request request *apache-socket*)
     (force-output *apache-socket*)))
