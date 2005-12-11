@@ -90,6 +90,8 @@
 		     (*password* (password request))(first (rassoc *country-language* *country-language-ids*))
 		     (*country-language* (find-country-lang command (getf session-params :lang) *session*))
 		     (*country-language-id* (first (rassoc *country-language* *country-language-ids*))))
+                (unless (equal (cookie *session*) (cookie *request*))
+                  (setf (cookie *session*) (cookie *request*)))
 		(setf (country-language *session*) *country-language*
 		      (country-language-id *session*) *country-language-id*)
 					;	(setf (search-params request) search-params)

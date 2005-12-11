@@ -190,9 +190,9 @@
     (declare (optimize (speed 3)(space 0)(debug 0)(safety 0))
 	     (type simple-base-string user-agent))
     (when user-agent
-      (or (= (mismatch "Googlebot" user-agent) 9)
-	  (= (mismatch "msnbot" user-agent) 6)
-	  (search "Slurp" user-agent)))))
+      (or (search "Googlebot" user-agent)
+	  (search "msnbot" user-agent)
+          (search "Slurp" user-agent)))))
 
 (defmacro with-posted-strings ((request . params) . body)
   (let ((posted-content (gensym)))

@@ -60,12 +60,23 @@
       (if (string= *robot-session-id* (id session))
 	(push data *robot-log*)
 	(push data *session-log*))))
-  (remhash (id session) *sessions*))
+  (remhash (id session) *sessions*)
+  (remhash (cookie session) *session-cookies*))
+
+(defun clear-all-sessions ()
+  (clrhash *sessions*)
+  (clrhash *session-cookies*))
 
 (defun register-tokens-chars (token-chars)
   (loop for (token char . rest) on token-chars by 'cddr
 	do (setf (gethash char *session-char-to-token*) token
 		 (gethash token *session-token-to-char*) char)))
+
+(defmethod (setf cookie) :around (value (obj session))
+  (when (cookie obj)
+    (remhash (cookie obj) *session-cookies*))
+  (call-next-method)
+  (setf (gethash value *session-cookies*) obj))
 
 (register-tokens-chars
  '(:session #\S
@@ -226,7 +237,8 @@
 
 (defun get-session (request &optional (session-params (decode-session-url (url request))))
   (let* ((session-id (getf session-params :session))
-	 (session (and session-id (gethash session-id *sessions*))))
+	 (session (or (and session-id (gethash session-id *sessions*))
+                      (gethash (cookie request) *session-cookies*))))
     (if session
       (when (string= session-id *robot-session-id*)
 	(unless (web-robot-request? request)
@@ -303,13 +315,16 @@
 					 (html:universal-time-to-string
 					  (+ (* 3600 24 365 10) *session-timer-time*))))
 
+(defun make-cookie ()
+  (concatenate 'string (make-session-id)(make-session-id)))
+
 (defun process-cookie (request)
   (let ((cookie (cdr (assoc "Cookie" (command request) :test #'string=))))
     (unless cookie
-      (setf cookie (make-session-id))
-      (push-header "Set-Cookie" (concatenate 'string "LispID=" cookie *cookie-expiration*) request))
+      (setf cookie (make-cookie))
+      (push-header "Set-Cookie" (concatenate 'string cookie *cookie-expiration*) request))
     (setf (cookie request) cookie)))
-  
+
 ;  (let ((cookies (cdr (assoc "Cookie" (command request) :test #'string=))))
 ;    (if cookies
 ;      (let ((pos (search "LispID=" cookies)))
