@@ -448,7 +448,7 @@
 (defvar *clipboard-view-context* nil)
 
 (defun slot-list-tag (attributes forms)
-  (destructuring-bind (slot-name &key (height "''") (width "100%") (class "stdlist") add-fn-only) attributes
+  (destructuring-bind (slot-name &key (height nil) (width "100%") (class "stdlist") add-fn-only) attributes
     (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
@@ -466,7 +466,7 @@
 					 (name item)))
 			    ,sub-obj-name))))))
 	    `(html:html
-	      ((:div :class ,class :style ,(format nil "width:~a;height:~a;" width height))
+	      ((:div :class ,class :style ,(format nil "width:~a;" width )) ;height:~a; height
 	       ,@forms
 	       ((:div :class ,(concatenate 'string class "h")
 		      :style ,(format nil "width:100%;height:100%;overflow:auto;")
@@ -536,8 +536,8 @@
 		  (:body
 		   :br
 		   (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
-		   (:jscript "function f42(d){window.opener.Fad('" item "',d);"
-			     "window.close();};")
+		   (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
+			     "window.setTimeout('window.close();', 600); shot = true;}};")
 		   (loop for object in (when dispatcher
 					 (funcall (meta::get-object-func (slot dispatcher))(object dispatcher)))
 			 do (html:html "&nbsp;&nbsp;"

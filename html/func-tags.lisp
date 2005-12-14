@@ -254,7 +254,7 @@
 	`(optimize-progn
 	  ,(html-gen `((,tag :id ,on-name :class ,(concatenate 'string class "o") :style "display:none;"
 			:onclick ,(format nil "f825h('~a');f825s('~a');f825h('~a');" on-name off-name div-name)) ,on-forms))
-	  ,(html-gen `((,tag :id ,off-name :class ,(concatenate 'string class "h") :style "display:;"
+	  ,(html-gen `((,tag :id ,off-name :class ,(concatenate 'string class "h"); :style "display:;"
 			 :onclick ,(format nil "f825s('~a');f825h('~a');f825s('~a');" on-name off-name div-name)) ,off-forms))
 	  ,(when pane-forms (html-gen `((:div :id ,div-name :class ,(concatenate 'string class "d") :style "display:none;") ,@pane-forms))))))))
 
