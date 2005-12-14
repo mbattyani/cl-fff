@@ -243,6 +243,15 @@
      interface::*request-stream*
      "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
      (:html
-      (:head
-       (:body
-        (:jscript "window.opener.location.reload(true);window.close();")))))))
+      (:head)
+      (:body
+       (:jscript "window.opener.location.reload(true);window.close();"))))))
+
+(defun reload-remote-browser (request)
+  (sleep 0.5)
+  (interface::with-output-to-request (request)
+    (html::html-to-stream
+     interface::*request-stream*
+     "window.location.href = window.location.href;")))
+
+;window.location.reload(true);

@@ -53,6 +53,11 @@
     (setf (views link) (loop for (view . obj) in views
 			     collect (list view obj)))))
 
+(defun compute-push-pull-urls (link)
+  (let ((url-values (list :link (interface-id link) :session (id (session link)))))
+    (setf (url-push link)(encode-session-url nil (list* :func "lpush" url-values)))
+    (setf (url-pull link)(encode-session-url nil (list* :func "lpull" url-values)))))
+
 (defun remove-http-link (link)
   (remhash (interface-id link) *http-links*)
   (unregister-http-link link))

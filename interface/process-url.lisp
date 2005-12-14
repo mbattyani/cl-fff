@@ -98,15 +98,17 @@
 		(let ((page-fn (or (gethash (getf session-params :func) *named-funcs*)
 				   (gethash (getf session-params :page) *named-pages*)
 				   (gethash  (%command-param "Host" command) *web-404*))))
-		(log-message (format nil "process-http-request4 ~s session-params ~s page-func ~s ~%"
-				     url session-params page-fn))
-		    (process-page-fn *user* page-fn request)))
-	      (let ((session (create-session request)))
-		(setf (getf session-params :session) (id session))
-		(interface::redirect-to (interface::encode-session-url nil session-params) request)))))))))
+                  (log-message (format nil "process-http-request4 ~s session-params ~s page-func ~s ~%"
+                                       url session-params page-fn))
+                  (process-page-fn *user* page-fn request)))
+              (let ((func (getf session-params :func "")))
+                (if (or (string= func "lpush")(string= func "lpull"))
+                    (reload-remote-browser-from-push-pull request)
+                    (let ((session (create-session request)))
+                      (setf (getf session-params :session) (id session))
+                      (interface::redirect-to (interface::encode-session-url nil session-params) request)))))))))))
 
-(defun process-asp-url (request)
-  )
+(defun process-asp-url (request))
 
 (add-named-url "/asp/fixed.html"
    #'(lambda (request)
