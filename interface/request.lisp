@@ -247,7 +247,7 @@
       (:body
        (:jscript "window.opener.location.reload(true);window.close();"))))))
 
-(defun reload-remote-browser (request)
+(defun reload-remote-browser-from-push-pull (request)
   (sleep 0.5)
   (interface::with-output-to-request (request)
     (html::html-to-stream
