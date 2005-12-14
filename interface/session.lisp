@@ -13,6 +13,7 @@
 
 (defvar *sessions* (make-hash-table :test #'equal))
 (defvar *session-cookies* (make-hash-table :test #'equal))
+(defvar *enable-cookies* nil)
 (defvar *session-log* nil)
 (defvar *session-timeout* 1200) ;in seconds
 (defvar *session-file* #P"~/session-log.txt")
@@ -238,7 +239,7 @@
 (defun get-session (request &optional (session-params (decode-session-url (url request))))
   (let* ((session-id (getf session-params :session))
 	 (session (or (and session-id (gethash session-id *sessions*))
-                      (gethash (cookie request) *session-cookies*))))
+                      (and *enable-cookies* (gethash (cookie request) *session-cookies*)))))
     (if session
       (when (string= session-id *robot-session-id*)
 	(unless (web-robot-request? request)

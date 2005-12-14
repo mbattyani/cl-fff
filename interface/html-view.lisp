@@ -161,7 +161,7 @@
 	((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
 	  :style "display:none;" ,@attrs) ,@form)
 	((:a :id ,(name item)
-	  :insert-string ,(if (choices-fn item)
+	  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
 			      (format nil "HREF=\"javascript:open1('/asp/pick-val.html','250px','500px','~a');\"" (name item))
 			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
 	  ,@attrs) ,@form)))))
