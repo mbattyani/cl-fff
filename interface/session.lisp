@@ -240,6 +240,8 @@
   (let* ((session-id (getf session-params :session))
 	 (session (or (and session-id (gethash session-id *sessions*))
                       (and *enable-cookies* (gethash (cookie request) *session-cookies*)))))
+    (when (and session (cookie session) (not (equal (cookie session)(cookie request))))
+      (setf session nil)) ;;bad cookie!
     (if session
       (when (string= session-id *robot-session-id*)
 	(unless (web-robot-request? request)

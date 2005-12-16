@@ -183,8 +183,7 @@
 			    ((:td :class "cald" )((:a :fformat (:href "javascript:f42(~a);" d)) d)))
 			  (:when (= (mod col 7) 6) "</tr>")))))))
 
-(interface::add-named-url "/asp/calendar.html"
-  #'(lambda (request)
+(defun calendar-request-handler (request)
       (decode-posted-content request)
       (let* ((link-name (cdr (assoc "link" (posted-content request) :test 'string=)))
 	     (link (gethash link-name *http-links*))
@@ -253,7 +252,9 @@
 	       ((:a :class "call" :href "javascript:window.close();")
 		(:translate '(:en "Close" :fr "Fermer"))))
 	      ))))))
-      t))
+      t)
+
+(interface::add-named-url "/asp/calendar.html" 'calendar-request-handler)
 
 ;;; ***** Combo *************
 (defclass html-combo (html-item)
@@ -312,6 +313,8 @@
 
 (defclass html-slot-list (html-item)
   ((action-func  :initform nil :accessor action-func :initarg :action-fn)
+   (html-fn :accessor html-fn :initform nil :initarg :html-fn)
+   (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
    (list-format :accessor list-format :initform nil)
    (table-class  :initform ""  :accessor table-class)))
 
@@ -453,6 +456,8 @@
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-slot-list :tooltip (meta::tooltip slot) :slot slot
+				 :choices-fn (meta::get-object-func slot)
+				 :html-fn (meta::get-value-html-fn slot)
 				 :action-fn 'slot-list-action-fn :list-format (meta::list-format slot)))
 	    (sub-obj-name (format nil #T(:en "Add ~a" :fr "Ajouter ~a")
 				  (meta::translate (meta::user-name (find-class (meta::value-type slot)))))))
@@ -512,43 +517,46 @@
 			       ((:a :href ,(format nil "javascript:f825foc('~a');" (name item)))
 				,sub-obj-name)))))))))))))))
 
-(interface::add-named-url "/asp/obj-pick2.html"
-  #'(lambda (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (dispatcher nil))
-	(when link
-	  (setf link (gethash link *http-links*))
-	  (when (and link item)
-	    (let* ((*session* (session link))
-		   (*user* (user *session*))
-		   (*country-language* (country-language *session*)))
-	      (setf dispatcher (gethash item (dispatchers link)))
-	      (with-output-to-request (request)
-		(html::html-to-stream
-		 *request-stream*
-		 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-		 (:html
-		  (:head
-		   (:title (:translate '(:en "pick an object" :fr "Choisissez un objet")))
-		   ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
-		  (:body
-		   :br
-		   (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
-		   (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
-			     "window.setTimeout('window.close();', 600); shot = true;}};")
-		   (loop for object in (when dispatcher
-					 (funcall (meta::get-object-func (slot dispatcher))(object dispatcher)))
-			 do (html:html "&nbsp;&nbsp;"
-				       ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-					(html:esc (meta::short-description object))) :br))
-		   ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-					   (:translate '(:en "Close" :fr "Fermer"))))))))))))
-      t))
-  
-(interface::add-named-url "/asp/obj-new.html"
-  #'(lambda (request)
+(defun pick2-request-handler (request)
+  (decode-posted-content request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (*dispatcher* nil))
+    (when link
+      (setf link (gethash link *http-links*))
+      (when (and link item)
+        (let* ((*session* (session link))
+               (*user* (user *session*))
+               (*country-language* (country-language *session*)))
+          (setf *dispatcher* (gethash item (dispatchers link)))
+          (with-output-to-request (request)
+            (html::html-to-stream
+             *request-stream*
+             "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+             (:html
+              (if (html-fn (item *dispatcher*))
+                  (funcall (html-fn (item *dispatcher*)) *dispatcher*)
+                  (html:html
+                   (:head
+                    (:title (:translate '(:en "pick an object" :fr "Choisissez un objet")))
+                    ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+                   (:body
+                    :br
+                    (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
+                    (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
+                              "window.setTimeout('window.close();', 600); shot = true;}};")
+                    (loop for object in (when *dispatcher*
+                                          (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
+                       do (html:html "&nbsp;&nbsp;"
+                                     ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                                      (html:esc (meta::short-description object))) :br))
+                    ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
+                                            (:translate '(:en "Close" :fr "Fermer"))))))))))))))
+    t)
+
+(interface::add-named-url "/asp/obj-pick2.html" 'pick2-request-handler)
+
+(defun obj-new-request-handler (request)
       (decode-posted-content request)
       (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
 	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
@@ -578,12 +586,12 @@
 				    (html:esc (meta::translate (meta::user-name object)))) :br))
 	       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
 				       (:translate '(:en "Close" :fr "Fermer")))))))))
-	t)))
+	t))
+(interface::add-named-url "/asp/obj-new.html" 'obj-new-request-handler)
 
 ;(defun ask-yes-no-question (request title question yes-id no-id)
 
-(interface::add-named-url "/asp/obj-del.html"
-  #'(lambda (request)
+(defun obj-del-request-handler (request)
       (decode-posted-content request)
       (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
 	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
@@ -620,8 +628,9 @@
 		((:a :class "call" :href "javascript:f42('30001');" )
 		 (:translate '(:en "No" :fr "Non")))
 		))))))
-	t)))
+	t))
 
+(interface::add-named-url "/asp/obj-del.html" 'obj-del-request-handler)
 
 (html:add-func-tag :slot-list 'slot-list-tag)
 ;;;syntax ((:slot-list :class "css" :width width :height height)
@@ -669,8 +678,7 @@
 
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
-(interface::add-named-url "/asp/pick-val.html"
-  #'(lambda (request)
+(defun pick-request-handler (request)
       (decode-posted-content request)
       (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
 	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
@@ -689,7 +697,8 @@
 		 (:html
 		  (when *dispatcher*
 		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
-      t))
+      t)
+(interface::add-named-url "/asp/pick-val.html" 'pick-request-handler)
 
 (defun std-pick-val-html-fn (dispatcher)
   (let* ((item (interface::item dispatcher))
@@ -773,11 +782,14 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	(:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
-		  "window.close();};")
+        (:if (typep dispatcher 'html-slot-list-dispatcher)
+             (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
+                       "window.setTimeout('window.close();', 600); shot = true;}};")
+             (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+                       "window.close();};"))
 	(:p (:translate (meta::get-value-text slot)))
 	(when dispatcher
-	  (draw-simple-tree (funcall (choices-fn dispatcher) object) 0 t (not null-allowed) ()
+	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
 			    :draw-node-fn #'draw-item :opened-node t)
 	  (when null-allowed
 	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix")) "")) 0  nil t ()
