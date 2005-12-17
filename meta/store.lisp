@@ -426,7 +426,8 @@
 (defmethod close-store ((store ascii-store))
   )
 
-
+(defmethod update-object-parent (object store)
+  (mark-object-as-modified object))
 
 ;;;********************************************************************************
 ;;; Void  Store

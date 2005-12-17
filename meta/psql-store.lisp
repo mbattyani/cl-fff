@@ -286,6 +286,12 @@
 (defmethod close-store ((store psql-store))
   )
 
+(defmethod update-object-parent (object (store psql-store))
+  (let ((cmd (gen-sql-change-parent object)))
+    (when cmd
+      (with-store-db (store)
+        (clsql:execute-command cmd)))))
+
 ;(setf *pool* (clsql:find-or-create-connection-pool '("213.11.22.163" "Test" "lisp" "") :postgresql))
 ;(setf *default-store* (make-instance 'psql-store :db-pool *pool*))
 ;(setf clsql-uffi::*clsql-uffi-library-filename* "/cvs/clsql/interfaces/clsql-uffi/clsql-uffi.dll")

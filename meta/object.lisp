@@ -38,16 +38,17 @@
     (setf store (if parent (object-store parent) *default-store*)))
   (setf (object-store object) store)
   (setf (listeners object) nil)
-  (setf (parent object) parent)
   (setf (disabled-slots object) nil)
   (setf (modified object) nil)
   (if force-id
     (setf (id object) (if anonymous 0 force-id)
 	  (new-object object) nil
+          (parent object) parent
 	  (original-lists object) ())
     (let ((*parent-of-root-object-initialized* object))
       (when (anonymous (class-of object))(setf anonymous t))
-      (setf (new-object object) t)
+      (setf (new-object object) t
+            (parent object) parent)
       (if anonymous
 	(setf (id object) 0)
 	(let ((id (create-new-object-id store (id (class-of object)))))
@@ -144,4 +145,8 @@
 
 (defmethod duplicate-object-for-paste (object &key parent store)
   (duplicate-object object :parent parent :store store))
+
+(defmethod (setf parent) :after (value (object root-object))
+  (update-object-parent object (object-store object)))
+
 

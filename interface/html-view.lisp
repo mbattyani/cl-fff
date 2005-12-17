@@ -211,7 +211,7 @@
       :br
       (:h1 (:translate (meta::get-value-title fc-function) :default '(:en "Choose an object" :fr "Choisissez un objet")))
       (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
-		"window.close();};")
+		"window.close();}; window.focus();")
       (:p (:translate (meta::get-value-text fc-function)))
       (when dispatcher
 	(when t;(meta::null-allowed fc-function)

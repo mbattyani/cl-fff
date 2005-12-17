@@ -169,7 +169,7 @@
 		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
 		  "');")))
     (html:html
-     (:jscript "function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
+     (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
      ((:table :class "calt" :align "center")
       (:tr ((:th :class "calh") "Di")((:th :class "calh") "Lu")((:th :class "calh") "Ma")
@@ -543,7 +543,7 @@
                    (:body
                     :br
                     (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
-                    (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
+                    (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
                               "window.setTimeout('window.close();', 600); shot = true;}};")
                     (loop for object in (when *dispatcher*
                                           (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
@@ -577,7 +577,7 @@
 	      (:body
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-	       (:jscript "function f42(d){window.opener.Fck('" item "',d);"
+	       (:jscript "window.focus();function f42(d){window.opener.Fck('" item "',d);"
 			 "window.close();};")
 	       (loop for object in (when dispatcher (sub-classes dispatcher))
 		     for i from 1
@@ -611,7 +611,7 @@
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
-	       (:jscript "function f42(d){window.opener.Fck('" item "',d);"
+	       (:jscript "window.focus();function f42(d){window.opener.Fck('" item "',d);"
 			 "window.close();};")
 	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
 			 (:translate '(:en "Do you want to remove these objects:"
@@ -712,7 +712,7 @@
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+      (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
@@ -727,11 +727,6 @@
 			     (html:esc text)) :br)))
       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
 			      (:translate '(:en "Close" :fr "Fermer"))))))))
-
-(defun get-treeview1 (obj)
-  '(("Groupe Société Générale") (("SGAM" "SGAM") (("ACT" "ACT") (("DIR" "DIR")) (("EUR" "EUR")) (("INT" "INT")) (("MID" "MID")) (("NEG" "NEG")) (("OPC" "OPC"))) (("ADC" "ADC") (("COM" "COM")) (("DIR" "DIR")) (("ESA" "ESA")) (("MID" "MID")) (("PAR" "PAR")) (("TRA" "TRA"))) (("AUD" "AUD")) (("COM" "COM")) (("DIR" "DIR")) (("DIV" "DIV") (("STR" "STR"))) (("DMC" "DMC") (("DIR" "DIR")) (("EDI" "EDI")) (("MKT" "MKT"))) (("ETG" "ETG")) (("ETR" "ETR")) (("FIL" "FIL")) (("FIN" "FIN") (("DIR" "DIR")) (("FAC" "FAC")) (("OPE" "OPE"))) (("HUM" "HUM")) (("INF" "INF") (("INF" "INF"))) (("INV" "INV") (("BAN" "BAN")) (("DIR" "DIR")) (("EDE" "EDE")) (("ETR" "ETR")) (("FRA" "FRA")) (("MSG" "MSG")) (("REP" "REP"))) (("OBM" "OBM") (("DIR" "DIR")) (("FIN" "FIN")) (("FRA" "FRA")) (("INT" "INT")) (("INV" "INV")) (("MON" "MON")) (("NEG" "NEG"))) (("PAR" "PAR")) (("PRO" "PRO") (("ING" "ING")) (("LOG" "LOG")) (("MAR" "MAR")) (("REG" "REG"))) (("SAM" "SAM")) (("SEC" "SEC") (("DIR" "DIR")) (("SOC" "SOC"))) (("SPI" "SPI")))(("SGAM2" "SGAM2") (("ACT" "ACT") (("DIR" "DIR")) (("EUR" "EUR")) (("INT" "INT")) (("MID" "MID")) (("NEG" "NEG")) (("OPC" "OPC"))) (("ADC" "ADC") (("COM" "COM")) (("DIR" "DIR")) (("ESA" "ESA")) (("MID" "MID")) (("PAR" "PAR")) (("TRA" "TRA"))) (("AUD" "AUD")) (("COM" "COM")) (("DIR" "DIR")) (("DIV" "DIV") (("STR" "STR"))) (("DMC" "DMC") (("DIR" "DIR")) (("EDI" "EDI")) (("MKT" "MKT"))) (("ETG" "ETG")) (("ETR" "ETR")) (("FIL" "FIL")) (("FIN" "FIN") (("DIR" "DIR")) (("FAC" "FAC")) (("OPE" "OPE"))) (("HUM" "HUM")) (("INF" "INF") (("INF" "INF"))) (("INV" "INV") (("BAN" "BAN")) (("DIR" "DIR")) (("EDE" "EDE")) (("ETR" "ETR")) (("FRA" "FRA")) (("MSG" "MSG")) (("REP" "REP"))) (("OBM" "OBM") (("DIR" "DIR")) (("FIN" "FIN")) (("FRA" "FRA")) (("INT" "INT")) (("INV" "INV")) (("MON" "MON")) (("NEG" "NEG"))) (("PAR" "PAR")) (("PRO" "PRO") (("ING" "ING")) (("LOG" "LOG")) (("MAR" "MAR")) (("REG" "REG"))) (("SAM" "SAM")) (("SEC" "SEC") (("DIR" "DIR")) (("SOC" "SOC"))) (("SPI" "SPI")))))
-
-
 
 (defun std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -783,10 +778,10 @@ function fh(name)
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
         (:if (typep dispatcher 'html-slot-list-dispatcher)
-             (:jscript "var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
+             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
-                       "window.close();};"))
+             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+                       "window.setTimeout('window.close();', 600); shot = true;}};"))
 	(:p (:translate (meta::get-value-text slot)))
 	(when dispatcher
 	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
@@ -794,6 +789,64 @@ function fh(name)
 	  (when null-allowed
 	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix")) "")) 0  nil t ()
 			      :draw-node-fn #'draw-item)))
+	:br :br
+	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
+				(:translate '(:en "Close" :fr "Fermer")))))))))
+
+(defun std-fn-pick-treeview-html-fn (dispatcher)
+  (flet ((draw-item (node)
+	   (let* ((name (first node))
+		  (text (first name))
+		  (value (second name)))
+	     (if value
+		 (html:html "&nbsp;&nbsp;"
+			    ((:a :fformat (:href "javascript:f42('~a');"
+						 (if (stringp value)
+						     (html:quote-javascript-string value)
+						     value)))
+			     (html:esc text)))
+		 (html:html "&nbsp;&nbsp;"
+			    (html:esc text))))))
+    (let* ((item (interface::item dispatcher))
+	   (item-name (interface::name item))
+	   (object (interface::object dispatcher))
+	   (fc-fn (fc-function (item dispatcher))))
+      (html:html
+       (:head
+	(:title (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+       (:style "
+.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
+.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
+.ic  {height:16px; width:16px; border:0;}
+.sp  {position:relative;}
+")
+       (:jscript
+	"function fs(name)
+{
+  var item;
+  item=document.getElementById(name);
+  if (item)
+     item.style.display = 'inline';
+}
+    
+function fh(name)
+{
+  var item;
+  item=document.getElementById(name);
+  if (item)
+     item.style.display = 'none';
+}
+")
+       (:body
+	:br
+	(:h1 (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+        (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+                  "window.setTimeout('window.close();', 600); shot = true;}};")
+	(:p (:translate (meta::get-value-text fc-fn)))
+	(when dispatcher
+	  (draw-simple-tree (funcall (meta::get-object-func fc-fn) object) 0 t t ()
+			    :draw-node-fn #'draw-item :opened-node t))
 	:br :br
 	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
 				(:translate '(:en "Close" :fr "Fermer")))))))))
@@ -866,7 +919,7 @@ function fh(name)
 	 ((:input :id "index" :name "index" :type "hidden"))
 	 ((:input :id "level" :name "level" :type "hidden"))
 	 ((:input :id "action":name "action" :type "hidden"))
-	 (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+	 (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		   "window.close();};"
 		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
 		   "document.forms['go'].submit();};")
@@ -933,7 +986,7 @@ function fh(name)
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet")))
-      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+      (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
@@ -1008,7 +1061,7 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-	(:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+	(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		  "window.close();};")
 	((:table :class "pcolt" :align "center")
 	 (loop for x below 18
@@ -1109,7 +1162,7 @@ function fh(name)
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      (:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+      (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		"else window.opener.Fck('" item-name "',-i);"
 		"};")
       (:p (:translate (meta::get-value-text slot)))
@@ -1179,7 +1232,7 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	(:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+	(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		"else window.opener.Fck('" item-name "',-i);"
 		"};")
 	(:p (:translate (meta::get-value-text slot)))
@@ -1244,7 +1297,7 @@ function fh(name)
 	 ((:input :id "index" :name "index" :type "hidden"))
 	 ((:input :id "level" :name "level" :type "hidden"))
 	 ((:input :id "action" :name "action" :type "hidden"))
-	 (:jscript "function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+	 (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		   "else window.opener.Fck('" item-name "',-i);"
 		   "};"
 		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
@@ -1384,7 +1437,7 @@ function fh(name)
 		  :class "ic" :align "top" :fformat (:onclick "fh('~a');fh('~a');fs('~a');"
 							      div-o span-o span-c)))
 	   ((:img :src "/fo.gif" :class "ic" :align "top")))
-	  ((:span  :class "sp" :fformat (:style "left:~dpx;" (+ pos 32)))
+	  ((:span  :class "sp" :fformat (:style "left:~dpx;" pos))
 	   "&nbsp;"
 	   (funcall draw-node-fn node)))
 	  ((:div :class "d1" :id div-o :style display)

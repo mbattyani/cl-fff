@@ -13,7 +13,7 @@
 
 (defvar *sessions* (make-hash-table :test #'equal))
 (defvar *session-cookies* (make-hash-table :test #'equal))
-(defvar *enable-cookies* nil)
+(defvar *enable-cookies* t)
 (defvar *session-log* nil)
 (defvar *session-timeout* 1200) ;in seconds
 (defvar *session-file* #P"~/session-log.txt")
@@ -264,7 +264,8 @@
 (defun create-session (request)
   (if (web-robot-request? request)
     (make-instance 'session :id *robot-session-id*)
-    (make-instance 'session)))
+    (let ((session (make-instance 'session)))
+      (setf (cookie session) (cookie request)))))
 
 (defun encode-page-reader (stream subchar arg)
   (declare (ignore arg subchar))
