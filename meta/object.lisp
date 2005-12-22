@@ -146,7 +146,7 @@
 (defmethod duplicate-object-for-paste (object &key parent store)
   (duplicate-object object :parent parent :store store))
 
-(defmethod (setf parent) :after (value (object root-object))
-  (update-object-parent object (object-store object)))
+;(defmethod (setf parent) :after (value (object root-object))
+;  (update-object-parent object (object-store object)))
 
 
