@@ -577,8 +577,8 @@
 	      (:body
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-	       (:jscript "window.focus();function f42(d){window.opener.Fck('" item "',d);"
-			 "window.close();};")
+               (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
+                              "window.setTimeout('window.close();', 600); shot = true;}};")
 	       (loop for object in (when dispatcher (sub-classes dispatcher))
 		     for i from 1
 		     do (html:html "&nbsp;&nbsp;"
@@ -611,8 +611,8 @@
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
-	       (:jscript "window.focus();function f42(d){window.opener.Fck('" item "',d);"
-			 "window.close();};")
+               (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
+                              "window.setTimeout('window.close();', 600); shot = true;}};")
 	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
 			 (:translate '(:en "Do you want to remove these objects:"
 				       :fr "Voulez vous vraiment supprimer ces objets:"))
