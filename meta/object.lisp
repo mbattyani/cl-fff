@@ -149,4 +149,7 @@
 ;(defmethod (setf parent) :after (value (object root-object))
 ;  (update-object-parent object (object-store object)))
 
+(defun update-object-parent (object)
+  (update-object-parent-in-store object (object-store object)))
+
 

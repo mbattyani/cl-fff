@@ -159,8 +159,19 @@
 (defvar *month-fr* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
 		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
 
-(defvar *month-names* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
+(defparameter *month-names* '(:fr ("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
+                                   "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre")
+                              :en ("January" "February" "March" "April" "May" "June"
+                                   "July" "August" "September" "October" "November" "Décember")))
+
+(defvar *default-month-names* '("January" "February" "March" "April" "May" "June"
+                                "July" "August" "September" "October" "November" "December"))
+
+(defparameter *day-names* '(:fr ("Di" "Lu" "Ma" "Me" "Je" "Ve" "Sa")
+                            :en ("Su" "Mo" "Tu" "We" "Th" "Fr" "Sa")))
+
+(defvar *default-day-names* '("January" "February" "March" "April" "May" "June"
+                                "July" "August" "September" "October" "November" "Décember"))
 
 (defun html-month (item month year show-time)
   (let ((first-week-day (first-week-day month year))
@@ -172,8 +183,8 @@
      (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
      ((:table :class "calt" :align "center")
-      (:tr ((:th :class "calh") "Di")((:th :class "calh") "Lu")((:th :class "calh") "Ma")
-	   ((:th :class "calh") "Me")((:th :class "calh") "Je")((:th :class "calh") "Ve")((:th :class "calh") "Sa"))
+      (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
+             (html:html ((:th :class "calh") day))))
       "<tr>"
       (loop for d from (- first-week-day)
 	    for col from 0
@@ -226,7 +237,7 @@
 	       ((:input :name "link" :type "hidden" :value link-name))
 	       ((:select :name "month" :onchange "document.forms['go'].submit();")
 		(loop for m from 1 to 12
-		      for name in *month-fr*
+		      for name in (getf *month-names* *country-language* *default-month-names*)
 		      do (if (= month m)
 			   (html:ffmt "<option value=~d SELECTED>~d" m name)
 			   (html:ffmt "<option value=~d>~d" m name))))
@@ -1438,8 +1449,9 @@ function fh(name)
 							      div-o span-o span-c)))
 	   ((:img :src "/fo.gif" :class "ic" :align "top")))
 	  ((:span  :class "sp" :fformat (:style "left:~dpx;" pos))
-	   "&nbsp;"
-	   (funcall draw-node-fn node)))
+           (:nobr
+            "&nbsp;"
+            (funcall draw-node-fn node))))
 	  ((:div :class "d1" :id div-o :style display)
 	   (incf level)
 	   (setf previous-lasts (append previous-lasts (list last)))
@@ -1450,14 +1462,15 @@ function fh(name)
 	 ((:div :class "d1")
 	  (draw-prev-lines2 previous-lasts)
 	  ((:span :class "sp" :fformat (:style "left:~dpx;" pos))
-	   ((:img :src
-		  (if last
-		      (if first "/l1.gif" "/l2.gif")
-		      "/l3.gif")
-		  :class "ic" :align "top"))
-	   ((:img :src "/lf.gif" :class "ic" :align "top"))
-	   "&nbsp;"
-	   (funcall draw-node-fn node)))))))
+           (:nobr
+            ((:img :src
+                   (if last
+                       (if first "/l1.gif" "/l2.gif")
+                       "/l3.gif")
+                   :class "ic" :align "top"))
+            ((:img :src "/lf.gif" :class "ic" :align "top"))
+            "&nbsp;"
+            (funcall draw-node-fn node))))))))
 
 (defun draw-prev-lines (previous-lasts)
   (loop for pl in previous-lasts do

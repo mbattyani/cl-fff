@@ -286,7 +286,7 @@
 (defmethod close-store ((store psql-store))
   )
 
-(defmethod update-object-parent (object (store psql-store))
+(defmethod update-object-parent-in-store (object (store psql-store))
   (let ((cmd (gen-sql-change-parent object)))
     (when cmd
       (with-store-db (store)

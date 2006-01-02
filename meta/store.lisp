@@ -426,7 +426,7 @@
 (defmethod close-store ((store ascii-store))
   )
 
-(defmethod update-object-parent (object store)
+(defmethod update-object-parent-in-store (object store)
   (mark-object-as-modified object))
 
 ;;;********************************************************************************
