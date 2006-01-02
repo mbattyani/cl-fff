@@ -240,7 +240,8 @@
   (let* ((session-id (getf session-params :session))
 	 (session (or (and session-id (gethash session-id *sessions*))
                       (and *enable-cookies* (gethash (cookie request) *session-cookies*)))))
-    (when (and session (cookie session) (not (equal (cookie session)(cookie request))))
+    (when (and session (cookie session)
+               (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
       (setf session nil)) ;;bad cookie!
     (if session
       (when (string= session-id *robot-session-id*)
@@ -292,7 +293,10 @@
     (maphash #'(lambda (id session)
 		 (declare (ignore id))
 		 (when (and session
-			    (> (- *session-timer-time* (last-access-time session)) *session-timeout*))
+                            (or 
+                             (and (not (browser-ip session))
+                                  (> (- *session-timer-time* (last-access-time session)) 20))
+                             (> (- *session-timer-time* (last-access-time session)) *session-timeout*)))
 		   (end-session session)))
 	     *sessions*)
     (dump-session-log)))
@@ -325,7 +329,8 @@
 (defun process-cookie (request)
   (let ((cookie (cdr (assoc "Cookie" (command request) :test #'string=))))
     (unless cookie
-      (setf cookie (make-cookie))
+      (setf cookie (make-cookie)
+            (new-cookie request) t)
       (push-header "Set-Cookie" (concatenate 'string cookie *cookie-expiration*) request))
     (setf (cookie request) cookie)))
 

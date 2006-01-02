@@ -39,6 +39,7 @@
    (password :initform nil :accessor password)
    (user :initform nil :accessor user)
    (cookie :initform nil :accessor cookie)
+   (new-cookie :initform nil :accessor new-cookie)
    (session :initform nil :accessor session)
    ))
 
