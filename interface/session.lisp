@@ -324,7 +324,7 @@
 					  (+ (* 3600 24 365 10) *session-timer-time*))))
 
 (defun make-cookie ()
-  (concatenate 'string (make-session-id)(make-session-id)))
+  (concatenate 'string "C="(make-session-id)(make-session-id)))
 
 (defun process-cookie (request)
   (let ((cookie (cdr (assoc "Cookie" (command request) :test #'string=))))
