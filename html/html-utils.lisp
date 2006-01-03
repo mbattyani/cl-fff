@@ -233,37 +233,42 @@ Arguments to directives are supported only as indicated."
 (export 'universal-time-to-string)
 
 (defun universal-time-to-string (time &optional (time-zone 0))
-  (let ((*print-pretty* nil))
-    (multiple-value-bind
-	  (sec min hour date month year day-of-week dsp tz)
-	(decode-universal-time time time-zone)
-      (declare (ignore tz dsp))
-      (format nil
-	      "~a, ~2,'0d ~a ~d ~2,'0d:~2,'0d:~2,'0d~@[ GMT~]"
-	      (svref '#("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun") day-of-week)
-	      date
-	      (svref '#(nil "Jan" "Feb" "Mar" "Apr" "May" "Jun"
-			"Jul" "Aug" "Sep" "Oct" "Nov" "Dec") month)
-	      year hour min sec (= 0 time-zone)))))
-
+  (if time
+      (let ((*print-pretty* nil))
+        (multiple-value-bind
+              (sec min hour date month year day-of-week dsp tz)
+            (decode-universal-time time time-zone)
+          (declare (ignore tz dsp))
+          (format nil
+                  "~a, ~2,'0d ~a ~d ~2,'0d:~2,'0d:~2,'0d~@[ GMT~]"
+                  (svref '#("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun") day-of-week)
+                  date
+                  (svref '#(nil "Jan" "Feb" "Mar" "Apr" "May" "Jun"
+                            "Jul" "Aug" "Sep" "Oct" "Nov" "Dec") month)
+                  year hour min sec (= 0 time-zone))))
+      ""))
+  
 (export 'universal-time-to-date)
 (defun universal-time-to-date (time lang &optional (time-zone 0))
-  (let ((*print-pretty* nil))
-    (multiple-value-bind
-	  (sec min hour date month year day-of-week dsp tz)
-	(decode-universal-time time time-zone)
-      (declare (ignore tz dsp))
-      (case lang
-	(:fr 
-	 (format nil "~a ~2,'0d ~a ~d"
-		 (svref '#("Lundi" "Mardi" "Mercredi" "Jeudi" "Vendredi" "Samedi" "Dimanche") day-of-week)
-		 date
-		 (svref '#(nil "Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-			   "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre") month) year))
-	(t 
-	 (format nil "~a, ~2,'0d ~a ~d"
-		 (svref '#("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday") day-of-week)
-		 date
-		 (svref '#(nil "January" "February" "March" "April" "May" "June"
-			   "July" "August" "September" "October" "November" "December") month) year))))))
-
+  (if time
+      (let ((*print-pretty* nil))
+        (multiple-value-bind
+              (sec min hour date month year day-of-week dsp tz)
+            (decode-universal-time time time-zone)
+          (declare (ignore tz dsp))
+          (case lang
+            (:fr 
+             (format nil "~a ~2,'0d ~a ~d"
+                     (svref '#("Lundi" "Mardi" "Mercredi" "Jeudi" "Vendredi" "Samedi" "Dimanche") day-of-week)
+                     date
+                     (svref '#(nil "Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
+                               "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre") month) year))
+            (t 
+             (format nil "~a, ~2,'0d ~a ~d"
+                     (svref '#("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday") day-of-week)
+                     date
+                     (svref '#(nil "January" "February" "March" "April" "May" "June"
+                               "July" "August" "September" "October" "November" "December") month) year)))))
+      ""))
+  
+  
