@@ -117,8 +117,9 @@
 	       (write-string "http://" stream)
 	       (write-string *server-name* stream))
 	     (write-string url-prefix stream)
-	     (write-char #\/ stream)
-	     (write-string *request-id* stream)
+             (when *request-id*
+               (write-char #\/ stream)
+               (write-string *request-id* stream))
 	     (write-string "/sdata" stream)
 ;internal format ::= <TokenChar><Value><Tab>
 	     (write-string (html:encode-url-string
