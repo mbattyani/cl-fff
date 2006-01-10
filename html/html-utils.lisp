@@ -91,6 +91,20 @@ as type and sets speed to 3 with safety 0 within its scope."
                         (write-part vector stream scan-idx idx)
                         (write-string vector stream :start start :end idx))))))
 
+;;; from TBNL
+(defun url-encode (string)
+  "URL-encodes a string using the external format EXTERNAL-FORMAT."
+  (with-output-to-string (s)
+    (loop for c across string
+          do (cond ((or (char<= #\0 c #\9)
+                        (char<= #\a c #\z)
+                        (char<= #\A c #\Z)
+                        (find c "$-_.!*'()," :test #'char=))
+                     (write-char c s))
+                   #+nil((char= c #\Space)
+                     (write-char #\+ s))
+                   (t (format s "%~2,'0x" (char-code c)))))))
+
 ;;;------------------------------------------------------------------- 
 ;;;
 ;;; FAST COMPILE-TIME FORMAT

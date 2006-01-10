@@ -1,10 +1,15 @@
 (in-package meta)
 
+(defmacro with-store-lock ((store) &body body)
+  `(mp:with-lock ((store-lock ,store))
+     ,@body))
+
 (defun silent-mark-object-as-modified (object)
   (unless (modified object)
-	  (setf (modified object) t)
-	  (when (object-store object)
-	    (push object (modified-objects (object-store object))))))
+    (with-store-lock ((object-store object))
+      (setf (modified object) t)
+      (when (object-store object)
+        (push object (modified-objects (object-store object)))))))
 
 (defmethod mark-object-as-modified (object)
   (silent-mark-object-as-modified object))
@@ -272,12 +277,14 @@
 (defclass store ()
   ((loaded-objects :initform (make-hash-table :test #'eql) :accessor loaded-objects)
    (modified-objects :initform () :accessor modified-objects)
-   (store-id :initform 0 :accessor store-id)))
+   (store-id :initform 0 :accessor store-id)
+   (store-lock :initform (mp:make-lock :name (format nil "store-lock~d" (random 1000000))) :accessor store-lock)))
 
 (defmethod save-modified-objects (store)
-  (dolist (object (modified-objects store))
-    (save-object-to-store store object))
-  (setf (modified-objects store) ()))
+  (with-store-lock (store)
+    (dolist (object (modified-objects store))
+      (save-object-to-store store object))
+    (setf (modified-objects store) ())))
 
 
 (defmethod initialize-instance :after ((store store) &rest init-options &key &allow-other-keys)

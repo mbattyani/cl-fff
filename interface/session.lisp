@@ -22,6 +22,8 @@
 (defvar *robot-file* #P"~/robot-log.txt")
 (defvar *session-timer-time* (get-universal-time))
 
+(defvar *url-params-aliases* (make-hash-table :test #'equal))
+
 (defvar *create-sessions-data-funcs* (make-hash-table))
 
 (defvar *session-char-to-token* (make-hash-table))
@@ -180,15 +182,16 @@
       (with-output-to-string (s) (write-url s values)))))
 
 (defun decode-session-url (url)
-  (let (string
-	(params nil)
-	(next-char 0))
-    (loop while next-char
-	  do (setf (values string next-char) (extract-param-string "sdata" url next-char))
-	  while string
-	  do 
-	  (setf string (html:decode-url-string (nsubstitute #\= #\* (nsubstitute #\= #\_ string))))
-	  (setf params (nconc (loop with i = 0 and l = (length string)
+  (or (gethash url *url-params-aliases*)
+      (let (string
+            (params nil)
+            (next-char 0))
+        (loop while next-char
+           do (setf (values string next-char) (extract-param-string "sdata" url next-char))
+           while string
+           do 
+             (setf string (html:decode-url-string (nsubstitute #\= #\* (nsubstitute #\= #\_ string))))
+             (setf params (nconc (loop with i = 0 and l = (length string)
 				    while (< i l)
 				    for key = (gethash (aref string i) *session-char-to-token*)
 				    for pos = (position #\Tab string :start (1+ i))
@@ -196,8 +199,8 @@
 				    nconc (list key value)
 				    while pos
 				    do (setf i (1+ pos)))
-			      params)))
-    params))
+                                 params)))
+        params)))
 
 (defun encode-integer (n)
   (declare (optimize (speed 3)(debug 0)(safety 0)(space 0)))
@@ -231,7 +234,7 @@
 (defun meta::decode-object-id (string)
   (decode-object-id string))
 
-(defun encode-object-url (object &key stream absolute args)
+(defmethod encode-object-url (object &key stream absolute args)
   (setf args (append (list :page "object" :object object) args))
   (when *session*
     (setf args (list* :session (id *session*) :lang *country-language-id* args)))
@@ -332,22 +335,9 @@
     (unless cookie
       (setf cookie (make-cookie)
             (new-cookie request) t)
-      (push-header "Set-Cookie" (concatenate 'string cookie *cookie-expiration*) request))
+      (push-header "Set-Cookie" (concatenate 'string cookie *cookie-expiration*) request)
+      (push-header "Set-Cookie" (concatenate 'string cookie "; path=/") request))
     (setf (cookie request) cookie)))
-
-;  (let ((cookies (cdr (assoc "Cookie" (command request) :test #'string=))))
-;    (if cookies
-;      (let ((pos (search "LispID=" cookies)))
-;	(when pos
-;	  (let ((end (position #\Space cookies :start pos)))
-;	    (setf (cookie request)(subseq cookies (+ pos 11) end)))))
-;      (progn (setf cookie (make-session-id))
-;	     (push-header "Set-Cookie" (concatenate 'string "LispID=" cookie *cookie-expiration*) request)))
-;  (let ((cookie (cdr (assoc "Cookie" (command request) :test #'string=))))
-;    (unless cookie
-;      (setf cookie (make-session-id))
-;      (push-header "Set-Cookie" (concatenate 'string "LispID=" cookie *cookie-expiration*) request))
-;    (setf (cookie request) cookie)))
 
 (defun string-to-float (string)
   (let* ((*read-eval* nil)
