@@ -264,6 +264,8 @@
 
 (defvar *names-for-true* '("true" "1" "yes" "oui" "vrai" "t"))
 
+(defvar *GMT-time* nil)
+
 (defun parse-date (string)
   (let* ((pos1 (position #\/ string))
 	 (pos2 (when pos1 (position #\/ string :start (1+ pos1))))
@@ -280,7 +282,9 @@
 	(when (< n3 100) (incf n3 2000))
 	(unless (and n1 n2 n3 (<= 1 n2 12) (<= 0 h 23) (<= 0 m 59) (<= 0 s 59))
 	  (error "bad date : ~s" string))
-	(encode-universal-time s m h n1 n2 n3)))))
+        (if *GMT-time*
+            (encode-universal-time s m h n1 n2 n3 0)
+            (encode-universal-time s m h n1 n2 n3))))))
 
 ;**** MUST be provided by the interface!
 ;(defun decode-object-id (string)
@@ -331,13 +335,15 @@
 
 (defun date-to-sql (value stream)
   (if value
-    (multiple-value-bind (s mn h d m y) (decode-universal-time value)
+    (multiple-value-bind (s mn h d m y) 
+        (if *GMT-time* (decode-universal-time value 0)(decode-universal-time value))
       (format stream "'~4,'0d-~2,'0d-~2,'0d'" y m d))
     (write-string "null" stream)))
 
 (defun utime-to-sql (value stream)
   (if value
-    (multiple-value-bind (s mn h d m y) (decode-universal-time value)
+    (multiple-value-bind (s mn h d m y) 
+        (if *GMT-time* (decode-universal-time value 0)(decode-universal-time value))
       (format stream "'~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d'" y m d h mn s))
     (write-string "null" stream)))
 
@@ -420,12 +426,20 @@
 (defun parse-iso-date (string)
   (when string
     (let ((length (length string)))
-      (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
-			     (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
-			     (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
-			     (parse-integer string :start 8 :end 10)
-			     (parse-integer string :start 5 :end 7)
-			     (parse-integer string :start 0 :end 4)))))
+      (if *GMT-time*
+          (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
+                                 (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
+                                 (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
+                                 (parse-integer string :start 8 :end 10)
+                                 (parse-integer string :start 5 :end 7)
+                                 (parse-integer string :start 0 :end 4)
+                                 0)
+          (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
+                                 (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
+                                 (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
+                                 (parse-integer string :start 8 :end 10)
+                                 (parse-integer string :start 5 :end 7)
+                                 (parse-integer string :start 0 :end 4))))))
 
 (defun parse-sql-boolean (value)
   (when value

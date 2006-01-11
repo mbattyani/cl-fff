@@ -110,7 +110,8 @@
 
 (defmethod make-set-value-javascript ((item html-date) value slot)
   (if value
-      (multiple-value-bind (s mn h d m y) (decode-universal-time value)
+      (multiple-value-bind (s mn h d m y) 
+          (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
 	(let ((j-value (if (show-time item)
 			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
 			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
@@ -148,7 +149,7 @@
 (defun first-week-day (month year)
   (multiple-value-bind (s m h d m y dw)
       (decode-universal-time 
-       (encode-universal-time 1 1 1 1 month year))
+       (encode-universal-time 1 1 1 1 month year 0) 0)
     dw))
 
 (defun last-day (month year)
@@ -214,7 +215,11 @@
 	(setf mn (when mn (parse-integer mn :junk-allowed t)))
 	(setf sec (when sec (parse-integer sec :junk-allowed t)))
 	(multiple-value-bind (s min h d m y) 
-	    (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))(get-universal-time)))
+            (if meta::*GMT-time*
+                (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))
+                                           (get-universal-time)) 0)
+                (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))
+                                           (get-universal-time))))
 	  (setf year (or year y))
 	  (setf month (or month m))
 	  (setf hour (or hour h))
