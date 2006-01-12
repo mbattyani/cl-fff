@@ -373,6 +373,13 @@
   (let* ((slot (slot *dispatcher*))
 	 (list (funcall (get-value-fn *dispatcher*) object))
 	 (list-length (length list)))
+    (if (item-state *dispatcher*)
+        (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
+               (list (funcall (get-value-fn *dispatcher*) object)))
+          (if (plusp value)
+              (funcall (set-value-fn *dispatcher*) (cons choice list) object)
+              (funcall (set-value-fn *dispatcher*) (delete choice list) object)))
+(progn
     (collect-selected-objects-idx (when (find #\= click-str) (subseq click-str (1+ (position #\= click-str)))))
     (if (<= -4 value -1)
 	(let ((start (start *dispatcher*))
@@ -442,7 +449,7 @@
                   (html:fast-format nil "x_.open1('/asp/obj-del.html', '250px', '250px', '~a');"
                                     (name (item *dispatcher*)))))
                 ((and (= value -10) *user*) ; paste
-                 (paste-clipboard (clipboard *user*) object slot))))))))
+                 (paste-clipboard (clipboard *user*) object slot))))))))))
   
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
   (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
@@ -986,7 +993,7 @@ function fh(name)
                       ((:a :id ,(action-link obj-link)
 			   :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a')"
 					  (name obj-link)))
-                       ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "middle" :title "Changer")))))))))))
+                       ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "middle" :title "Change")))))))))))
 
 (html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
 
@@ -1039,7 +1046,8 @@ function fh(name)
 	  (:when (modifiable-p ,slot)
 	    ((:a :id ,(action-link item)
 		 :href ,(format nil "javascript:open1('/asp/pick-val.html', '400px', '500px', '~a')"
-				(name item))) (:translate '(:en "Change" :fr "Changer")))))))))
+				(name item))) 
+             ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))))))))
 
 (html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
 
@@ -1077,7 +1085,9 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-	(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
+        (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+                  "window.setTimeout('window.close();', 600); shot = true;}};")
+#+nil        (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		  "window.close();};")
 	((:table :class "pcolt" :align "center")
 	 (loop for x below 18
@@ -1144,16 +1154,15 @@ function fh(name)
 		  ((:td :align "right" :valign "top")
 		   ((:a :id ,(action-link item)
 			:href ,(format nil "javascript:open1('/asp/pick-val.html', '300px', '500px', '~a')"
-				       (name item))) (:translate '(:en "Change" :fr "Changer"))))))))
+				       (name item))) 
+                    ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))
 	    `(html:html
-	      ((:table :width "100%")
-	       (:tr
-		(:td ((:span :id ,(name item) ,@attrs)))
-		(:when (modifiable-p ,slot)
-		  ((:td :align "right" :valign "top")
-		   ((:a :id ,(action-link item)
-			:href ,(format nil "javascript:open1('/asp/pick-val.html', '300px', '500px', '~a')"
-				       (name item))) (:translate '(:en "Change" :fr "Changer")))))))))))))
+              ((:span :id ,(name item) ,@attrs))
+              (:when (modifiable-p ,slot)
+                ((:a :id ,(action-link item)
+                     :href ,(format nil "javascript:open1('/asp/pick-val.html', '300px', '500px', '~a')"
+                                    (name item)))
+                 ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
@@ -1188,7 +1197,7 @@ function fh(name)
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:input :type "checkbox" :fformat (:id "CB~d" i)
 				     :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
-				     :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")
+				     :insert-string (if (and value (member (decode-object-id value) slot-value :test #'equal)) "CHECKED" "")
 				     ))
 			    (html:esc text) :br)
 	      (push value choices))
@@ -1197,6 +1206,72 @@ function fh(name)
 			      (:translate '(:en "Close" :fr "Fermer"))))))))
 
 (defun std-mpick-treeview-html-fn (dispatcher)
+  (let* ((item (interface::item dispatcher))
+         (item-name (interface::name item))
+         (object (interface::object dispatcher))
+         (slot (interface::slot dispatcher))
+         (slot-value (funcall (get-value-fn dispatcher) object))
+         (choices ())
+         (i 0))
+    (flet ((draw-item2 (node)
+             (let* ((name (first node))
+		    (text (first name))
+		    (value (second name)))
+	       (if value
+		   (html:html "&nbsp;&nbsp;"
+			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
+				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
+				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
+			      (incf i)
+			      (push value choices)
+			      (html:esc text))
+                   (html:html "&nbsp;&nbsp;"
+                              (html:esc text))))))
+      (html:html
+       (:head
+	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+       (:style "
+.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
+.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
+.ic  {height:16px; width:16px; border:0;}
+.sp  {position:relative;}
+")
+       (:jscript
+	"function fs(name)
+{
+  var item;
+  item=document.getElementById(name);
+  if (item)
+     item.style.display = 'inline';
+}
+    
+function fh(name)
+{
+  var item;
+  item=document.getElementById(name);
+  if (item)
+     item.style.display = 'none';
+}
+")
+       (:body
+	:br
+	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+        (:if nil ;(typep dispatcher 'html-slot-list-dispatcher)
+             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
+                       "window.setTimeout('window.close();', 600); shot = true;}};")
+             (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+		"else window.opener.Fck('" item-name "',-i);"
+		"};"))
+	(:p (:translate (meta::get-value-text slot)))
+	(when dispatcher
+	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t t ()
+			    :draw-node-fn #'draw-item2)
+	  (setf (item-state dispatcher) (nreverse choices)))
+	:br :br
+	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
+				(:translate '(:en "Close" :fr "Fermer"))))))))
+#+nil
   (let* ((item (interface::item dispatcher))
 	 (item-name (interface::name item))
 	 (object (interface::object dispatcher))
@@ -1436,6 +1511,7 @@ function fh(name)
     (if non-leaf-node
 	(html:html
 	 ((:div :class "d1")
+           (:nobr
 	  (draw-prev-lines2 previous-lasts)
 	  ((:span :id span-c :class "sp" :fformat (:style "left:~dpx;" pos))
 	   ((:img :src
@@ -1454,7 +1530,6 @@ function fh(name)
 							      div-o span-o span-c)))
 	   ((:img :src "/fo.gif" :class "ic" :align "top")))
 	  ((:span  :class "sp" :fformat (:style "left:~dpx;" pos))
-           (:nobr
             "&nbsp;"
             (funcall draw-node-fn node))))
 	  ((:div :class "d1" :id div-o :style display)

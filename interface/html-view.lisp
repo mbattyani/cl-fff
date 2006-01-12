@@ -210,8 +210,10 @@
      (:body
       :br
       (:h1 (:translate (meta::get-value-title fc-function) :default '(:en "Choose an object" :fr "Choisissez un objet")))
-      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
-		"window.close();}; window.focus();")
+      (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+                "window.setTimeout('window.close();', 600); shot = true;}};")     
+#+nil      (:jscript "function f42(d){window.opener.Fch('" item-name "',d);"
+                "window.close();}; window.focus();")
       (:p (:translate (meta::get-value-text fc-function)))
       (when dispatcher
 	(when t;(meta::null-allowed fc-function)
