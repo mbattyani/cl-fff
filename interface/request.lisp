@@ -191,7 +191,8 @@
     (declare (optimize (speed 3)(space 0)(debug 0)(safety 0))
 	     (type simple-base-string user-agent))
     (when user-agent
-      (or (search "Googlebot" user-agent)
+      (or (search "Google" user-agent)
+          (search "Gigabot" user-agent)
 	  (search "msnbot" user-agent)
           (search "Slurp" user-agent)))))
 

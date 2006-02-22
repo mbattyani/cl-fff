@@ -164,7 +164,7 @@
   (let* ((*package* (ensure-package (project-package proj)))
 	 (*print-right-margin* 150)
 	 (*project-version* (version proj))
-	 (*from-project-version* 14);(or from-version (1- *project-version*)))
+	 (*from-project-version* (or from-version (1- *project-version*)))
 	 (fn-names ())
 	 (classes ())
 	 (file-id (interface::make-session-id))

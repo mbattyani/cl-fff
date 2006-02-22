@@ -18,6 +18,9 @@
 (defvar *session-timeout* 1200) ;in seconds
 (defvar *session-file* #P"~/session-log.txt")
 (defvar *robot-session-id* "Robot")
+(defvar *robot-session-cookie* (concatenate 'string "Robot; path=/; expires="
+					 (html:universal-time-to-string
+					  (+ (* 3600 24 365 10) (get-universal-time)))))
 (defvar *robot-log* nil)
 (defvar *robot-file* #P"~/robot-log.txt")
 (defvar *session-timer-time* (get-universal-time))
@@ -249,10 +252,13 @@
       (setf session nil)) ;;bad cookie!
     (if session
       (when (string= session-id *robot-session-id*)
-	(unless (web-robot-request? request)
+        (setf (new-cookie session) nil)
+        (unless (web-robot-request? request)
 	  (setf session nil)))
       (when (web-robot-request? request)
-	(setf session (make-instance 'session :id *robot-session-id*))))
+	(setf session (make-instance 'session :id *robot-session-id*)
+              (new-cookie session) nil)
+        (push-header "Set-Cookie" *robot-session-cookie* request)))
     (when session
       (unless (history session)
 	(setf (cookie session) (cookie request))
