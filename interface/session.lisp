@@ -252,12 +252,12 @@
       (setf session nil)) ;;bad cookie!
     (if session
       (when (string= session-id *robot-session-id*)
-        (setf (new-cookie session) nil)
+        (setf (new-cookie request) nil)
         (unless (web-robot-request? request)
 	  (setf session nil)))
       (when (web-robot-request? request)
 	(setf session (make-instance 'session :id *robot-session-id*)
-              (new-cookie session) nil)
+              (new-cookie request) nil)
         (push-header "Set-Cookie" *robot-session-cookie* request)))
     (when session
       (unless (history session)

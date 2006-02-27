@@ -69,7 +69,7 @@
   
 (defmethod update-instance-for-different-class :after ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)
-  (when (and (slot-boundp instance 'data-object)(data-object new-object))
+  (when (and (slot-boundp new-object 'data-object)(data-object new-object))
     (change-class (data-object new-object) (data-class (class-of new-object)))
     (initialize-unbound-slots new-object)
     (initialize-disable-predicates new-object)))
