@@ -151,9 +151,10 @@
       (when content-type
 	(setf content-type (html::parse-header-values content-type)))
       (setf (posted-content request)
-	    (nconc
-	     (when posted-content (html::parse-posted-content posted-content content-type))
-	     (when url-params (html::parse-url-posted-content url-params))))))
+            (ignore-errors
+              (nconc
+               (when posted-content (html::parse-posted-content posted-content content-type))
+               (when url-params (html::parse-url-posted-content url-params)))))))
   (posted-content request))
 
 (defmacro cache-request-value (slot-name value-name)
