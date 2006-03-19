@@ -46,6 +46,7 @@
    (original-cookie :initform nil :accessor original-cookie)
    (cookie :initform nil :accessor cookie)
    (browser :initform nil :accessor browser)
+   (robot-session :initform nil :accessor robot-session :initarg :robot-session)
    (browser-ip :initform nil :accessor browser-ip)
    (user :initform nil :accessor user)
    (authentified :initform nil :accessor authentified)
@@ -63,9 +64,9 @@
 (defun end-session (session)
   (when (history session)
     (let ((data (list* (cookie session)(browser session)(browser-ip session)(nreverse (history session)))))
-      (if (string= *robot-session-id* (id session))
-	(push data *robot-log*)
-	(push data *session-log*))))
+      (if (robot-session session)
+          (push data *robot-log*)
+          (push data *session-log*))))
   (remhash (id session) *sessions*)
   (remhash (cookie session) *session-cookies*))
 
@@ -251,12 +252,12 @@
                (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
       (setf session nil)) ;;bad cookie!
     (if session
-      (when (string= session-id *robot-session-id*)
+      (when (robot-session session)
         (setf (new-cookie request) nil)
         (unless (web-robot-request? request)
 	  (setf session nil)))
       (when (web-robot-request? request)
-	(setf session (make-instance 'session :id *robot-session-id*)
+	(setf session (make-instance 'session :id *robot-session-id* :robot-session t)
               (new-cookie request) nil)
         (push-header "Set-Cookie" *robot-session-cookie* request)))
     (when session
@@ -274,7 +275,7 @@
 
 (defun create-session (request)
   (if (web-robot-request? request)
-    (make-instance 'session :id *robot-session-id*)
+      (make-instance 'session :id *robot-session-id* :robot-session t)
     (let ((session (make-instance 'session)))
       (setf (cookie session) (cookie request)))))
 
