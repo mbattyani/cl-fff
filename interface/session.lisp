@@ -187,6 +187,7 @@
 
 (defun decode-session-url (url)
   (or (gethash url *url-params-aliases*)
+      (gethash (concatenate 'string "/asp" (subseq url 7)) *url-params-aliases*) ;python
       (let (string
             (params nil)
             (next-char 0))
