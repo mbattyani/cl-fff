@@ -174,7 +174,7 @@
 (defvar *default-day-names* '("January" "February" "March" "April" "May" "June"
                                 "July" "August" "September" "October" "November" "Décember"))
 
-(defun html-month (item month year show-time)
+(defun html-month (item day month year show-time)
   (let ((first-week-day (first-week-day month year))
 	(last-day (last-day month year))
 	(time (if show-time 
@@ -192,7 +192,8 @@
 	    until (and (> d last-day)(= (mod col 7) 0))
 	    do (html:html (:if (or (< d 1)(> d last-day))
 			    ((:td :class "cald"))
-			    ((:td :class "cald" )((:a :fformat (:href "javascript:f42(~a);" d)) d)))
+			    ((:td :class "cald" :insert-string (if (= day d) "style='background-color:#ffffff';" ""))
+                             ((:a :fformat (:href "javascript:f42(~a);" d)) d)))
 			  (:when (= (mod col 7) 6) "</tr>")))))))
 
 (defun calendar-request-handler (request)
@@ -202,6 +203,7 @@
 	     (item (cdr (assoc "item" (posted-content request) :test 'string=)))
 	     (year (cdr (assoc "year" (posted-content request) :test 'string=)))
 	     (month (cdr (assoc "month" (posted-content request) :test 'string=)))
+             (day nil)
 	     (hour (cdr (assoc "hour" (posted-content request) :test 'string=)))
 	     (mn (cdr (assoc "mn" (posted-content request) :test 'string=)))
 	     (sec (cdr (assoc "sec" (posted-content request) :test 'string=)))
@@ -222,6 +224,7 @@
                                            (get-universal-time))))
 	  (setf year (or year y))
 	  (setf month (or month m))
+	  (setf day d)
 	  (setf hour (or hour h))
 	  (setf mn (or mn min))
 	  (setf sec (or sec s)))
@@ -252,7 +255,7 @@
 		      do (if (= year a)
 			   (html:ffmt "<option value=~d SELECTED>~d" a a)
 			   (html:ffmt "<option value=~d>~d" a a)))))
-	       (html-month item month year (show-time (item dispatcher)))
+	       (html-month item day month year (show-time (item dispatcher)))
 	      
 	      ((:div :align "center")
 	       (:when (show-time (item dispatcher))
@@ -260,7 +263,10 @@
 		 ":"
 		 ((:input :name "mn" :id "mn" :value (princ-to-string mn) :style "width:20px;"))
 		 ":"
-		 ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br)
+		 ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br
+		 (html:html "&nbsp;&nbsp;"
+			    ((:a :fformat (:href "javascript:f42(~d);" day))
+			     (:translate '(:en "Submit" :fr "Envoyer"))) :br))
 	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
 		 (html:html "&nbsp;&nbsp;"
 			    ((:a :href "javascript:f42('');")
