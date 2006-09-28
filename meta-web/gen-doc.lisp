@@ -597,6 +597,7 @@
 				  :left-margin 25 :right-margin 25)
 			"Goupes de classes")
 	     (tt::vspace 10)
+#+nil
 	     (dolist (group (class-groups project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 14 :color '(0.0 0 0.4)
 				    :left-margin 25 :right-margin 25)
@@ -625,6 +626,7 @@
 				  :left-margin 25 :right-margin 25)
 			    "Fichiers sources" )
 	     (tt::vspace 10)
+#+nil
 	     (dolist (file (files project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 12 :color '(0.0 0 0.4)
 				    :left-margin 65 :right-margin 25)
@@ -645,6 +647,7 @@
 				      :left-margin 25 :right-margin 25)
 			    "Fin" (tt::dotted-hfill)
 			    (tt::format-string "~d" (tt::find-ref-point-page-number :the-end)))
+#+nil
 	     (when (other-documents project)
 	       (tt::vspace 20)
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -660,6 +663,7 @@
 				  (tt::put-string (page-number doc))))))
 
 	     :eop
+             :hfill (tt::graph-box (gen-class-graph-layout project (mapcan #'(lambda (x) (copy-list (classes x))) (class-groups project)) 1)) :hfill
 	     (if (eq meta::*country-language* :fr)
 		 (french-doc-help project)
 		 (english-doc-help project))
@@ -745,10 +749,12 @@
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
 
+#+nil
   (dolist (group (class-groups project))
     (when (print-in-doc group)
       (gen-doc-content group)))
 
+#+nil
   (when (print-source-files project)
     (dolist (file (files project))
       (when (print-in-doc file)
@@ -807,7 +813,8 @@
 	(*margins* '(72 72 72 50))
 	(pdf::*max-number-of-pages* 2000)
 	(*index* nil)
-	(*package* (ensure-package (project-package project))))
+	(*package* (ensure-package (project-package project)))
+        (meta::*country-language* :fr))
     (tt::with-document ()
       (let* ((print-stamp (multiple-value-bind (second minute hour date month year)
 			      (decode-universal-time (version-date project))
