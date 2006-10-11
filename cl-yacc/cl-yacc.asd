@@ -1,10 +1,10 @@
 ;;; -*-Lisp-*-
 
-(asdf:defsystem #:yacc
-  :name "yacc"
+(asdf:defsystem #:cl-yacc
+  :name "cl-yacc"
   :author "Juliusz Chroboczek <jch@pps.jussieu.fr>"
   :licence "MIT/X11"
   :description "A LALR(1) parser generator for Common Lisp"
   
-  :components ((:file "yacc"))
+  :components ((:file "yacc")(:file "convert"))
   )
