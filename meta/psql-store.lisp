@@ -299,4 +299,6 @@
 
 (defun load-clsql-uffi ()
   (clsql-uffi::load-uffi-foreign-library t)
-  (postgresql::load-postgresql-foreign-library t))
+  (#-lispworks5 postgresql::load-postgresql-foreign-library 
+   #+lispworks5 db-postgresql::load-postgresql-foreign-library 
+   t))

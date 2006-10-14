@@ -21,7 +21,7 @@
 (in-package #:cl-user)
 
 (defpackage #:clsql-postgresql
-    (:use #:common-lisp #:clsql-base-sys #:postgresql #:clsql-uffi)
+    (:use #:common-lisp #:clsql-base-sys #+lispworks5 #:db-postgresql #-lispworks5 #:postgresql #:clsql-uffi)
     (:export #:postgresql-database)
     (:documentation "This is the CLSQL interface to PostgreSQL."))
 
@@ -289,10 +289,13 @@
             (return list)))))
 
 ;;; Large objects support (Marc B)
+(defconstant +INV_ARCHIVE+ 65536)         ; fe-lobj.c
+(defconstant +INV_WRITE+   131072)
+(defconstant +INV_READ+    262144)
 
 (defmethod database-create-large-object ((database postgresql-database))
   (lo-create (database-conn-ptr database)
-	     (logior postgresql::+INV_WRITE+ postgresql::+INV_READ+)))
+	     (logior +INV_WRITE+ +INV_READ+)))
 
 
 #+mb-original
@@ -304,7 +307,7 @@
     (with-transaction (:database database)
        (unwind-protect
 	  (progn 
-	    (setf fd (lo-open ptr object-id postgresql::+INV_WRITE+))
+	    (setf fd (lo-open ptr object-id +INV_WRITE+))
 	    (when (>= fd 0)
 	      (when (= (lo-write ptr fd data length) length)
 		(setf result t))))
@@ -322,7 +325,7 @@
     (database-execute-command "begin" database)
     (unwind-protect
 	(progn 
-	  (setf fd (lo-open ptr object-id postgresql::+INV_WRITE+))
+	  (setf fd (lo-open ptr object-id +INV_WRITE+))
 	  (when (>= fd 0)
 	    (when (= (lo-write ptr fd data length) length)
 	      (setf result t))))
@@ -343,7 +346,7 @@
     (unwind-protect
        (progn
 	 (database-execute-command "begin" database)
-	 (setf fd (lo-open ptr object-id postgresql::+INV_READ+))
+	 (setf fd (lo-open ptr object-id +INV_READ+))
 	 (when (>= fd 0)
 	   (setf length (lo-lseek ptr fd 0 2))
 	   (lo-lseek ptr fd 0 0)

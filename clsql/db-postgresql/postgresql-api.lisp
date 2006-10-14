@@ -19,7 +19,7 @@
 ;;;; *************************************************************************
 
 (declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0)))
-(in-package :postgresql)
+(in-package #+lispworks5 #:db-postgresql #-lispworks5 #:postgresql)
 
 
 ;;;; This file implements as little of the FFI bindings to the

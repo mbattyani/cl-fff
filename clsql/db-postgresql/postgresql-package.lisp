@@ -18,7 +18,7 @@
 
 (in-package #:cl-user)
 
-(defpackage #:postgresql
+(defpackage #+lispworks5 #:db-postgresql #-lispworks5 #:postgresql
     (:nicknames #:pgsql)
     (:use #:cl #:clsql-uffi)
     (:export
