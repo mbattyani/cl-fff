@@ -196,6 +196,7 @@
           (search "Gigabot" user-agent)
 	  (search "msnbot" user-agent)
 	  (search "yacybot" user-agent)
+	  (search "ZyBorg" user-agent)
           (search "Slurp" user-agent)))))
 
 (defmacro with-posted-strings ((request . params) . body)
