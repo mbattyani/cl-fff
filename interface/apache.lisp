@@ -5,6 +5,7 @@
 (defvar *apache-port* 3000)
 (defvar *apache-socket* nil)
 (defvar *apache-nb-use-socket* 0)
+(defvar *apache-nb-requests* 0)
 (defvar *close-apache-socket* nil)
 (defvar *ignore-errors* nil)
 
@@ -59,6 +60,7 @@
 
 (defun process-apache-command (command)
   (log-message (format nil "process-apache-command ~s~%" command))
+  (incf *apache-nb-requests*)
   (util:with-logged-errors () (%process-apache-command% command)))
 
 (defvar *reply-protocol* nil)
