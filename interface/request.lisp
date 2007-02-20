@@ -194,9 +194,13 @@
     (when user-agent
       (or (search "Google" user-agent)
           (search "Gigabot" user-agent)
+          (search "Snapbot" user-agent)
 	  (search "msnbot" user-agent)
+	  (search "Ask Jeeves" user-agent)
 	  (search "yacybot" user-agent)
 	  (search "ZyBorg" user-agent)
+	  (search "MJ12bot" user-agent)
+          (search "topicblogs" user-agent)
           (search "Slurp" user-agent)))))
 
 (defmacro with-posted-strings ((request . params) . body)
