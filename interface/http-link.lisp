@@ -139,7 +139,7 @@
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
 	     (:html ((:body :optional 
-			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',5000);"))
+			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',2000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
 			       "parent.F6541();"
@@ -261,7 +261,7 @@
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
       (html::optimize-progn
-       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 5000);"
+       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 2000);"
 			  (html:ffmt "v686=~s;" http-link-url)))
        ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
 			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
@@ -288,7 +288,7 @@
 	(setf (last-access-time interface) *session-timer-time*)
 	(html:html-to-stream s
 	     (:html (:head ((:meta :http-equiv "Content-Type" :content "text/html; charset=iso-8859-1")))
-		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',5000);")))
+		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',2100);")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
 			       "parent.F6541();"
