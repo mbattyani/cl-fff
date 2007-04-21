@@ -104,9 +104,15 @@
               (let ((func (getf session-params :func "")))
                 (if (or (string= func "lpush")(string= func "lpull"))
                     (reload-remote-browser-from-push-pull request)
-                    (let ((session (create-session request)))
+                    (let* ((session (create-session request))
+                           (original-url (%command-param "url" command))
+                           (query-start (position #\? original-url))
+                           new-url)
                       (setf (getf session-params :session) (id session))
-                      (interface::redirect-to (interface::encode-session-url nil session-params) request)))))))))))
+                      (setf new-url (interface::encode-session-url nil session-params))
+                      (when query-start
+                        (setf new-url (concatenate 'string new-url (subseq original-url query-start))))
+                      (interface::redirect-to new-url request)))))))))))
 
 (defun process-asp-url (request))
 
