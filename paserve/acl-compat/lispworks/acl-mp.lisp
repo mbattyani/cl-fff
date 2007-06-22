@@ -178,7 +178,8 @@
                                                      (funcall timeoutfn)))))))))
       (mp:schedule-timer-relative timer timeout)
       (unwind-protect (funcall bodyfn)
-        (without-interrupts
+;        (break)
+        (progn ;without-interrupts
          (mp:unschedule-timer timer)
          (setf unsheduled? t))))))
 

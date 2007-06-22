@@ -124,7 +124,7 @@
     :data-object))
 
 (defmethod (setf slot-definition-allocation) (allocation (slot stored-slot-definition))
-  (call-next-method))
+  (unless (eq allocation :data-object) (call-next-method)))
 
 ;; Called when the defclass is expanded, to process a slot option.  It
 ;; should return the new list of slot options, based on

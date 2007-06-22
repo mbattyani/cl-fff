@@ -98,8 +98,9 @@
                ((objects *object*)
                 (html:html nb-objects (:translate '(:fr " objets" :en " objects"))))
                (t (html:html (:translate '(:fr ": Vide" :en ": Empty")))))
-             (:when (check-clipboard-compatibility *object*
-                                                   (object source-dispatcher) (slot source-dispatcher))
+             (:when (and source-dispatcher
+                         (check-clipboard-compatibility *object*
+                                                        (object source-dispatcher) (slot source-dispatcher)))
                ((:a :format (:href "javascript:Fck('~a', f854('~a',-10));" 
                                    source-item-name source-item-name))
                 ((:img :border "0" :src "/p.jpg" :width "22" :height "18" :alt "Paste")) :br
