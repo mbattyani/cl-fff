@@ -274,12 +274,9 @@ function SLk(v456, v457, v458, v459)
   
   x.open("POST", v459, true);
   x.onreadystatechange = function() { 
-    if(this.readyState == 4) { 
-      eval(this.responseText);
-      delete this.onreadystatechange;
-      this.onreadystatechange = null;
-      delete this.responseText;
-      this.responseText = null;
+    if(x.readyState == 4) { 
+      eval(x.responseText);
+      x.onreadystatechange = function() {};
     }
   }
   x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
