@@ -140,7 +140,7 @@
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
 			   ((:a :id ,(concatenate 'string (name edit) "l")
 				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '280px', '~a')"
-					       (name edit))) (:translate '(:en "calendar" :fr "calendrier")))
+					       (name edit))) (:translate '(:en "calendar" :fr "calendrier" :sp "calendario")))
 			   )
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
@@ -162,6 +162,8 @@
 
 (defparameter *month-names* '(:fr ("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
                                    "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre")
+                              :sp ("Enero" "Febrero" "Marzo" "Abril" "Mayo" "Junio" 
+                                   "Julio" "Agosto" "Septiembre" "Octubre"  "Noviembre" "Diciembre")
                               :en ("January" "February" "March" "April" "May" "June"
                                    "July" "August" "September" "October" "November" "Décember")))
 
@@ -169,6 +171,7 @@
                                 "July" "August" "September" "October" "November" "December"))
 
 (defparameter *day-names* '(:fr ("Di" "Lu" "Ma" "Me" "Je" "Ve" "Sa")
+                            :sp ("Do" "Lu" "Ma" "Mi" "Ju" "Vi" "Sa")
                             :en ("Su" "Mo" "Tu" "We" "Th" "Fr" "Sa")))
 
 (defvar *default-day-names* '("January" "February" "March" "April" "May" "June"
@@ -234,11 +237,11 @@
 	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
 	   (:html
 	    (:head
-	     (:title (:translate '(:en "Choose a day" :fr "Choisissez une date")))
+	     (:title (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
 	     ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	    (:body
 	     :br
-	     (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date")))
+	     (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
 	     ((:form :name "go" :method "post" :action "/asp/calendar.html")
 	      ((:input :name "item" :type "hidden" :value item))
 	      ((:div :align "center")
@@ -266,13 +269,13 @@
 		 ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br
 		 (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42(~d);" day))
-			     (:translate '(:en "Submit" :fr "Envoyer"))) :br))
+			     (:translate '(:en "Submit" :fr "Envoyer" :sp "Submit"))) :br))
 	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
 		 (html:html "&nbsp;&nbsp;"
 			    ((:a :href "javascript:f42('');")
-			     (:translate '(:en "No date" :fr "Aucune date"))) :br))
+			     (:translate '(:en "No date" :fr "Aucune date" :sp "Ninguna fecha"))) :br))
 	       ((:a :class "call" :href "javascript:window.close();")
-		(:translate '(:en "Close" :fr "Fermer"))))
+		(:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
 	      ))))))
       t)
 
@@ -488,7 +491,7 @@
 				 :choices-fn (meta::get-object-func slot)
 				 :html-fn (meta::get-value-html-fn slot)
 				 :action-fn 'slot-list-action-fn :list-format (meta::list-format slot)))
-	    (sub-obj-name (format nil #T(:en "Add ~a" :fr "Ajouter ~a")
+	    (sub-obj-name (format nil #T(:en "Add ~a" :fr "Ajouter ~a" :sp "Agregar ~a")
 				  (meta::translate (meta::user-name (find-class (meta::value-type slot)))))))
 	(setf (table-class item) (concatenate 'string class "t"))
 	(if add-fn-only
@@ -580,7 +583,7 @@
                                      ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
                                       (html:esc (meta::short-description object))) :br))
                     ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-                                            (:translate '(:en "Close" :fr "Fermer"))))))))))))))
+                                            (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
 (interface::add-named-url "/asp/obj-pick2.html" 'pick2-request-handler)
@@ -636,7 +639,7 @@
 	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
 	     (:html
 	      (:head
-	       (:title (:translate '(:en "Delete" :fr "Suppression")))
+	       (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
@@ -644,18 +647,20 @@
                               "window.setTimeout('window.close();', 600); shot = true;}};")
 	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
 			 (:translate '(:en "Do you want to remove these objects:"
+                                       :sp "Está seguro de querer eliminar estos objetos:"
 				       :fr "Voulez vous vraiment supprimer ces objets:"))
 			 (:translate '(:en "Do you want to remove this object:"
+                                       :sp "Está seguro de querer eliminar este objeto:"
 				       :fr "Voulez vous vraiment supprimer cet objet:"))))
 	       (:p
 		(dolist (object (objects-to-delete dispatcher))
 		  (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
 	       ((:div :align "center")
 		((:a :class "call" :href "javascript:f42('30000');" )
-		 (:translate '(:en "Yes" :fr "Oui")))
+		 (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
 		"&nbsp;&nbsp;&nbsp;&nbsp;"
 		((:a :class "call" :href "javascript:f42('30001');" )
-		 (:translate '(:en "No" :fr "Non")))
+		 (:translate '(:en "No" :fr "Non" :sp "No")))
 		))))))
 	t))
 

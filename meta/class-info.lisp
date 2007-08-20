@@ -8,11 +8,11 @@
 
 (export 'translated-string)
 (defclass translated-string ()
-  ((english  :initarg :en  :accessor english)
-   (french   :initarg :fr  :accessor french)
-   (german   :initarg :de  :accessor german)
-   (spanish  :initarg :sp  :accessor spanish)
-   (italian  :initarg :it  :accessor italian)))
+  ((english  :initarg :en  :accessor english :initform "")
+   (french   :initarg :fr  :accessor french :initform "")
+   (german   :initarg :de  :accessor german :initform "")
+   (spanish  :initarg :sp  :accessor spanish :initform "")
+   (italian  :initarg :it  :accessor italian :initform "")))
 
 (defun translated-string-reader (stream subchar arg)
   (declare (ignore arg subchar))
@@ -67,7 +67,7 @@
 
 (defvar *default-void-link-text*
   (make-instance 'translated-string
-		 :en "not defined" :fr "non défini"))
+		 :en "not defined" :fr "non défini" :sp "No definido"))
 
 (defun translated-void-link-text (slot)
   (let ((translation (translate (void-link-text slot))))
@@ -170,7 +170,7 @@
 
 (defvar *undefined-short-desc*
   (make-instance 'translated-string
-		 :en "(no description)" :fr "(pas de description)"))
+		 :en "(no description)" :fr "(pas de description)" :sp "(no descripción)"))
 
 (defmethod short-description :around ((obj root-object))
   (let ((desc (call-next-method)))

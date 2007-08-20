@@ -1,6 +1,6 @@
 (in-package interface)
 
-(defparameter *country-language-ids* '(("en" . :en)("fr" . :fr)("es" . :es)("it" . :it)))
+(defparameter *country-language-ids* '(("en" . :en)("fr" . :fr)("sp" . :sp)("it" . :it)))
 
 ; URL -> Lambda(request) -> t if OK
 (defvar *named-urls* (make-hash-table :test #'equal))
