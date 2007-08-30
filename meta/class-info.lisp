@@ -6,7 +6,6 @@
 (export '*country*)
 (defvar *country* :en)
 
-(export 'translated-string)
 (defclass translated-string ()
   ((english  :initarg :en  :accessor english :initform "")
    (french   :initarg :fr  :accessor french :initform "")
@@ -30,7 +29,6 @@
 (defun check-string (string)
   (and string (> (length string) 0) string))
 
-(export 'translate)
 (defmethod translate ((tr-string t) &key default (country-lang *country-language*))
   (or (check-string tr-string) (translate default) ""))
 
