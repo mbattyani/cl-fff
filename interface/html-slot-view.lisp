@@ -570,11 +570,11 @@
                   (funcall (html-fn (item *dispatcher*)) *dispatcher*)
                   (html:html
                    (:head
-                    (:title (:translate '(:en "pick an object" :fr "Choisissez un objet")))
+                    (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
                     ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
                    (:body
                     :br
-                    (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet")))
+                    (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
                     (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
                               "window.setTimeout('window.close();', 600); shot = true;}};")
                     (loop for object in (when *dispatcher*
@@ -617,7 +617,7 @@
 				   ((:a :fformat (:href "javascript:f42('~a');" i))
 				    (html:esc (meta::translate (meta::user-name object)))) :br))
 	       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				       (:translate '(:en "Close" :fr "Fermer")))))))))
+				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 	t))
 (interface::add-named-url "/asp/obj-new.html" 'obj-new-request-handler)
 
@@ -708,7 +708,7 @@
 	  (:when (modifiable-p ,slot)
 	    ((:a :id ,(action-link item)
 		 :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a');"
-				(name item))) (:translate '(:en "Change" :fr "Changer")))))))))
+				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
 
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
@@ -741,18 +741,20 @@
 	 (slot (interface::slot dispatcher)))
     (html:html
      (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur"  :sp "Elija un valor")))
       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
      (:body
       :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
       (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(when (meta::null-allowed (slot dispatcher))
 	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"))) :br :br))
+		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" 
+                                                                        :fr "Aucun de ces choix" 
+                                                                        :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for (text value) in (funcall (choices-fn dispatcher)(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42('~a');" (if (stringp value)
@@ -760,7 +762,7 @@
 									     value)))
 			     (html:esc text)) :br)))
       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-			      (:translate '(:en "Close" :fr "Fermer"))))))))
+			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 (defun std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -783,7 +785,7 @@
 	   (null-allowed (meta::null-allowed (slot dispatcher))))
       (html:html
        (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
 	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -810,7 +812,7 @@ function fh(name)
 ")
        (:body
 	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
         (:if (typep dispatcher 'html-slot-list-dispatcher)
              (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
@@ -821,12 +823,13 @@ function fh(name)
 	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
 			    :draw-node-fn #'draw-item :opened-node t)
 	  (when null-allowed
-	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix")) "")) 0  nil t ()
+	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix" 
+                                                                                 :sp "Ninguna de estas opciones")) "")) 0  nil t ()
 			      :draw-node-fn #'draw-item)))
 	:br :br
 	((:div :align "center")
          ((:a :class "call" :href "javascript:window.close();")
-          (:translate '(:en "Close" :fr "Fermer")))))))))
+          (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 (defun std-fn-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -848,7 +851,7 @@ function fh(name)
 	   (fc-fn (fc-function (item dispatcher))))
       (html:html
        (:head
-	(:title (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:title (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
 	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -875,7 +878,7 @@ function fh(name)
 ")
        (:body
 	:br
-	(:h1 (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:h1 (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
         (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
                   "window.setTimeout('window.close();', 600); shot = true;}};")
 	(:p (:translate (meta::get-value-text fc-fn)))
@@ -884,7 +887,7 @@ function fh(name)
 			    :draw-node-fn #'draw-item :opened-node t))
 	:br :br
 	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				(:translate '(:en "Close" :fr "Fermer")))))))))
+				(:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 (defun std-pick-huge-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -920,7 +923,7 @@ function fh(name)
       (setf (item-state2 dispatcher) path)
       (html:html
        (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
 	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -947,7 +950,7 @@ function fh(name)
 ")
        (:body
 	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
+	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
 	((:form :name "go" :method "post" :action "/asp/pick-val.html")
 	 ((:input :id "item" :name "item" :type "hidden" :value item-name))
 	 ((:input :id "link" :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
@@ -964,14 +967,16 @@ function fh(name)
 	   (draw-huge-tree (funcall (choices-fn dispatcher) object) 0 0 t (not null-allowed)
 			   () path #'draw-item)
 	   (when null-allowed
-	     (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix")) "")) 0  nil t ()
+	     (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                                                                  :sp "Ninguna de estas opciones")) "")) 0  nil t ()
 			       :draw-node-fn #'draw-item)
 	     #+ignore
 	     (html:html "&nbsp;&nbsp;"
-			((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"))))))
+			((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                                                                                       :sp "Ninguna de estas opciones"))))))
 	 :br :br
 	 ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				 (:translate '(:en "Close" :fr "Fermer"))))))))))
+				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
 
 ;;; slot-obj-link
 
@@ -1016,24 +1021,25 @@ function fh(name)
 	 (slot (slot dispatcher)))
     (html:html
      (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet")))
+      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
      (:body
       :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet")))
+      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
       (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(when (meta::null-allowed (slot dispatcher))
 	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"))) :br :br))
+		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                                                            :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
 			     (html:esc (meta::short-description object))) :br)))
       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-			      (:translate '(:en "Close" :fr "Fermer"))))))))
+			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 
 ;;; pick-color
