@@ -54,7 +54,8 @@
 	(let ((id (create-new-object-id store (id (class-of object)))))
 	  (when (gethash id (loaded-objects store)) (error "Object is already there loaded"))
 	  (setf (id object) id)))
-      (setf (data-object object) (apply 'make-instance (data-class (class-of object)) (append init-options '(:allow-other-keys t))))
+      (setf (data-object object) (apply 'make-instance (data-class (class-of object))
+                                        (append init-options '(:allow-other-keys t))))
       (unless no-init-forms
 	(call-next-method object)
 	(initialize-disable-predicates object))
@@ -152,4 +153,19 @@
 (defun update-object-parent (object)
   (update-object-parent-in-store object (object-store object)))
 
+(defmethod load-all-sub-objects (object)
+  )
 
+(defmethod load-all-sub-objects ((object list))
+  (map nil 'load-all-sub-objects object))
+
+(defmethod load-all-sub-objects ((object root-object))
+  (util:with-logged-errors (:ignore-errors t)
+     (load-object-data object)
+     (let* ((class (class-of object))
+            (data-object (data-object object)))
+       (loop for slot in (class-slots (class-of object))
+             for slot-name = (slot-definition-name slot)
+             do
+             (unless (or (in-proxy slot) (not (stored slot)) (linked-value slot))
+               (load-all-sub-objects (slot-value data-object slot-name)))))))

@@ -15,6 +15,7 @@
 
 (defclass psql-store (store)
   ((db-pool :initform nil :accessor db-pool :initarg :db-pool)
+   (broken-objects :initform nil :accessor broken-objects)
    ))
 
 (defmethod initialize-instance :after ((store psql-store) &rest init-options &key &allow-other-keys)
@@ -85,13 +86,38 @@
 		(new-object object) nil))))))
 
 (defmethod save-modified-objects ((store psql-store))
-  (when (modified-objects store)
-    (with-store-db (store)
-      (let ((*forced-db-connection* clsql:*default-database*))
-	(clsql:with-transaction ()
-	  (dolist (object (modified-objects store))
-	    (save-object-to-store store object))
-	  (setf (modified-objects store) ()))))))
+  (with-store-lock (store)
+   (when (modified-objects store)
+     (with-store-db (store)
+       (let ((*forced-db-connection* clsql:*default-database*)
+             (modified-objects (modified-objects store))
+             (current-object nil)
+             (saved-so-far ())
+             (created-so-far ()))
+         (mp:without-interrupts
+          (setf modified-objects (modified-objects store))
+          (setf (modified-objects store) ()))
+         (clsql:with-transaction ()
+           (clsql:add-transaction-rollback-hook
+            clsql:*default-database*
+            #'(lambda()
+                (mp:without-interrupts
+                 (when current-object
+                   (pushnew current-object (broken-objects store))
+                   (setf modified-objects (remove current-object modified-objects)))
+                 (setf (modified-objects store) (append (modified-objects store) modified-objects)))
+                (dolist (object saved-so-far)
+                  (setf (modified object) t))
+                (dolist (object created-so-far)
+                  (setf (modified object) t
+                        (new-object object) t))))
+           (dolist (object modified-objects)
+             (when (modified object)
+               (setf current-object object)
+               (save-object-to-store store object)
+               (if (new-object object)
+                   (push object created-so-far)
+                 (push object saved-so-far))))))))))
 
 (defmethod read-object-proxy-from-store ((store psql-store) id)
   (let ((found (gethash id (loaded-objects store))))
