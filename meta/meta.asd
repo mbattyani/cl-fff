@@ -18,6 +18,7 @@
 	       (:file "psql-store" :depends-on ("store"))
 	       (:file "class-info" :depends-on ("object"))
 	       (:file "sql" :depends-on ("object"))
+	       (:file "psql-export" :depends-on ("sql" "psql-store"))
 	       (:file "utilities" :depends-on ("store")))
-  :depends-on (:utility :clsql :clsql-postgresql)
+  :depends-on (:utility :clsql :clsql-postgresql :csv-parser)
   )

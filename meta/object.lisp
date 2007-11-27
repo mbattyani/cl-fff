@@ -159,7 +159,21 @@
 (defmethod load-all-sub-objects ((object list))
   (map nil 'load-all-sub-objects object))
 
+(defvar *nb-of-object-loaded* 0)
+(defvar *room-values* nil)
+(defvar *room-stream* nil)
+
+
 (defmethod load-all-sub-objects ((object root-object))
+  (incf *nb-of-object-loaded*)
+  (when (zerop (mod *nb-of-object-loaded* 10000))
+    (let ((room1 (system:room-values))
+          room2)
+;      (when (= *nb-of-object-loaded* 100000) (throw :pre-load nil))
+      (hcl:mark-and-sweep 2)
+      (sys:force-promote-0)
+      (setf room2 (system:room-values))
+      (push (append room1 room2) *room-values*)))
   (util:with-logged-errors (:ignore-errors t)
      (load-object-data object)
      (let* ((class (class-of object))
