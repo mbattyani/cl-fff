@@ -61,7 +61,7 @@
 	(initialize-disable-predicates object))
       (mark-object-as-modified object)))
   (unless anonymous (setf (gethash (id object) (loaded-objects store)) object))
-  (hcl:flag-special-free-action object))
+  #+nil(hcl:flag-special-free-action object))
 
 (defmethod update-instance-for-different-class :before ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)
@@ -93,7 +93,7 @@
 ;	(format t "~%free ~S ~S~%" (class-name (class-of object))(id object))
     (save-object object)))
 
-(hcl:add-special-free-action '%free-object%)
+#+nil (hcl:add-special-free-action '%free-object%)
 
 (defmethod duplicate-object (object &key parent store)
   (load-object-data object)
@@ -170,8 +170,8 @@
     (let ((room1 (system:room-values))
           room2)
 ;      (when (= *nb-of-object-loaded* 100000) (throw :pre-load nil))
-      (hcl:mark-and-sweep 2)
-      (sys:force-promote-0)
+;      (hcl:mark-and-sweep 2)
+;      (sys:force-promote-0)
       (setf room2 (system:room-values))
       (push (append room1 room2) *room-values*)))
   (util:with-logged-errors (:ignore-errors t)

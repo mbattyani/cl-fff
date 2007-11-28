@@ -178,7 +178,7 @@
 			(unless data (setf data (load-object-data object)))
 			(slot-value data slot-name)))))
     (if (eq (value-type slot) :decimal)
-	(float (/ value (expt 10 (nb-decimals slot))))
+	(float (/ value (expt 10 (nb-decimals slot))) 1.0d0)
 	value)))
 
 (defmethod (setf slot-value-using-class) (value (class fc-class) object slot-name)
@@ -189,7 +189,7 @@
 	(let ((data (data-object object)))
 	  (unless data (setf data (load-object-data object)))
 	  (setf (slot-value data slot-name) value)))
-      (when (eq (value-type slot) :decimal)(setf value (float (/ value (expt 10 (nb-decimals slot))))))
+      (when (eq (value-type slot) :decimal)(setf value (float (/ value (expt 10 (nb-decimals slot))) 1.0d0)))
       value))
 
 (defmethod slot-boundp-using-class ((class fc-class) object slot-name)
@@ -253,7 +253,7 @@
 					  (find c "0123456789+-.,"))
 				      string
 				      :start (if first-digit first-digit 0))))
-    (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit))))))
+    (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit))) 1.0d0)))
 
 (defun find-value-from-choice (choice-nb choices)
   (let* ((choice-nb (parse-integer choice-nb :junk-allowed t))
@@ -391,6 +391,8 @@
     (write-string "null" s)))
 
 (defun number-to-sql (value s)
+  (when (floatp value)
+    (setf value (float value 1.0d0)))
   (if value
     (prin1 value s)
     (write-string "null" s)))
@@ -401,6 +403,8 @@
     (write-string "null" s)))
 
 (defun decimal-to-sql (value s &optional (format "'~,2f'"))
+  (when (floatp value)
+    (setf value (float value 1.0d0)))
   (if value
     (format s format value)
     (write-string "null" s)))
@@ -513,6 +517,8 @@
     (write-string "null" s)))
 
 (defun number-to-string (value s)
+  (when (floatp value)
+    (setf value (float value 1.0d0)))
   (if value
     (prin1 value s)
     (write-string "null" s)))
@@ -523,6 +529,8 @@
     (write-string "null" s)))
 
 (defun decimal-to-string (value s &optional (format "'~,2f'"))
+  (when (floatp value)
+    (setf value (float value 1.0d0)))
   (if value
     (format s format value)
     (write-string "null" s)))
@@ -568,6 +576,8 @@
 			       (write-char #\' s))
 			     (write-string "null" s))))
     ((safe-subtypep type 'number) #'(lambda (value s)
+                                      (when (floatp value)
+                                        (setf value (float value 1.0d0)))
 				      (if value
 					(prin1 value s)
 					(write-string "null" s))))
@@ -642,7 +652,7 @@
 					    (find c "0123456789+-.,"))
 					string
 					:start (if first-digit first-digit 0))))
-      (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit)))))))
+      (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit))) 1.0d0))))
 
 (defun string-to-number (string null-allowed)
   (if (and null-allowed (string-equal string "nil"))
