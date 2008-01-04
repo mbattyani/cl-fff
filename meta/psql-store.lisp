@@ -13,6 +13,14 @@
 	   (let ((clsql:*default-database* ,db)) ,@body)
 	(unless ,forced (clsql:disconnect :database ,db))))))
 
+; version with store lock
+;    `(with-store-lock (,store)
+;        (let* ((,forced *forced-db-connection*)
+;               (,db (or ,forced (clsql:connect nil :pool (db-pool ,store)))))
+;          (unwind-protect
+;              (let ((clsql:*default-database* ,db)) ,@body)
+;            (unless ,forced (clsql:disconnect :database ,db)))))))
+
 (defclass psql-store (store)
   ((db-pool :initform nil :accessor db-pool :initarg :db-pool)
    (broken-objects :initform nil :accessor broken-objects)
