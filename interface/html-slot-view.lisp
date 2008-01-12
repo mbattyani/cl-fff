@@ -19,11 +19,13 @@
   (when (meta::choices slot)
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (html:quote-javascript-string
-		  (if (stringp value) value (write-to-string value)))))
+                  (cond
+                   ((stringp value) value)
+                   ((and (not value) (meta-level::dont-display-null-value slot)) "")
+                   (t (write-to-string value))))))
     (if (modifiable-p *dispatcher*)
 	(concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")
 	(concatenate 'string "x_.f826si('" (name item) "', '" j-value "');"))))
-
 
 (defmethod make-set-status-javascript ((item html-edit) status slot)
   (when (modifiable-p *dispatcher*)
@@ -61,7 +63,10 @@
   (when (meta::choices slot)
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (html:quote-javascript-string
-		  (if (stringp value) value (write-to-string value)))))
+                  (cond
+                   ((stringp value) value)
+                   ((and (not value) (meta-level::dont-display-null-value slot)) "")
+                   (t (write-to-string value))))))
     (concatenate 'string "x_.fgt('" (name item) "').innerHTML='" j-value "';")))
 
 
