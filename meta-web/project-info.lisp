@@ -230,13 +230,17 @@ rankdir=LR;
     (with-open-file (s src-file :direction :output :if-exists :supersede)
       (format s "(in-package ~s)~%" (package-name *package*))
       (format s "
+(defvar *~a-classes-list* '~a)
+
 (defun create-~a-classes (store)
-  (dolist (class '~a)
+  (dolist (class *~a-classes-list*)
      (meta::create-class-table store (find-class class))))
 
 "
 	      (name group)
-	      (mapcar 'name (remove-if-not 'instanciable (classes group))))
+	      (mapcar 'name (remove-if-not 'instanciable (classes group)))
+	      (name group)
+              (name group))
       (dolist (class (classes group))
 	(print-class-source s class))
       (format s "~%"))
