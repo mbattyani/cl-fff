@@ -250,7 +250,7 @@
 	 (session (or (and session-id (gethash session-id *sessions*))
                       (and *enable-cookies* (gethash (cookie request) *session-cookies*)))))
     (when (and session (cookie session)
-               (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
+               #+nil (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
       (setf session nil)) ;;bad cookie!
     (if session
       (when (robot-session session)
