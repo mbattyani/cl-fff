@@ -1,5 +1,13 @@
 (in-package html)
 
+(defun comment-tag (attributes form)
+  `(optimize-progn
+    (write-string "<!--" *html-stream*)
+    ,@(mapcar #'html-gen form)
+    (write-string "-->" *html-stream*)))
+
+(add-func-tag :comment 'comment-tag)
+
 (defun progn-tag (attributes form)
   `(optimize-progn ,@(mapcar #'html-gen form)))
 
