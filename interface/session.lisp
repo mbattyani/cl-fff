@@ -247,8 +247,9 @@
 
 (defun get-session (request &optional (session-params (decode-session-url (url request))))
   (let* ((session-id (getf session-params :session))
-	 (session (or (and session-id (gethash session-id *sessions*))
-                      (and *enable-cookies* (gethash (cookie request) *session-cookies*)))))
+	 (session (or (and *enable-cookies* (gethash (cookie request) *session-cookies*))
+                      (and session-id (gethash session-id *sessions*))
+                      )))
     (when (and session (cookie session)
                #+nil (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
       (setf session nil)) ;;bad cookie!
