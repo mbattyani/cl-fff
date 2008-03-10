@@ -10,6 +10,7 @@
     decode-vector))
 
 (defvar *session-decoding-vector* (reverse-encoding *session-encoding-vector*))
+(defvar *relaxed-session-security* t) ;allow sessions without cookies
 
 (defvar *sessions* (make-hash-table :test #'equal))
 (defvar *session-cookies* (make-hash-table :test #'equal))
@@ -251,7 +252,8 @@
                       (and session-id (gethash session-id *sessions*))
                       )))
     (when (and session (cookie session)
-               #+nil (not (new-cookie request)) (not (equal (cookie session)(cookie request))))
+               (if *relaxed-session-security* (not (new-cookie request)) t)
+               (not (equal (cookie session)(cookie request))))
       (setf session nil)) ;;bad cookie!
     (if session
       (when (robot-session session)

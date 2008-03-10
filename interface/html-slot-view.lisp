@@ -57,18 +57,19 @@
 ;;;***** slot span **************
 
 (defclass html-span (html-item)
-  ())
+  ((format-fn :accessor format-fn :initarg :format-fn :initform nil)))
 
 (defmethod make-set-value-javascript ((item html-span) value slot)
   (when (meta::choices slot)
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
-  (let ((j-value (html:quote-javascript-string
-                  (cond
-                   ((and (not value) (meta-level::dont-display-null-value slot)) "")
-                   ((stringp value) value)
-                   (t (write-to-string value))))))
+  (let ((j-value (if (format-fn item)
+                     (funcall (format-fn item) value)
+                     (html:quote-javascript-string 
+                      (cond
+                       ((and (not value) (meta-level::dont-display-null-value slot)) "")
+                       ((stringp value) value)
+                       (t (write-to-string value)))))))
     (concatenate 'string "x_.fgt('" (name item) "').innerHTML='" j-value "';")))
-
 
 (defmethod make-set-status-javascript ((item html-span) status slot)
   )
@@ -78,7 +79,9 @@
     (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
 		      :test #'string= :key #'clos:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let* ((edit (make-instance 'html-span :tooltip (meta::tooltip slot) :slot slot)))
+      (let* ((edit (make-instance 'html-span :tooltip (meta::tooltip slot)
+                                             :slot slot :format-fn (getf attrs :format-fn))))
+        (remf attrs :format-fn)
 	`(html:html ((:span :id ,(name edit) ,@attrs)))))))
 
 (html:add-func-tag :slot-span 'slot-span-tag)
