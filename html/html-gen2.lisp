@@ -66,7 +66,7 @@
     do (setf (gethash tag *empty-table*) tag)
     finally (return ',tags)))
 
-(define-empty-tags :br :hr :crlf :input :link :img)
+(define-empty-tags :br :hr :crlf :input :link :img :meta)
 
 (defmethod html-gen ((form cons))
    (let ((elt (first form)))

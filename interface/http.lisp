@@ -76,7 +76,7 @@
   (destructuring-bind (stream &key no-header title style-sheet description script-lib icon 
 			      (encoding "text/html; charset=ISO-8859-1")) args
     `(progn
-      (html::html-to-stream ,stream "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+      (html::html-to-stream ,stream "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >"
        (:html (:head 
 	       ,@(when icon `(((:link :rel "Shortcut icon" :href ,icon))))
 	       ,@(when title `((:title ,title)))
