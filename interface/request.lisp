@@ -51,7 +51,8 @@
       (push (cons "url-params" (subseq (url request) (1+ param-pos)))(command request))
       (setf (url request) (subseq (url request) 0 param-pos))))
   (decode-authentication request)
-  (process-cookie request))
+  (unless (web-robot-request? request)
+    (process-cookie request)))
 
 (defun push-header (header value request)
   (setf (header-alist request) (acons header value (header-alist request))))
@@ -190,10 +191,11 @@
 (defun web-robot-request? (request)
   (let ((user-agent (user-agent request)))
     (declare (optimize (speed 3)(space 0)(debug 0)(safety 0))
-	     (type simple-base-string user-agent))
-    (when user-agent
+	     #+nil (type simple-base-string user-agent))
+    (or (not user-agent)
       (or (search "Google" user-agent)
           (search "Gigabot" user-agent)
+          (search "YahooFeed" user-agent)
           (search "Snapbot" user-agent)
 	  (search "msnbot" user-agent)
 	  (search "Ask Jeeves" user-agent)
