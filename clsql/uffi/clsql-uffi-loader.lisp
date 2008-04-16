@@ -25,8 +25,8 @@
     "/usr/lib/"
     "/usr/local/lib/"
     "/home/kevin/debian/src/clsql/uffi/"))
-  
-(defparameter *clsql-uffi-library-filename* nil)
+
+(defvar user::*clsql-uffi-library-filename* "./uffi.dll")
 
 (defvar *clsql-uffi-supporting-libraries* '("c")
   "Used only by CMU. List of library flags needed to be passed to ld to
@@ -38,18 +38,14 @@ set to the right path before compiling or loading the system.")
 
 (defun load-uffi-foreign-library (&optional force)
   (when force (setf *uffi-library-loaded* nil))
-  (unless *uffi-library-loaded*
-    (setf *clsql-uffi-library-filename* (uffi:find-foreign-library
-					 "uffi" *clsql-uffi-library-path*
-					 :drive-letters '("C" "D")))
-    (unless (probe-file *clsql-uffi-library-filename*)
-      (error "Unable to find uffi.so"))
-    (if (uffi:load-foreign-library *clsql-uffi-library-filename* 
-				   :module "uffi" 
+    (unless (probe-file user::*clsql-uffi-library-filename*)
+      (error "Unable to find ~s" user::*clsql-uffi-library-filename*))
+    (if (uffi:load-foreign-library user::*clsql-uffi-library-filename* 
+				   :module "uffi"
 				   :supporting-libraries 
 				   *clsql-uffi-supporting-libraries*)
 	(setq *uffi-library-loaded* t)
-	(error "Unable to load helper library ~A" *clsql-uffi-library-filename*))))
+	(error "Unable to load helper library ~A" *clsql-uffi-library-filename*)))
 
-(load-uffi-foreign-library)
+;(load-uffi-foreign-library)
 

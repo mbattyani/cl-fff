@@ -28,26 +28,19 @@ set to the right path before compiling or loading the system.")
 (defvar *postgresql-library-loaded* nil
   "T if foreign library was able to be loaded successfully")
 
-(defvar *postgresql-library-path* '("/opt/postgresql/lib/" "/usr/local/lib/" 
-				    "/usr/lib/" "/postgresql/lib/"
-				    "/usr/local/pgsql/lib/" "/usr/lib/pgsql/"
-				    "/opt/pgsql/lib/pgsql" "/sw/lib/pgsql/"))
+(defvar user::*postgresql-library-filename* "./psql.dll")
 
 (defun load-postgresql-foreign-library (&optional force)
-  (when force (setf *uffi-library-loaded* nil))
+  (when force (setf *postgresql-library-loaded* nil))
     (unless *postgresql-library-loaded*
-      (let ((libpath (uffi:find-foreign-library 
-		      "libpq" *postgresql-library-path*
-		      :drive-letters '("C" "D" "E")
-		      #+(or macosx darwin ccl-5.0) :types
-		      #+(or macosx darwin ccl-5.0) '("so")
-		      )))
-	(if (uffi:load-foreign-library libpath
-				       :module "postgresql"
-				       :supporting-libraries 
-				       *postgresql-supporting-libraries*)
-	    (setq *postgresql-library-loaded* t)
-      (error "Can't load PostgreSQL client library ~A" libpath)))))
+      (unless (probe-file user::*postgresql-library-filename*)
+        (error "Unable to find ~s" user::*postgresql-library-filename*))
+      (if (uffi:load-foreign-library user::*postgresql-library-filename*
+                                     :module "postgresql"
+                                     :supporting-libraries 
+                                     *postgresql-supporting-libraries*)
+          (setq *postgresql-library-loaded* t)
+        (error "Can't load PostgreSQL client library ~A" libpath))))
 
 (defmethod clsql-base-sys:database-type-library-loaded ((database-type
 						    (eql :postgresql)))
@@ -57,5 +50,5 @@ set to the right path before compiling or loading the system.")
 						  (eql :postgresql)))
   (load-postgresql-foreign-library))
 
-(load-postgresql-foreign-library)
+;(load-postgresql-foreign-library)
 
