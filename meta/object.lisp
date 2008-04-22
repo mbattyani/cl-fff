@@ -58,6 +58,7 @@
                                         (append init-options '(:allow-other-keys t))))
       (unless no-init-forms
 	(call-next-method object)
+        (initialize-unbound-slots object)
 	(initialize-disable-predicates object))
       (mark-object-as-modified object)))
   (unless anonymous (setf (gethash (id object) (loaded-objects store)) object))
