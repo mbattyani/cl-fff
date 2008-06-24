@@ -89,7 +89,7 @@
                           resume-hook suspend-hook initial-bindings run-immediately)
   (declare (ignore priority quantum reset-action resume-hook suspend-hook run-immediately))
   (let ((mp:*process-initial-bindings* initial-bindings))
-    (mp:create-process name :run-reasons run-reasons :arrest-reasons arrest-reasons)))
+    (mp:create-process name :run-reasons run-reasons)))
 
 (defun process-run-function (name-or-options preset-function &rest preset-arguments)
   (let ((process (ctypecase name-or-options
