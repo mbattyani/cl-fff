@@ -318,7 +318,9 @@
 	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Type")
 	     ((:td :class "dvcv":style "background-color:#c0c0d0;") "Linked")
              ((:td :class "dvcv":style "background-color:#c0c0d0;") "Stored")
-             ((:td :class "dvcv":style "background-color:#c0c0d0;") "Copy")))
+             ((:td :class "dvcv":style "background-color:#c0c0d0;") "Copy")
+             ((:td :class "dvcv":style "background-color:#c0c0d0;") "View")
+             ((:td :class "dvcv":style "background-color:#c0c0d0;") "Modif")))
 	  (loop repeat max-nb
 	     for object in objects
 	     for index from start
@@ -343,5 +345,14 @@
                   ((:td :class "dvcv")
 		   (:p (:if (stored object) "stored" "")))
                   ((:td :class "dvcv")
-		   (:p (:if (duplicate-value object) "copy" ""))))))))))
+		   (:p (:if (duplicate-value object) "copy" "")))
+                  ((:td :class "dvcv")
+		   (:p (:if (visible object)
+                            "all"
+                            (:format "~{~a~^, ~}" (mapcar 'name (visible-groups object))))))
+                  ((:td :class "dvcv")
+		   (:p (:if (modifiable object)
+                            "all"
+                            (:format "~{~a~^, ~}" (mapcar 'name (modifiable-groups object))))
+                        )))))))))
 

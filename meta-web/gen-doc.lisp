@@ -942,3 +942,382 @@
 
 (defun english-doc-help (project)
   (french-doc-help project))
+
+(defun make-mcd-entity-node (class-info class-type)
+  (list class-info class-type))
+
+(defun make-mcd-relation-node (name class1 class2 nb1 nb2)
+  (list name class1 class2 nb1 nb2))
+
+(defvar %super-classes% ())
+
+(defun collect-super-classes (class)
+  (let ((%super-classes% nil))
+    (%collect-super-classes% class)
+    %super-classes%))
+
+(defun %collect-super-classes% (class)
+  (loop for super in (direct-superclasses class) do
+        (unless (member super %super-classes%)
+          (push super %super-classes%)
+          (%collect-super-classes% super))))
+
+(defun collect-all-slots (class)
+  (let ((super-classes (collect-super-classes class))
+        (slots ()))
+    (pushnew class super-classes)
+    (loop for class in super-classes do
+          (loop for slot in (direct-slots class) do
+                (pushnew slot slots :key 'name :test 'equal)))
+    slots))
+
+(defun gen-mcd-graph (project classes depth &optional (max-dx 440) (max-dy 550))
+  (setf classes (remove-if-not 'instanciable classes))
+  (let* ((entities (make-hash-table))
+	 (relations ())
+	 (all-classes (get-project-classes project))
+	 (new-classes classes)
+	 (next-new-classes ()))
+    (flet ((add-entity-node (class type)
+	     (unless (gethash class entities)
+	       (setf (gethash class entities)(list class type (symbol-name (gensym "N"))))))
+           (add-relation-node (slot class1 class2 nb1 nb2)
+	       (push (list slot class1 class2 nb1 nb2 (symbol-name (gensym "N"))(symbol-name (gensym "N"))) relations)))
+      (dolist (class classes)
+	(add-entity-node class :start-class))
+      (loop while new-classes
+            repeat depth do
+            (loop for class in new-classes do
+                  (loop for slot in (collect-all-slots class)
+                        for object-type = (object-type slot) do
+                        (when (eq (value-type slot) :object)
+                          (when (not (member object-type classes))
+                            (add-entity-node object-type :from-class)
+                            (push object-type next-new-classes)
+                            (push object-type classes))
+                          (add-relation-node slot class object-type 0 0))))
+            (setf new-classes next-new-classes
+                  next-new-classes ()))
+      (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")(s-dot::fontname "Arial")))
+              (loop for class in classes
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id (third (gethash class entities)))
+                                        (list 's-dot::label (name class))
+                                        '(s-dot::height "1.0")
+                                        '(s-dot::fontname "Arial")
+                                        '(s-dot::shape "box")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id id1) in relations
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id id)
+                                        (list 's-dot::label (name slot))
+                                        '(s-dot::fontname "Arial")
+                                        '(s-dot::shape "diamond")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id id1) in relations
+                    collect (list 's-dot::edge 
+                                  (list (list 's-dot::from (third (gethash class1 entities)))
+                                        (list 's-dot::to id)
+                                        '(s-dot::labeldistance "3.0")
+                                        '(s-dot::headport "w")
+;                                        '(s-dot::tailport "e")
+                                        '(s-dot::arrowhead "none")
+                                        (if (null-allowed slot)
+                                            '(s-dot::arrowtail "odottee")
+                                          '(s-dot::arrowtail "tee"))
+                                        #+nil
+                                        (if (null-allowed slot)
+                                            '(s-dot::taillabel "0..1")
+                                          '(s-dot::taillabel "1"))))
+                    collect (list 's-dot::edge (list (list 's-dot::from id)
+                                              (list 's-dot::to (third (gethash class2 entities)))
+                                              '(s-dot::labeldistance "3.0")
+;                                              '(s-dot::headport "w")
+                                              '(s-dot::tailport "e")
+                                              (if (list-of-values slot)
+                                                  '(s-dot::arrowhead "crowodot")
+                                                '(s-dot::arrowhead "tee"))
+                                              #+nil
+                                              (if (list-of-values slot)
+                                                  '(s-dot::headlabel "0..N")
+                                                '(s-dot::headlabel "1"))
+                                              ))))
+#+nil
+      (append (list 's-dot::graph '((s-dot::label "MCD Physique")(s-dot::ratio "1.0")(s-dot::rankdir "LR")
+                                    (s-dot::fontname "Arial")))
+              (loop for class in classes collect
+                    (list* 's-dot::record '((s-dot::fontname "Arial"))
+                           (list 's-dot::node
+                                 (list (list 's-dot::id (symbol-name (gensym "N")))
+                                       (list 's-dot::label (meta::convert-name-to-sql-name (name class)))
+                                       '(s-dot::shape "box")
+                                       '(s-dot::style "filled")))
+                           (list 's-dot::node
+                                 (list (list 's-dot::id (third (gethash class entities)))
+                                       (list 's-dot::label "id")
+                                       '(s-dot::shape "box")
+                                       '(s-dot::style "filled")))
+                           (loop for (slot class1 class2 nb1 nb2 id id1) in relations 
+                                 when (and (eql class1 class) (not (list-of-values slot))) collect
+                                 (list 's-dot::node
+                                       (list (list 's-dot::id id1)
+                                             (list 's-dot::label (meta::convert-name-to-sql-name (name slot)))
+                                             '(s-dot::shape "box")
+                                             '(s-dot::style "filled"))))))
+              (loop for (slot class1 class2 nb1 nb2 id id1) in relations
+                    when (list-of-values slot) collect
+                    (list 's-dot::record '((s-dot::fontname "Arial"))
+                          (list 's-dot::node
+                                (list (list 's-dot::id id)
+                                      (list 's-dot::label (meta::convert-name-to-sql-name 
+                                                           (format nil "~a_~a" (name class1)(name slot))))
+                                      '(s-dot::shape "box")
+                                      '(s-dot::style "filled")))
+                          (list 's-dot::node
+                                (list (list 's-dot::id (format nil "~a1" id))
+                                      (list 's-dot::label "parentid")
+                                      '(s-dot::shape "box")
+                                      '(s-dot::style "filled")))
+                          (list 's-dot::node
+                                (list (list 's-dot::id (format nil "~a2" id))
+                                      (list 's-dot::label "id")
+                                      '(s-dot::shape "box")
+                                      '(s-dot::style "filled")))))
+              (loop for (slot class1 class2 nb1 nb2 id id1) in relations
+                    when (not (list-of-values slot)) collect
+                    (list 's-dot::edge
+                          (list (list 's-dot::from (format nil (if (eql class1 class2) "~a:w" "~a:e") id1))
+                                (list 's-dot::to (format nil "~a:w" (third (gethash class2 entities))))
+                                '(s-dot::labeldistance "3.0")
+                                '(s-dot::headport "w")
+                                (if (eql class1 class2)
+                                    '(s-dot::tailport "w")
+                                    '(s-dot::tailport "e"))
+                                '(s-dot::arrowhead "normal")
+                                '(s-dot::arrowtail "none")
+                                #+nil
+                                (if (null-allowed slot)
+                                    '(s-dot::arrowtail "odottee")
+                                  '(s-dot::arrowtail "tee"))
+                                #+nil
+                                (if (list-of-values slot)
+                                    '(s-dot::arrowhead "crowodot")
+                                  '(s-dot::arrowhead "tee"))
+                                #+nil
+                                (if (null-allowed slot)
+                                    '(s-dot::taillabel "0..1")
+                                  '(s-dot::taillabel "1"))))
+                    when (list-of-values slot) collect
+                    (list 's-dot::edge
+                          (list (list 's-dot::from (format nil "~a:e" (third (gethash class1 entities))))
+                                (list 's-dot::to (format nil "~a1:w" id))
+                                '(s-dot::labeldistance "3.0")
+                                '(s-dot::headport "w")
+                                '(s-dot::tailport "e")
+                                '(s-dot::arrowhead "none")
+                                '(s-dot::arrowtail "normal")
+                                #+nil
+                                (if (null-allowed slot)
+                                    '(s-dot::arrowtail "odottee")
+                                  '(s-dot::arrowtail "tee"))
+                                #+nil
+                                (if (null-allowed slot)
+                                    '(s-dot::taillabel "0..1")
+                                  '(s-dot::taillabel "1"))))
+                    when (list-of-values slot) collect
+                    (list 's-dot::edge
+                          (list (list 's-dot::from (format nil (if (eql class1 class2) "~a2:w" "~a2:e") id))
+                                (list 's-dot::to (format nil (if (eql class1 class2) "~a:e" "~a:w")
+                                                         (third (gethash class2 entities))))
+                                '(s-dot::labeldistance "3.0")
+                                '(s-dot::tailport "e")
+                                '(s-dot::headport "w")
+                                #+nil
+                                (if (list-of-values slot)
+                                    '(s-dot::arrowhead "crowodot")
+                                  '(s-dot::arrowhead "tee"))
+                                #+nil
+                                (if (list-of-values slot)
+                                    '(s-dot::headlabel "0..N")
+                                  '(s-dot::headlabel "1"))
+                                )))))))
+
+(defclass mcd-entity ()
+  (
+   (node-id :accessor node-id :initform (symbol-name (gensym "N")))
+   (class-info :accessor class-info :initform nil)
+;   (parent-class :accessor parent-class :initform nil)
+;   (parent-slot :accessor parent-slot :initform nil)
+   (out-relations :accessor out-relations :initform nil)
+   (in-relations :accessor in-relations :initform nil)
+   ))
+
+(defclass mcd-relations ()
+  (
+   (node-id :accessor node-id :initform (symbol-name (gensym "N")))
+   (slot-info :accessor slot-info :initform nil)
+   (from-entity :accessor out-slots :initform nil)
+   (to-entity :accessor in-slots :initform nil)
+   ))
+
+(defun gen-mcd-graph-detail (project classes depth &optional (max-dx 440) (max-dy 550))
+  (setf classes (remove-if-not 'instanciable classes))
+  (let* ((entities (make-hash-table))
+	 (relations ())
+	 (all-classes (get-project-classes project))
+	 (new-classes classes)
+	 (next-new-classes ()))
+    (loop for class in all-classes 
+          for entity1 = (make-instance 'mcd-entity)
+          do
+          (setf (gethash class entities) entity1
+                )
+          (loop for slot in (collect-all-slots class)
+                for object-type = (object-type slot) do
+                (when (eq (value-type slot) :object)
+                  (when (not (member object-type classes))
+                    (add-entity-node object-type :from-class)
+                    (push object-type next-new-classes)
+                    (push object-type classes))
+                  (add-relation-node slot class object-type 0 0))))
+
+    (flet ((add-entity-node (class type)
+	     (unless (gethash class entities)
+	       (setf (gethash class entities)(list class type (symbol-name (gensym "N"))))))
+           (add-relation-node (slot class1 class2 nb1 nb2)
+	       (push (list slot class1 class2 nb1 nb2 (symbol-name (gensym "N"))) relations)))
+      (dolist (class classes)
+	(add-entity-node class :start-class))
+      (loop while new-classes
+            repeat depth do
+            (loop for class in new-classes do
+                  (loop for slot in (collect-all-slots class)
+                        for object-type = (object-type slot) do
+                        (when (eq (value-type slot) :object)
+                          (when (not (member object-type classes))
+                            (add-entity-node object-type :from-class)
+                            (push object-type next-new-classes)
+                            (push object-type classes))
+                          (add-relation-node slot class object-type 0 0))))
+            (setf new-classes next-new-classes
+                  next-new-classes ()))
+      (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")))
+              (loop for class in classes
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id (third (gethash class entities)))
+                                        (list 's-dot::label (name class))
+                                        '(s-dot::shape "box")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id) in relations
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id id)
+                                        (list 's-dot::label (name slot))
+                                        '(s-dot::shape "diamond")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id) in relations
+                    collect (list 's-dot::edge 
+                                  (list (list 's-dot::from (third (gethash class1 entities)))
+                                        (list 's-dot::to id)
+                                        '(s-dot::labeldistance "3.0")
+                                        '(s-dot::headport ":w")
+                                        '(s-dot::arrowhead "none")
+                                        (if (null-allowed slot)
+                                            '(s-dot::arrowtail "odottee")
+                                          '(s-dot::arrowtail "tee"))
+                                        #+nil
+                                        (if (null-allowed slot)
+                                            '(s-dot::taillabel "0..1")
+                                          '(s-dot::taillabel "1"))))
+                    collect (list 's-dot::edge (list (list 's-dot::from id)
+                                              (list 's-dot::to (third (gethash class2 entities)))
+                                              '(s-dot::labeldistance "3.0")
+                                              '(s-dot::tailport ":e")
+                                              (if (list-of-values slot)
+                                                  '(s-dot::arrowhead "crowodot")
+                                                '(s-dot::arrowhead "tee"))
+                                              #+nil
+                                              (if (list-of-values slot)
+                                                  '(s-dot::headlabel "0..N")
+                                                '(s-dot::headlabel "1"))
+                                              )))))))
+
+(defun gen-mcd-graph-detail (project classes depth &optional (max-dx 440) (max-dy 550))
+  (setf classes (remove-if-not 'instanciable classes))
+  (let* ((entities (make-hash-table))
+	 (relations ())
+	 (all-classes (get-project-classes project))
+	 (new-classes classes)
+	 (next-new-classes ()))
+    (loop for class in all-classes 
+          for entity1 = (make-instance 'mcd-entity)
+          do
+          (setf (gethash class entities) entity1
+                )
+          (loop for slot in (collect-all-slots class)
+                for object-type = (object-type slot) do
+                (when (eq (value-type slot) :object)
+                  (when (not (member object-type classes))
+                    (add-entity-node object-type :from-class)
+                    (push object-type next-new-classes)
+                    (push object-type classes))
+                  (add-relation-node slot class object-type 0 0))))
+
+    (flet ((add-entity-node (class type)
+	     (unless (gethash class entities)
+	       (setf (gethash class entities)(list class type (symbol-name (gensym "N"))))))
+           (add-relation-node (slot class1 class2 nb1 nb2)
+	       (push (list slot class1 class2 nb1 nb2 (symbol-name (gensym "N"))) relations)))
+      (dolist (class classes)
+	(add-entity-node class :start-class))
+      (loop while new-classes
+            repeat depth do
+            (loop for class in new-classes do
+                  (loop for slot in (collect-all-slots class)
+                        for object-type = (object-type slot) do
+                        (when (eq (value-type slot) :object)
+                          (when (not (member object-type classes))
+                            (add-entity-node object-type :from-class)
+                            (push object-type next-new-classes)
+                            (push object-type classes))
+                          (add-relation-node slot class object-type 0 0))))
+            (setf new-classes next-new-classes
+                  next-new-classes ()))
+      (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")))
+              (loop for class in classes
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id (third (gethash class entities)))
+                                        (list 's-dot::label (name class))
+                                        '(s-dot::shape "box")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id) in relations
+                    collect (list 's-dot::node 
+                                  (list (list 's-dot::id id)
+                                        (list 's-dot::label (name slot))
+                                        '(s-dot::shape "diamond")
+                                        '(s-dot::style "filled"))))
+              (loop for (slot class1 class2 nb1 nb2 id) in relations
+                    collect (list 's-dot::edge 
+                                  (list (list 's-dot::from (third (gethash class1 entities)))
+                                        (list 's-dot::to id)
+                                        '(s-dot::labeldistance "3.0")
+                                        '(s-dot::headport ":w")
+                                        '(s-dot::arrowhead "none")
+                                        (if (null-allowed slot)
+                                            '(s-dot::arrowtail "odottee")
+                                          '(s-dot::arrowtail "tee"))
+                                        #+nil
+                                        (if (null-allowed slot)
+                                            '(s-dot::taillabel "0..1")
+                                          '(s-dot::taillabel "1"))))
+                    collect (list 's-dot::edge (list (list 's-dot::from id)
+                                              (list 's-dot::to (third (gethash class2 entities)))
+                                              '(s-dot::labeldistance "3.0")
+                                              '(s-dot::tailport ":e")
+                                              (if (list-of-values slot)
+                                                  '(s-dot::arrowhead "crowodot")
+                                                '(s-dot::arrowhead "tee"))
+                                              #+nil
+                                              (if (list-of-values slot)
+                                                  '(s-dot::headlabel "0..N")
+                                                '(s-dot::headlabel "1"))
+                                              )))))))

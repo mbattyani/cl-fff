@@ -27,17 +27,20 @@
 	(interface::redirect-to (interface::encode-object-url project) request))
       t))
 
-(defun html-project-list()
+(defun project-list()
   (clsql:with-database (nil nil :pool *database-pool*)
-    (html:html
-     (loop for project in (sort (mapcar #'(lambda (x)
-					    (meta::load-object (first x) *meta-store*))
-					(clsql:query "select id from project" :types :auto))
-				#'string< :key #'name)
-	   do (html:html ((:a :href (interface::encode-object-url project))
-			  (:esc (meta::short-description project))) ": "
-			  (:i (:insert-string (description project))) :br))
-     :br ((:a :href "/asp/new-project.html") "New projet"))))
+    (sort (mapcar #'(lambda (x)
+                      (meta::load-object (first x) *meta-store*))
+                  (clsql:query "select id from project" :types :auto))
+          #'string< :key #'name)))
+
+(defun html-project-list()
+  (html:html
+   (loop for project in (project-list)
+         do (html:html ((:a :href (interface::encode-object-url project))
+                        (:esc (meta::short-description project))) ": "
+                        (:i (:insert-string (description project))) :br))
+   :br ((:a :href "/asp/new-project.html") "New projet")))
 
 (defparameter *meta-web-classes*
   '(slot-info class-info project choice-value user-group translated-string sql-list
