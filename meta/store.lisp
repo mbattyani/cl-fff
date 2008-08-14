@@ -406,7 +406,7 @@
 	  (init-object-from-sexpr object sexpr))))))
 
 (defmethod load-named-object ((store ascii-store) name)
-  (let ((filename (merge-pathnames (file-directory store) (format nil "~D.named" (sxhash name))))
+  (let ((filename (merge-pathnames (file-directory store) (format nil "~d.named" (sxhash name))))
 	id)
     (ignore-errors
       (with-open-file (s filename :direction :input)
@@ -415,7 +415,7 @@
 	  (load-object id store))))))
 
 (defmethod register-named-object ((store ascii-store) object name)
-  (let ((filename (merge-pathnames (file-directory store) (format nil "~D.named" (sxhash name)))))
+  (let ((filename (merge-pathnames (file-directory store) (format nil "~d.named" (sxhash name)))))
     (with-open-file (s filename :direction :output :if-exists :supersede)
       (format s "~D~%" (id object)))))
 
