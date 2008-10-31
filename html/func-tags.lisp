@@ -68,6 +68,16 @@
 
 (add-func-tag :fformat 'fformat-tag)
 
+(defun imgz-tag (attributes form)
+  (let ((srcz (getf attributes :srcz "")))
+   (setf attributes (copy-list attributes))
+   (remf attributes :srcz)
+   (html-gen
+    `((:a :target "_blank" :href ,srcz)
+      ((:img :border ,(getf attributes :border 0) ,@attributes))))))
+
+(add-func-tag :imgz 'imgz-tag)
+
 (defun optional-attr (value)
   (let ((val (gensym)))
     `((let ((,val ,(second value)))

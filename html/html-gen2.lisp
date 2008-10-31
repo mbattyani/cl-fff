@@ -130,6 +130,8 @@
 	   for attribute = (first attr)
 	   for value = (second attr)
 	   do
+           (when (numberp value)
+             (setf value (format nil "~a" value)))
 	   (cond
 	     ((func-attr attribute)
 	      (setf forms (nconc (reverse (funcall (func-attr attribute) value)) forms)))
