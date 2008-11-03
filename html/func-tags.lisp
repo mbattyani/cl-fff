@@ -69,7 +69,11 @@
 (add-func-tag :fformat 'fformat-tag)
 
 (defun imgz-tag (attributes form)
-  (let ((srcz (getf attributes :srcz "")))
+  (let* ((src (getf attributes :src ""))
+         (pos (search "-s.jpg" src))
+	 (srcz (getf attributes :srcz
+		     (or (when pos (remove-if #'identity src :start pos :end (+ pos 2)))
+			 src))))
    (setf attributes (copy-list attributes))
    (remf attributes :srcz)
    (html-gen
