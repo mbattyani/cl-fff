@@ -1,5 +1,9 @@
 (in-package utility)
 
+(export 'push-at-end)
+(defmacro push-at-end (item place)
+  `(setf ,place (nconc ,place (list ,item))))
+
 (export 'with-gensyms)
 (defmacro with-gensyms (syms &body body)
   `(let ,(mapcar #'(lambda (s)
