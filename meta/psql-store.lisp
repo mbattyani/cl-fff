@@ -146,11 +146,20 @@
       (unless sql-data
 	(util:with-logged-errors (:ignore-errors t)
 	  (error (with-output-to-string (s)
-		   (format s "~%object not found ~a (~a)~%" id (class-name (class-of object)))
+		   (format s "~%object not found ~a (~a)" id (class-name (class-of object)))
 		   (loop for obj = (meta::parent object) then (meta::parent obj)
 			 while obj do (format s " =>  ~a (~a, ~s)"
-					      (meta::id obj) (class-name (class-of obj))
-					      (ignore-errors (short-description obj))))))))
+					      (meta::id obj)
+                                              (ignore-errors (class-name (class-of obj)))
+					      (ignore-errors (short-description obj))))
+                   (when *preloaded-objects-stack*
+                     (format s " load-path: ")
+                     (loop for obj in (reverse *preloaded-objects-stack*)
+                           do (format s " =>  ~a (~a, ~s)"
+                                      (meta::id obj)
+                                      (ignore-errors (class-name (class-of obj)))
+                                      (ignore-errors (short-description obj)))))
+                   (format s "~%")))))
       (when sql-data
 	(when parent-id
 	  (setf (parent object) (read-object-from-store store parent-id)))

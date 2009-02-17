@@ -171,10 +171,16 @@
 		 :en "(no description)" :fr "(pas de description)" :sp "(no descripción)"))
 
 (defmethod short-description :around ((obj root-object))
-  (let ((desc (call-next-method)))
+  (let ((desc nil)
+        (got-error t))
+    (ignore-errors
+      (setf desc (call-next-method))
+      (setf got-error nil))
     (if (and (stringp desc) (> (length desc) 0))
       desc
-      (translate *undefined-short-desc*))))
+      (if got-error
+          "(error)"
+          (translate *undefined-short-desc*)))))
 
 (export 'long-description)
 (defmethod long-description (obj)

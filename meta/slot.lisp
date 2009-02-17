@@ -364,6 +364,8 @@
 (defun string-to-sql (value s)
   (if value
     (progn
+;      (when (> (length value) 7500)
+;            (setf value (subseq value 0 7500)))
       (write-char #\' s)
       (loop with length = (length value)
 	    for start = 0 then (when stop (1+ stop))
