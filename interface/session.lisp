@@ -73,7 +73,9 @@
 
 (defun clear-all-sessions ()
   (clrhash *sessions*)
-  (clrhash *session-cookies*))
+  (clrhash *session-cookies*)
+  (setf *session-log* nil)
+  (setf *robot-log* nil))
 
 (defun register-tokens-chars (token-chars)
   (loop for (token char . rest) on token-chars by 'cddr

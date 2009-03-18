@@ -190,6 +190,7 @@
 		      (setf (slot-value data-object (slot-definition-name slot)) list))
 		    (setf (slot-value data-object (slot-definition-name slot))
 			  (funcall sql-to-value-fn (pop result))))))
+        (initialize-unbound-slots object)
 	(initialize-disable-predicates object)))))
 
 (defmethod read-object-from-store ((store psql-store) id)
