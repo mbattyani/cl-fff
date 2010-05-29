@@ -73,7 +73,7 @@
 		    do (language-choice country)))))
 
 (defmacro with-html-page (args &body forms)
-  (destructuring-bind (stream &key no-header title style-sheet description script-lib icon 
+  (destructuring-bind (stream &key no-header title style-sheet description keywords script-lib icon 
 			      (encoding "text/html; charset=ISO-8859-1")) args
     `(progn
       (html::html-to-stream ,stream "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >"
