@@ -82,6 +82,7 @@
 	       ,@(when title `((:title ,title)))
 	       ,@(when style-sheet `(((:link :rel "stylesheet" :type "text/css" :href ,style-sheet))))
 	       ,@(when description `(((:meta :name "description" :content ,description))))
+	       ,@(when keywords `(((:meta :name "keywords" :content ,keywords))))
 	       ,@(when encoding `(((:meta :http-equiv "Content-type" :content ,encoding))))
 	       ,@(when script-lib `(((:script :src ,script-lib)))))
 	,@forms)))))
