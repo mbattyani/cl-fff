@@ -289,3 +289,33 @@ with their key-extraction function.")
         (push (car chars) buffer)))))
 
 (set-macro-character #\" #'read-multiline-string))
+
+(defun ap (&rest args)
+  (let ((package nil)
+  (search-list nil))
+    (loop for arg in args do
+   (if (and (symbolp arg) (find-package arg))
+       (setf package (find-package arg))
+       (push arg search-list)))
+    (%ap (nreverse search-list) package)))
+
+(defgeneric %ap (thing &optional package))
+
+(defmethod %ap ((thing string) &optional package)
+  (let ((*package* (or (and package (find-package package))
+           *package*)))
+    (apropos-list thing package)))
+
+(defmethod %ap ((thing symbol) &optional package)
+  (%ap (symbol-name thing) package))
+
+(defmethod %ap ((thing list) &optional package)
+  (cond ((null thing) nil)
+  ((null (rest thing)) (%ap (first thing) package))
+  (t
+   (let ((current (%ap (first thing) package)))
+     (dolist (next (rest thing))
+       (setf current (intersection current (%ap next package))))
+     current))))
+
+(export 'ap)

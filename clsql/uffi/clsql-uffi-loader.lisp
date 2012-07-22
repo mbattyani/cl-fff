@@ -20,7 +20,7 @@
 
 (defparameter *clsql-uffi-library-path*
   `(,(make-pathname :directory (pathname-directory *load-truename*))
-    "/usr/lib/clsql/"
+    "c:/map/"
     "/opt/lisp/clsql/uffi/"
     "/usr/lib/"
     "/usr/local/lib/"

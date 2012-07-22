@@ -1,5 +1,7 @@
 (in-package meta)
 
+;(setf  cl-postgres-system:*unicode* nil)
+
 (export 'psql-store)
 
 (defvar *forced-db-connection* nil)
@@ -343,6 +345,5 @@
 
 (defun load-clsql-uffi ()
   (clsql-uffi::load-uffi-foreign-library t)
-  (#-lispworks5 postgresql::load-postgresql-foreign-library 
-   #+lispworks5 db-postgresql::load-postgresql-foreign-library 
+  (db-postgresql::load-postgresql-foreign-library 
    t))
