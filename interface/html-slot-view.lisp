@@ -22,7 +22,7 @@
                   (cond
                    ((and (not value) (meta-level::dont-display-null-value slot)) "")
                    ((stringp value) value)
-                   (t (write-to-string value))))))
+                   (t (funcall (meta::value-to-string-fn slot) value))))))
     (if (modifiable-p *dispatcher*)
 	(concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")
 	(concatenate 'string "x_.f826si('" (name item) "', '" j-value "');"))))
@@ -68,7 +68,7 @@
                       (cond
                        ((and (not value) (meta-level::dont-display-null-value slot)) "")
                        ((stringp value) value)
-                       (t (write-to-string value)))))))
+                       (t (funcall (meta::value-to-string-fn slot) value)))))))
     (concatenate 'string "x_.fgt('" (name item) "').innerHTML='" j-value "';")))
 
 (defmethod make-set-status-javascript ((item html-span) status slot)
@@ -765,9 +765,10 @@
                                                                         :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for (text value) in (funcall (choices-fn dispatcher)(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');" (if (stringp value)
-									     (html:quote-javascript-string value)
-									     value)))
+			    ((:a :fformat (:href "javascript:f42('~a');"
+                                                 (if (stringp value)
+                                                     (html:quote-javascript-string value)
+                                                     value)))
 			     (html:esc text)) :br)))
       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
 			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))

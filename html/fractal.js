@@ -117,9 +117,9 @@ function SLk2(v456, v457, v458, v459)
   doc.write('<input type=\"hidden\" name=\"v465\">');
   doc.write('</form></body></html>');
   doc.close();
-  doc.all.v654.value=v456;
-  doc.all.v645.value=v457;
-  doc.all.v465.value=v458;
+  fgt(v654).value=v456;
+  fgt(v645).value=v457;
+  fgt(v465).value=v458;
   doc.forms['go'].submit();
 };
 

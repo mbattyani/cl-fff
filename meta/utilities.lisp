@@ -9,15 +9,17 @@
 	(cons class classes)
       classes)))
 
-
-(deftype :date () 'integer)
-(deftype :ip-address () 'string)
-(deftype :universal-time () 'integer)
-(deftype :time-of-day () 'integer)
-(deftype :color () 'string)
-(deftype :timestamp () 'integer)
-(deftype :decimal () 'double-float)
-(deftype :context-strings () 'cons)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (let ((cl-user::*packages-for-warn-on-redefinition*
+         (remove "KEYWORD" cl-user::*packages-for-warn-on-redefinition* :test #'equal)))
+    (deftype :date () 'integer)
+    (deftype :ip-address () 'string)
+    (deftype :universal-time () 'integer)
+    (deftype :time-of-day () 'integer)
+    (deftype :color () 'string)
+    (deftype :timestamp () 'integer)
+    (deftype :decimal () 'double-float)
+    (deftype :context-strings () 'cons)))
 
 (defun find-slot-by-name (class slot-name)
   (find slot-name (clos::class-slots class) :key #'clos:slot-definition-name))

@@ -22,5 +22,5 @@
 	       (:file "upgrade-database" :depends-on ("global"))
 	       (:file "gen-doc" :depends-on ("meta-classes"))
 	       (:file "pages" :depends-on ("style")))
-  :depends-on (:interface :utility :clsql :clsql-postgresql :cl-typesetting :cl-typegraph)
+  :depends-on (:interface :utility :psql-store :cl-typesetting :s-dot)
   )

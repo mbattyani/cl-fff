@@ -39,21 +39,24 @@
     (setf (disabled dispatcher) (meta::slot-disabled-p object slot))))
 
 (defmethod mark-dirty-value ((dispatcher slot-dispatcher))
-  (unless (or (dirty-value dispatcher)(dirty-status dispatcher))
-    (push dispatcher (dirty-dispatchers (interface dispatcher))))
-    (setf (dirty-value dispatcher) t))
+  (mp:with-lock ((link-lock (interface dispatcher)))
+    (unless (or (dirty-value dispatcher)(dirty-status dispatcher))
+      (push dispatcher (dirty-dispatchers (interface dispatcher))))
+    (setf (dirty-value dispatcher) t)))
 
 (defmethod mark-dirty-status ((dispatcher slot-dispatcher) disabled)
-  (unless (or (dirty-value dispatcher)(dirty-status dispatcher))
-    (push dispatcher (dirty-dispatchers (interface dispatcher))))
-  (setf (dirty-status dispatcher) t)
-  (setf (disabled dispatcher) disabled))
+  (mp:with-lock ((link-lock (interface dispatcher)))
+    (unless (or (dirty-value dispatcher)(dirty-status dispatcher))
+      (push dispatcher (dirty-dispatchers (interface dispatcher))))
+    (setf (dirty-status dispatcher) t)
+    (setf (disabled dispatcher) disabled)))
 
 (defmethod mark-dirty-status ((dispatcher object-dispatcher) disabled)
-  (unless (dirty-status dispatcher)
-    (push dispatcher (dirty-dispatchers (interface dispatcher))))
-  (setf (dirty-status dispatcher) t)
-  (setf (disabled dispatcher) disabled))
+  (mp:with-lock ((link-lock (interface dispatcher)))
+    (unless (dirty-status dispatcher)
+      (push dispatcher (dirty-dispatchers (interface dispatcher))))
+    (setf (dirty-status dispatcher) t)
+    (setf (disabled dispatcher) disabled)))
 
 (defmethod update-dispatcher-item ((dispatcher object-dispatcher) &optional force)
   (let* ((*dispatcher* dispatcher)
@@ -61,9 +64,10 @@
 	 (item (item dispatcher))
 	 (interface (interface dispatcher)))
     (when (or force (dirty-status dispatcher))
-      (send-to-interface
-       (make-set-status-javascript item (disabled dispatcher) nil) interface)
-      (setf (dirty-status dispatcher) nil))))
+      (mp:with-lock ((link-lock (interface dispatcher)))
+        (send-to-interface
+         (make-set-status-javascript item (disabled dispatcher) nil) interface)
+        (setf (dirty-status dispatcher) nil)))))
 
 (defmethod update-dispatcher-item ((dispatcher slot-dispatcher) &optional force)
   (let* ((*dispatcher* dispatcher)
@@ -72,13 +76,15 @@
 	 (interface (interface dispatcher))
 	 (slot (slot dispatcher)))
     (when (or force (dirty-status dispatcher))
-      (send-to-interface
-       (make-set-status-javascript item (disabled dispatcher) slot) interface)
-      (setf (dirty-status dispatcher) nil))
+      (mp:with-lock ((link-lock (interface dispatcher)))
+        (send-to-interface
+         (make-set-status-javascript item (disabled dispatcher) slot) interface)
+        (setf (dirty-status dispatcher) nil)))
     (when (or force (dirty-value dispatcher))
-      (send-to-interface
-       (make-set-value-javascript item (funcall (get-value-fn dispatcher) *object*) slot) interface)
-      (setf (dirty-value dispatcher) nil))))
+      (mp:with-lock ((link-lock (interface dispatcher)))
+        (send-to-interface
+         (make-set-value-javascript item (funcall (get-value-fn dispatcher) *object*) slot) interface)
+        (setf (dirty-value dispatcher) nil)))))
 
 (defmethod unregister-dispatcher (dispatcher)
   )
@@ -132,4 +138,3 @@
 
 (defmethod make-dispatcher (interface object (item button-group))
   (make-instance 'button-group-dispatcher :interface interface :object object :item item))
-

@@ -19,7 +19,7 @@
   (project (meta::parent obj)))
 
 (defmethod meta::short-description ((obj project))
-    (if (plusp (length (name obj))) (name obj) "(pas de nom)"))
+    (if (plusp (length (name obj))) (name obj) "(no name)"))
 
 (interface::add-named-url "/asp/new-project.html"
   #'(lambda (request)
@@ -28,11 +28,10 @@
       t))
 
 (defun project-list()
-  (clsql:with-database (nil nil :pool *database-pool*)
-    (sort (mapcar #'(lambda (x)
-                      (meta::load-object (first x) *meta-store*))
-                  (clsql:query "select id from project" :types :auto))
-          #'string< :key #'name)))
+  (sort (mapcar #'(lambda (x)
+                    (meta::load-object (first x) meta-web::*meta-store*))
+                (sql:query "select id from project"))
+        #'string< :key #'meta-web::name))
 
 (defun html-project-list()
   (html:html
@@ -67,9 +66,9 @@
 
 (defun map-class-objects (class function &key (store *meta-store*) (where-clause ""))
   (when (symbolp class)(setf class (find-class class)))
-  #-no-psql
-  (clsql:with-database (nil nil :pool (meta::db-pool store))
-    (clsql:do-query ((object-id)
+  #+nil
+  (sql:with-database (nil nil :pool (meta::db-pool store))
+    (sql:do-query ((object-id)
 		     (format nil "SELECT id FROM ~a ~a" (meta::sql-name class) where-clause)
 		     :types :auto)
       (let ((object (meta::load-object object-id store)))
@@ -178,6 +177,7 @@ rankdir=LR;
 	  do (setf (aref id i) (code-char (+ 48 (random 10)))))
     id))
 
+#+nil
 (defun html-user-page()
   (unless (interface::user interface::*session*)
     (interface::decode-posted-content interface::*request*)
@@ -185,8 +185,8 @@ rankdir=LR;
 	   (name (cdr (assoc "name" posted-content :test 'string=)))
 	   (password (cdr (assoc "password" posted-content :test 'string=))))
       (when (and name password)
-	#-no-psql(clsql:with-database (nil nil :pool *database-pool*)
-	  (let* ((id (caar (clsql:query (format nil "select id from meta_user where identifier='~a'" name)
+	#-no-psql(sql:with-database (nil nil :pool *database-pool*)
+	  (let* ((id (caar (sql:query (format nil "select id from meta_user where identifier='~a'" name)
 					:types :auto)))
 		 (user (and id (meta::load-object id *meta-store*))))
 	    (when (and user (string= password (password user)))
@@ -273,7 +273,7 @@ rankdir=LR;
   (values-tables (project obj)))
 
 (defun open-database (proj)
-  (setf (db-connection proj)
+  #+nil(setf (db-connection proj)
 	(clsql:find-or-create-connection-pool
 	 (list (database-ip proj) (database proj) "lisp" "") :postgresql))
   (setf (store proj) (make-instance 'meta::psql-store :db-pool (db-connection proj))))
@@ -287,6 +287,7 @@ rankdir=LR;
       (create-table class (store proj)))))
 
 (defun drop-database (proj)
+  #+nil
   (when (db-connection proj)
     (clsql:disconnect-pooled (db-connection proj))
     (setf (db-connection proj) nil))

@@ -84,7 +84,7 @@
   (unless (string-to-value-fn slot)
     (setf (string-to-value-fn slot) (default-string-to-value-fn (value-type slot) slot)))
   (unless (value-to-string-fn slot)
-    (setf (value-to-string-fn slot) (default-value-to-string-fn (value-type slot) slot)))
+    (setf (value-to-string-fn slot) 'write-to-string #+nil(default-value-to-string-fn (value-type slot) slot)))
   )
 
 (export 'fc-slot-p)
@@ -431,7 +431,7 @@
     ))
 
 (defun parse-iso-date (string)
-  (when string
+  (if (stringp string)
     (let ((length (length string)))
       (if *GMT-time*
           (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
@@ -446,11 +446,13 @@
                                  (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
                                  (parse-integer string :start 8 :end 10)
                                  (parse-integer string :start 5 :end 7)
-                                 (parse-integer string :start 0 :end 4))))))
+                                 (parse-integer string :start 0 :end 4))))
+    string))
 
 (defun parse-sql-boolean (value)
-  (when value
-    (char-equal (aref value 0) #\t)))
+  (if (characterp value)
+    (char-equal (aref value 0) #\t)
+    value))
 
 (defun parse-sql-symbol (value)
   (when value

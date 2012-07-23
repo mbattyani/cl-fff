@@ -43,10 +43,12 @@
    (output-sent    :accessor output-sent    :initform (loop repeat 10 collect nil)) ;list of ("packet-sync" . strings-list) more recent first
    (output-counter :accessor output-counter :initform 1)
    (url-push     :accessor url-push)
-   (url-pull       :accessor url-pull)))
+   (url-pull       :accessor url-pull)
+   (link-lock :initform nil :accessor link-lock)))
 
 (defmethod initialize-instance :after ((link http-link) &rest init-options &key views &allow-other-keys)
   (setf (gethash (interface-id link) *http-links*) link)
+  (setf (link-lock link) (mp:make-lock :name (format nil "link-~a-lock" (interface-id link))))
   (let ((url-values (list :link (interface-id link) :session (id (session link)))))
     (setf (url-push link)(encode-session-url nil (list* :func "lpush" url-values)))
     (setf (url-pull link)(encode-session-url nil (list* :func "lpull" url-values)))
@@ -139,19 +141,19 @@
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
 	     (:html ((:body :optional 
-			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',3000);"))
+			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
 			       "parent.F6541();"
 			       (html:ffmt "parent.F5641(~s, ~s);parent.F5614(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
-		     ))))
-	(with-output-to-request (request s)
-	  (html:html-to-stream s
-	       (:html (:body
-		       (:p "no-refresh")
-		       (:jscript "parent.location.reload(true);")))))))
+		     )))))
+      (with-output-to-request (request s)
+        (html:html-to-stream s
+             (:html (:body
+                     (:p "no-refresh")
+                     (:jscript "parent.location.href='/asp/index.html';"))))))
     t))
 
 (add-named-func "lpull" 'process-http-link-pull)
@@ -261,7 +263,7 @@
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
       (html::optimize-progn
-       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 3000);"
+       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 1000);"
 			  (html:ffmt "v686=~s;" http-link-url)))
        ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
 			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
@@ -299,4 +301,3 @@
   t)
 
 (add-named-func "popup" 'process-http-popup)
- 

@@ -15,7 +15,7 @@
 	       (:file "html-gen2" :depends-on ("html-utils"))
 	       (:file "func-tags" :depends-on ("html-gen2"))
 	       (:file "base64" :depends-on ("defpackage"))
-	       (:file "sha" :depends-on ("defpackage"))
+	       #+nil(:file "sha" :depends-on ("defpackage"))
 	       (:file "franz-if" :depends-on ("defpackage"))
 	       (:file "html-parse" :depends-on ("franz-if")))
   :depends-on (:utility)

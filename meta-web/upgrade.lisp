@@ -108,7 +108,8 @@
 					    ',(read-from-string (name slot)))))
 			(when (eq pass :modify-data)
                           (format t "Modifying data for ~a~%" ',class-name)
-			  (clsql:with-database (nil nil :pool *database-pool*)
+                          (error "not modified for lw-psql yet")
+			  #+nil(clsql:with-database (nil nil :pool *database-pool*)
 			    (clsql:do-query ((object-id
 					      ,@(mapcar #'(lambda(x) (read-from-string (name x))) modified-slots))
 					     ,(format nil "SELECT id ~{,~a~} FROM ~a"

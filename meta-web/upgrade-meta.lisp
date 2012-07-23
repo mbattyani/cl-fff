@@ -4,6 +4,8 @@
   (let* ((*package* (find-package "META-WEB")) (class (find-class 'project)))
     (when (eq pass :modify-tables) (meta-level::add-slot-to-class-table store class 'files))
     (when (eq pass :modify-data)
+      (error "not modified for lw-psql yet")
+      #+nil
       (clsql-sys:with-database (nil nil :pool *database-pool*)
         (clsql-sys:do-query ((object-id) "SELECT id  FROM project" :types :auto)
           (let ((object (meta-level:load-object object-id store)))

@@ -56,13 +56,17 @@
 	  (setf (id object) id)))
       (setf (data-object object) (apply 'make-instance (data-class (class-of object))
                                         (append init-options '(:allow-other-keys t))))
-      (unless no-init-forms
-	(call-next-method object)
-        (initialize-unbound-slots object)
-	(initialize-disable-predicates object))
-      (mark-object-as-modified object)))
+      (call-next-method)))
   (unless anonymous (setf (gethash (id object) (loaded-objects store)) object))
   #+nil(hcl:flag-special-free-action object))
+
+(defmethod initialize-instance :after ((object root-object) &rest init-options
+					&key (parent *parent-of-root-object-initialized*)
+					anonymous store force-id no-init-forms &allow-other-keys)
+  (unless no-init-forms
+    (initialize-unbound-slots object)
+    (initialize-disable-predicates object))
+  (mark-object-as-modified object))
 
 (defmethod update-instance-for-different-class :before ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)

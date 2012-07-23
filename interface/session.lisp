@@ -220,7 +220,7 @@
 	finally (return string)))
 
 (defun decode-integer (string)
-  (declare (optimize (speed 3)(debug 0)(safety 0)(space 0)))
+;  (declare (optimize (speed 3)(debug 0)(safety 0)(space 0)))
   (let ((decode-vector *session-decoding-vector*)
 	(l (length string)))
     (declare (type (simple-array (unsigned-byte 8) 128) decode-vector))
@@ -320,12 +320,12 @@
 
 (defun dump-session-log ()
   (when *session-log*
-    (with-open-file (s *session-file* :direction :output :if-exists :append :if-does-not-exist :create)
+    #+nil(with-open-file (s *session-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *session-log*
 	    do (format s "~s~%" session)))
     (setf *session-log* nil))  
   (when *robot-log*
-    (with-open-file (s *robot-file* :direction :output :if-exists :append :if-does-not-exist :create)
+    #+nil(with-open-file (s *robot-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *robot-log*
 	    do (format s "~s~%" session)))
     (setf *robot-log* nil)))

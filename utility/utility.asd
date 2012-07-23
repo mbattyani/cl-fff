@@ -13,6 +13,5 @@
 	       (:file "infix" :depends-on ("defpackage"))
 	       (:file "string" :depends-on ("defpackage"))
 	       (:file "log-errors" :depends-on ("utility")))
-  :depends-on ()
+  :depends-on (:split-sequence)
   )
-

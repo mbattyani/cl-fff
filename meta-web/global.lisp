@@ -46,20 +46,18 @@
 
 (defparameter *default-object-page-fr*
   '((prev-page-link) :br
-;    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*)))
-    (:p 
-     (:esc
-      (meta::translated-class-name interface::*object*)) :br
-     (interface::gen-localize-html interface::*object* :home-url #e"projects"))
+    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*))
+     ((:span :style "font-size:12px;font-weight:400")
+      " ("(:esc (meta::translated-class-name interface::*object*))")"))
+    (:p (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
 (defparameter *default-object-page-en*
   '((prev-page-link) :br
-;    (:h2 "Object : " (html:esc (meta::short-description interface::*object*)))
-    (:p 
-     (:esc
-      (meta::translated-class-name interface::*object*)) :br
-     (interface::gen-localize-html interface::*object* :home-url #e"projects"))
+    (:h2 "Object : " (html:esc (meta::short-description interface::*object*))
+     ((:span :style "font-size:12px;font-weight:400")
+      " ("(:esc (meta::translated-class-name interface::*object*))")"))
+    (:p (interface::gen-localize-html interface::*object* :home-url #e"projects"))
     (:object-view)))
 
 (defparameter *inspect-object-page-fr*

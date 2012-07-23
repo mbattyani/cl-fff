@@ -31,14 +31,14 @@
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:en) :name "ts-en" :source-code 
    `(((:tab :class "tabdv")
-      ("French"
-       ((:table :class "dvt" :style "width:100%")
-	((:tr :class "dvr")
-	 ((:td :class "dvcv") ((:slot-edit french :class "dvcve"))))))
       ("English"
        ((:table :class "dvt" :style "width:100%")
 	((:tr :class "dvr")
 	 ((:td :class "dvcv") ((:slot-edit english :class "dvcve"))))))
+      ("French"
+       ((:table :class "dvt" :style "width:100%")
+	((:tr :class "dvr")
+	 ((:td :class "dvcv") ((:slot-edit french :class "dvcve"))))))
       ("German"
        ((:table :class "dvt" :style "width:100%")
 	((:tr :class "dvr")
@@ -62,15 +62,7 @@
 (make-instance 'interface::object-view :object-class 'object-help
 	       :country-languages '(:fr :en) :name "oh" :source-code 
    `(((:tab :class "tabdv")
-      ("Français"
-       ((:table :class "dvt" :style "width:400px")
-	((:tr :class "dvr")
-	 ((:td :class "dvch") "tooltip")
-	 ((:td :class "dvcv") ((:slot-edit french-tooltip :class "dvcve" :style "width:320px"))))
-	((:tr :class "dvr")
-	 ((:td :class "dvcv" :colspan "2")
-	  ((:slot-medit french-help :class "dvcve" :rows "30" :cols "20" :style "width:320px"))))))
-      ("Anglais"
+      ("English"
        ((:table :class "dvt" :style "width:400px")
 	((:tr :class "dvr")
 	 ((:td :class "dvch") "tooltip")
@@ -78,7 +70,15 @@
 	((:tr :class "dvr")
 	 ((:td :class "dvcv" :colspan "2")
 	  ((:slot-medit english-help :class "dvcve" :rows "30" :cols "20" :style "width:320px"))))))
-      ("Allemand"
+      ("French"
+       ((:table :class "dvt" :style "width:400px")
+	((:tr :class "dvr")
+	 ((:td :class "dvch") "tooltip")
+	 ((:td :class "dvcv") ((:slot-edit french-tooltip :class "dvcve" :style "width:320px"))))
+	((:tr :class "dvr")
+	 ((:td :class "dvcv" :colspan "2")
+	  ((:slot-medit french-help :class "dvcve" :rows "30" :cols "20" :style "width:320px"))))))
+      ("German"
        ((:table :class "dvt" :style "width:400px")
 	((:tr :class "dvr")
 	 ((:td :class "dvch") "tooltip")
@@ -86,7 +86,7 @@
 	((:tr :class "dvr")
 	 ((:td :class "dvcv" :colspan "2")
 	  ((:slot-medit german-help :class "dvcve" :rows "30" :cols "20" :style "width:320px"))))))
-      ("Italien"
+      ("Italian"
        ((:table :class "dvt" :style "width:400px")
 	((:tr :class "dvr")
 	 ((:td :class "dvch") "tooltip")
@@ -94,7 +94,7 @@
 	((:tr :class "dvr")
 	 ((:td :class "dvcv" :colspan "2")
 	  ((:slot-medit italian-help :class "dvcve" :rows "30" :cols "20" :style "width:320px"))))))
-      ("Espagnol"
+      ("Spanish"
        ((:table :class "dvt" :style "width:400px")
 	((:tr :class "dvr")
 	 ((:td :class "dvch") "tooltip")

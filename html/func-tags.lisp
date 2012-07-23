@@ -128,9 +128,8 @@
 
 (add-func-tag :jscript 'jscript-tag)
 
-(defparameter *jscript-lib-file* (if *load-pathname*
-				   (merge-pathnames #P"fractal.js" *load-pathname*)
-				   (merge-pathnames #P"html/fractal.js" user:*fractal-root-dir*)))
+(defparameter *jscript-lib-file* (merge-pathnames #P"fractal.js"
+                                                  (asdf:system-source-directory :html)))
 
 (defun use-ui-tag (attributes form)
   `(html (:jscript (:insert-file ,*jscript-lib-file*))))
@@ -175,7 +174,7 @@
 		as visibility = "" then "none"
 		as i from 0
 		as pane-name = (format nil "~a~d" pane-array-name i)
-		collect (html-gen `((:div :id ,pane-name :class ,pane-class-name 
+		collect (html-gen `((:div :id ,pane-name :class ,pane-class-name
 					  :style ,(format nil "display:~a;" visibility))
 				    ,@tab-form)))
 	,(html-gen `(:jscript
@@ -282,5 +281,3 @@
 
 ;example : (:on-off ("change password")("hide password")(:p "div to hide"))
 (add-func-tag :on-off 'on-off-tag)
-
-

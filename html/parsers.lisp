@@ -112,7 +112,7 @@ ONLY-SAFE-CHARACTERS-P set to non-nill skips reserved or unsafe URL characters."
 
 (defun parse-header-values (string)
   (let ((list (mapcar #'(lambda (s) (string-trim *white-space* s))
-		      (util:split-sequence #\; string))))
+		      (split-sequence:split-sequence #\; string))))
     (loop for s in list
 	  for pos = (position #\= s)
 	  if pos collect (cons (string-trim *white-space* (subseq s 0 pos))
