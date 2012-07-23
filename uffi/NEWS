@@ -1,3 +1,0 @@
-UFFI now passes all tests with SCL, SBCL, & OpenMCL in Debian.
-
-UFFI now uses ASDF system definition files.
