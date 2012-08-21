@@ -14,6 +14,12 @@
     ; just try to connect to the database
     ))
 
+(defmethod initialize-store ((store psql-store))
+  (with-psql-store-db (store)
+    (sql-execute-command
+     "create table ObjectNames (name text primary key, objectid BIGINT NOT NULL) WITHOUT OIDS;")
+    (sql-execute-command "CREATE SEQUENCE object_id_seq START 1;")))
+
 (defmethod create-new-object-id ((store psql-store) class-id)
   (with-psql-store-db (store)
     (dpb class-id (byte 32 32) (caar (sql-query "select nextval('object_id_seq');")))))
@@ -21,7 +27,7 @@
 (defmethod save-object-to-store ((store psql-store) object)
   (when (modified object)
     (with-psql-store-db (store)
-      (psql-with-transaction 
+      (psql-with-transaction
 	(let ((new-original-lists ())
 	      (sql-write-object (gen-sql-write-object object)))
 	  (when sql-write-object
@@ -30,7 +36,7 @@
 		with class = (class-of object)
 		with class-name = (sql-name class)
 		for slot in (class-slots class)
-		do 
+		do
 		(when (and (stored slot)(list-of-values slot))
 		  (let* ((slot-name (sql-name slot))
 			 (new-list (slot-value data-object (slot-definition-name slot)))
@@ -298,5 +304,3 @@
 (setf *pool* (psql-create-db-pool "127.0.0.1" "MetaFractal2" "lisp"))
 #+nil
 (setf *default-store* (make-instance 'psql-store :db-pool *pool*))
-
-
