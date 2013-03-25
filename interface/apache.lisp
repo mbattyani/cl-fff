@@ -86,3 +86,9 @@
           (http-debug-request request)))
     (write-request request *apache-socket*)
     (force-output *apache-socket*)))
+
+;;; a fix to load portable aserve instead of apache
+(handler-case 
+    (progn (intern "FIXNUMP" 'common-lisp)
+           (setf (symbol-function 'common-lisp::fixnump) (symbol-function 'lw:fixnump)))
+  (error (error)))
