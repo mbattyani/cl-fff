@@ -104,7 +104,7 @@
 			      (progn ,@(mapcar 'html::html-gen (source-code view)))
 			      (html:html (:translate
 					  '(:en "You do not have the rights to access this object."
-					    :fr "Vous n'avez pas les droits d'accés pour cet objet.")))))))
+					    :fr "Vous n'avez pas les droits d'accÃ©s pour cet objet.")))))))
 	(setf (html-func view) func)))
     func))
 

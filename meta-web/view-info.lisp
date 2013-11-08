@@ -41,7 +41,7 @@
     ((:td )((:slot-edit name :style "width:100px")))
     ((:td )((:slot-edit title :style "width:150px")))
     ((:td )"CA "((:slot-edit ca :style "width:60px")):br
-     (:translate '(:fr "Entités " :en "Entities ")) :br
+     (:translate '(:fr "EntitÃ©s " :en "Entities ")) :br
      ((:slot-pick-mval entities)))
     ((:td )"Min "((:slot-edit min-debit  :style "width:50px")):br
      "Max "((:slot-edit max-debit :style "width:50px")))

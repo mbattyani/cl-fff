@@ -198,7 +198,7 @@ rankdir=LR;
 			      interface::*request*)
        (html:html
 	((:form :method "post" :action (interface::url interface::*request*))
-	 (:h1 "Vous devez vous authentifier pour accéder à cette page.")
+	 (:h1 "Vous devez vous authentifier pour accÃ©der Ã  cette page.")
 	 (:p "Nom  " ((:input :type "text" :name "name")) :br
 	     "code " ((:input :type "password" :name "password")))
 	 ((:input :type "submit" :name "submit" :value "Envoyer"))))))

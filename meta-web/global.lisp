@@ -10,7 +10,7 @@
 
 (defparameter *graph-file-prefix*
   #+win32 "d:/sources/web-sites/fractal/"
-  #+linux "/var/www/html/fractal/")
+  #+ (or macosx linux) "/var/www/html/fractal/")
 
 (defvar *current-class* nil)
 (defvar *current-slot* nil)
@@ -42,7 +42,7 @@
   (let ((previous (interface::get-previous-page interface::*request*)))
     (html:html
      (:when previous
-       ((:a :href previous) (:translate '(:fr "Page précédente" :en "Previous Page")))))))
+       ((:a :href previous) (:translate '(:fr "Page prÃ©cÃ©dente" :en "Previous Page")))))))
 
 (defparameter *default-object-page-fr*
   '((prev-page-link) :br

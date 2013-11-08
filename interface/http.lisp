@@ -54,7 +54,7 @@
     (acons :fdata fdata params)))
 
 (defparameter *country-items* '(:en ("en" "/sen.gif" "Switch to English")
-				:fr ("fr" "/sfr.gif" "Passer en français")))
+				:fr ("fr" "/sfr.gif" "Passer en franÃ§ais")))
 
 (defun language-choice (country &key flag-file)
   (let ((items (getf *country-items* country)))

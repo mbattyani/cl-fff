@@ -1,11 +1,11 @@
 (in-package meta)
 
-;;; a postgresql interfacte layer for lispworks Common SQL
+;;; a postgresql interface layer for lispworks Common SQL
 
 (require "postgresql")
 
 (defun init-psql ()
-  (fli:set-locale-encodings :utf-8 :unicode))
+  (fli:set-locale-encodings :utf-8  'fli::unicode-wchar #-unix :unicode))
 
 (defvar *forced-psql-connection* nil)
 (defvar *psql-transaction-level* nil)

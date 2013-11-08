@@ -165,15 +165,15 @@
     (if (or (and (= (mod year 4) 0)(/= (mod year 100) 0))(= (mod year 400) 0)) 29 28)
     (aref #(31 28 31 30 31 30 31 31 30 31 30 31) (1- month))))
 
-(defvar *month-fr* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
+(defvar *month-fr* '("Janvier" "FÃ©vrier" "Mars" "Avril" "Mai" "Juin"
+		     "Juillet" "AoÃ»t" "Septembre" "Octobre" "Novembre" "DÃ©cembre"))
 
-(defparameter *month-names* '(:fr ("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-                                   "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre")
+(defparameter *month-names* '(:fr ("Janvier" "FÃ©vrier" "Mars" "Avril" "Mai" "Juin"
+                                   "Juillet" "AoÃ»t" "Septembre" "Octobre" "Novembre" "DÃ©cembre")
                               :sp ("Enero" "Febrero" "Marzo" "Abril" "Mayo" "Junio" 
                                    "Julio" "Agosto" "Septiembre" "Octubre"  "Noviembre" "Diciembre")
                               :en ("January" "February" "March" "April" "May" "June"
-                                   "July" "August" "September" "October" "November" "Décember")))
+                                   "July" "August" "September" "October" "November" "DÃ©cember")))
 
 (defvar *default-month-names* '("January" "February" "March" "April" "May" "June"
                                 "July" "August" "September" "October" "November" "December"))
@@ -183,7 +183,7 @@
                             :en ("Su" "Mo" "Tu" "We" "Th" "Fr" "Sa")))
 
 (defvar *default-day-names* '("January" "February" "March" "April" "May" "June"
-                                "July" "August" "September" "October" "November" "Décember"))
+                                "July" "August" "September" "October" "November" "DÃ©cember"))
 
 (defun html-month (item day month year show-time)
   (let ((first-week-day (first-week-day month year))
@@ -612,7 +612,7 @@
 	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
 	     (:html
 	      (:head
-	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet à ajouter")))
+	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet Ã  ajouter")))
 	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
 	      (:body
 	       :br
@@ -655,10 +655,10 @@
                               "window.setTimeout('window.close();', 600); shot = true;}};")
 	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
 			 (:translate '(:en "Do you want to remove these objects:"
-                                       :sp "Está seguro de querer eliminar estos objetos:"
+                                       :sp "EstÃ¡ seguro de querer eliminar estos objetos:"
 				       :fr "Voulez vous vraiment supprimer ces objets:"))
 			 (:translate '(:en "Do you want to remove this object:"
-                                       :sp "Está seguro de querer eliminar este objeto:"
+                                       :sp "EstÃ¡ seguro de querer eliminar este objeto:"
 				       :fr "Voulez vous vraiment supprimer cet objet:"))))
 	       (:p
 		(dolist (object (objects-to-delete dispatcher))

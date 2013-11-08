@@ -65,7 +65,7 @@
 
 (defvar *default-void-link-text*
   (make-instance 'translated-string
-		 :en "not defined" :fr "non défini" :sp "No definido"))
+		 :en "not defined" :fr "non dÃ©fini" :sp "No definido"))
 
 (defun translated-void-link-text (slot)
   (let ((translation (translate (void-link-text slot))))
@@ -168,7 +168,7 @@
 
 (defvar *undefined-short-desc*
   (make-instance 'translated-string
-		 :en "(no description)" :fr "(pas de description)" :sp "(no descripción)"))
+		 :en "(no description)" :fr "(pas de description)" :sp "(no descripciÃ³n)"))
 
 (defmethod short-description :around ((obj root-object))
   (let ((desc nil)

@@ -24,7 +24,7 @@
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 0.7 1.0) :border-width 0.5)
 		    (trans-string :en " use the class, " :fr " utilise la classe, ")
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 1.0) :border-width 0.5)
-		    (trans-string :en " used by the class." :fr " utilisé par la classe.")))
+		    (trans-string :en " used by the class." :fr " utilisÃ© par la classe.")))
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun edge-color (color)
@@ -134,7 +134,7 @@
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(0.7 1.0 0.7) :border-width 0.5)
 		    (trans-string :en " User file, " :fr " Fichier utilisateur, ")
 		    (tt::colored-box :dx 9.0 :dy 9.0 :color '(1.0 0.7 0.7) :border-width 0.5)
-		    (trans-string :en " Generated file" :fr " Fichier généré, ")))
+		    (trans-string :en " Generated file" :fr " Fichier gÃ©nÃ©rÃ©, ")))
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun make-file-node-box (graph source-file)
@@ -233,18 +233,18 @@
 	    (tt:hrule :dy 2)
 	    (tt::vspace 10)
 	    (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-		(name-value-table (format nil "Caractéristiques générales de la fonction ~a" (name fn))
+		(name-value-table (format nil "CaractÃ©ristiques gÃ©nÃ©rales de la fonction ~a" (name fn))
 				  (append
 				   (list
 				    "Nom" (name fn)
-				    "Nom français" (french (user-name fn))
+				    "Nom franÃ§ais" (french (user-name fn))
 				    "Nom anglais" (english (user-name fn))
 				    "Description" (description fn)
 				    "Commentaire" (comment fn)
 				    "Visible par" (visible-string fn)))))
 	    (when (disable-predicate fn)
 	      (tt:paragraph (:font "Helvetica-Bold" :font-size 12 :top-margin 10 :bottom-margin 5)
-			    "Prédicat pour désactivation :")
+			    "PrÃ©dicat pour dÃ©sactivation :")
 	      (tt::process-lisp-code (safe-read-from-string (disable-predicate fn))))
 	    :fresh-page)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)))
@@ -261,11 +261,11 @@
 	     "Slot : " (tt::put-string (name slot)))
 	 (tt:hrule :dy 2)
 	 (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 10)
-	     (name-value-table (format nil "Caractéristiques générales du slot ~a" (name slot))
+	     (name-value-table (format nil "CaractÃ©ristiques gÃ©nÃ©rales du slot ~a" (name slot))
 	       (append
 		(list
 		 "Nom de l'attribut" (name slot)
-		 "Nom français" (french (user-name slot))
+		 "Nom franÃ§ais" (french (user-name slot))
 		 "Nom anglais" (english (user-name slot))
 		 "Nom dans la table SQL" (meta::convert-name-to-sql-name (or (sql-name slot) (name slot)))
 		 "Description" (description slot)
@@ -275,26 +275,26 @@
 		 (list "Type d'objet" (name (object-type slot))
 		       "Texte FR si vide" (french (void-link-text slot))
 		       "Texte EN si vide" (english (void-link-text slot))
-		       "Peut créer nouvel obj." (yes-no (can-create-new-object slot))
-		       "Créer objet valeur" (yes-no (create-new-object slot))
+		       "Peut crÃ©er nouvel obj." (yes-no (can-create-new-object slot))
+		       "CrÃ©er objet valeur" (yes-no (create-new-object slot))
 		       "Fn pour obtenir obj." (get-object-fn slot)
-		       "Fn à appeler sur new obj." (process-new-object-fn slot)
-		       "Titre FR pour dialog box de sélection" (french (get-value-title slot))
-		       "Titre EN pour dialog box de sélection" (english (get-value-title slot))
-		       "Texte FR pour dialog box de sélection" (french (get-value-text slot))
-		       "Texte EN pour dialog box de sélection" (english (get-value-text slot))
-		       "Fn de génération HTML" (get-value-html-fn slot)
+		       "Fn Ã  appeler sur new obj." (process-new-object-fn slot)
+		       "Titre FR pour dialog box de sÃ©lection" (french (get-value-title slot))
+		       "Titre EN pour dialog box de sÃ©lection" (english (get-value-title slot))
+		       "Texte FR pour dialog box de sÃ©lection" (french (get-value-text slot))
+		       "Texte EN pour dialog box de sÃ©lection" (english (get-value-text slot))
+		       "Fn de gÃ©nÃ©ration HTML" (get-value-html-fn slot)
 		       ))
 	       (when (eq (value-type slot) :other)
 		 (list "Autre type" (other-type slot)))
 	       (list
-		 "Enregistré dans base" (yes-no (stored slot))
+		 "EnregistrÃ© dans base" (yes-no (stored slot))
 		 "Dans proxy" (yes-no (in-proxy slot))
-		 "Indexé" (yes-no (indexed slot))
+		 "IndexÃ©" (yes-no (indexed slot))
 		 "Unique" (yes-no (unique slot))
 		 "Ne pas afficher nuls" (yes-no (dont-display-null-value slot))
-		 "Valeur par défaut" (initform slot)
-		 "Unité" (unit slot)
+		 "Valeur par dÃ©faut" (initform slot)
+		 "UnitÃ©" (unit slot)
 		 "Visible par" (visible-string slot)
 		 "Modifiable par" (modifiable-string slot)
 		 "Liste d'objets" (yes-no (list-of-values slot))
@@ -330,7 +330,7 @@
 						      (tt::put-string (english (name choice)))))))))
 	 (when (disable-predicate slot)
 	   (tt:paragraph (:font "Helvetica-Bold" :font-size 12 :top-margin 10)
-			 "Prédicat pour désactivation :")
+			 "PrÃ©dicat pour dÃ©sactivation :")
 	   (tt::process-lisp-code (safe-read-from-string (disable-predicate slot))))
 	 (when (value-constraint slot)
 	   (tt:paragraph (:font "Helvetica-Bold" :font-size 12 :top-margin 10)
@@ -353,9 +353,9 @@
 	  (tt:hrule :dy 2)
 	  (tt::vspace 10)
 	  (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-		(name-value-table (format nil "Caractéristiques générales de la classe ~a" (name class))
+		(name-value-table (format nil "CaractÃ©ristiques gÃ©nÃ©rales de la classe ~a" (name class))
 			(list
-			 "Nom français" (french (user-name class))
+			 "Nom franÃ§ais" (french (user-name class))
 			 "Nom anglais" (english (user-name class))
 			 "Nom de la table SQL" (meta::sql-name real-class)
 			 "Description" (description class)
@@ -363,8 +363,8 @@
 			 "class GUID" (guid class)
 			 "Version" (version class)
 			 "Instanciable" (yes-no (instanciable class))
-			 "Stockée en RAM" (yes-no (use-memory-store class))
-			 "Hérite des classes" (format nil "~{~a~^, ~}"
+			 "StockÃ©e en RAM" (yes-no (use-memory-store class))
+			 "HÃ©rite des classes" (format nil "~{~a~^, ~}"
 						      (mapcar 'name (direct-superclasses class)))
 			 "Visible par" (visible-string class)
 			 "Description courte" (if (short-description class)
@@ -411,7 +411,7 @@
 		     (tt::header-row ()
 			     (tt::cell (:col-span 5 :background-color '(1.0 0.7 0.7))
 				       (tt::paragraph (:font "Helvetica-Bold" :font-size 14)
-					 (tt::put-string (format nil "Liste des attributs hérités de ~a"
+					 (tt::put-string (format nil "Liste des attributs hÃ©ritÃ©s de ~a"
 								 (name super))))))
 		     (tt::header-row (:background-color '(1.0 0.7 0.7))
 			 (tt::cell ()(tt::paragraph () "Nom"))
@@ -462,7 +462,7 @@
 		     (tt::header-row ()
 			 (tt::cell (:col-span 4 :background-color '(1.0 0.7 0.7))
 				   (tt::paragraph (:font "Helvetica-Bold" :font-size 14)
-					(tt::put-string (format nil "Liste des fonctions héritées de ~a"
+					(tt::put-string (format nil "Liste des fonctions hÃ©ritÃ©es de ~a"
 								(name super))))))
 		     (tt::header-row (:background-color '(1.0 0.7 0.7))
 			 (tt::cell ()(tt::paragraph () "Nom"))
@@ -511,7 +511,7 @@
 	  (tt:hrule :dy 2)
 	  (tt::vspace 10)
 	  (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-			(name-value-table "Caractéristiques générales"
+			(name-value-table "CaractÃ©ristiques gÃ©nÃ©rales"
 			  (list
 			   "Nom" (name group)
 			   "Nom FR" (french (user-name group))
@@ -579,7 +579,7 @@
 	       (trans-string :en "Technical Documentation" :fr "Documentation technique") :vfill))
 	     :eop
 	     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-			   (trans-string :en "Table of Contents" :fr "Table des matières"))
+			   (trans-string :en "Table of Contents" :fr "Table des matiÃ¨res"))
 	     (tt:hrule :dy 2)
 	     (tt::vspace 20)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -590,7 +590,7 @@
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
 				  :left-margin 25 :right-margin 25)
-			"Paramètres généraux" (tt::dotted-hfill)
+			"ParamÃ¨tres gÃ©nÃ©raux" (tt::dotted-hfill)
 			(tt::format-string "~d" (tt::find-ref-point-page-number project)))
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :left :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -635,7 +635,7 @@
 	     (tt::vspace 10)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 14 :color '(0.0 0 0.4)
 				      :left-margin 45 :right-margin 25)
-			    "Graphe de dépendance des fichiers sources" (tt::dotted-hfill)
+			    "Graphe de dÃ©pendance des fichiers sources" (tt::dotted-hfill)
 			    (tt::format-string "~d" (tt::find-ref-point-page-number :file-graph)))
 	     (tt::vspace 20)
 	     (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -674,7 +674,7 @@
 	     (tt::vspace 3)
 	     (tt:hrule :dy 2 :color *color1*)
 	     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 20)
-			   (name-value-table "Caractéristiques générales"
+			   (name-value-table "CaractÃ©ristiques gÃ©nÃ©rales"
 					     (list
 					      "Nom" (name project)
 					      "Version" (format nil "~d" (version project))
@@ -744,7 +744,7 @@
 	  (tt::vspace 10)
 	  (tt::user-drawn-box :dx 200 :dy 12 :stroke-fn 'draw-file-graph-legend) :eol
 	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 16 :top-margin 6)
-			 (trans-string :en "File dependency graph." :fr "Graphe des dépendances de fichier."))
+			 (trans-string :en "File dependency graph." :fr "Graphe des dÃ©pendances de fichier."))
 ;********************	  
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
@@ -854,90 +854,90 @@
     (tt::mark-ref-point :help)
     (tt:hrule :dy 2)
     (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :top-margin 20)
-		  "Préambule")
+		  "PrÃ©ambule")
     (tt:paragraph (:h-align :justified :font "Helvetica-Oblique" :font-size 12 :top-margin 15)
-		  "Le projet " (tt::put-string (name project)) " est basé sur le modèle classique des serveurs web applicatifs (modèle des trois tiers). Il se compose d'une base de données SQL (PostgreSQL), d'un framework applicatif (Plateforme applicative de Fractal Concept) et d'un serveur web (Apache 1.3). Le logiciel est utilisé par des postes clients légers (Internet Explorer). Cette documentation ne contient que les éléments spécifiques à l'application. Elle ne contient pas les documentations de la base de données, de la plateforme applicative et du serveur web.")
+		  "Le projet " (tt::put-string (name project)) " est basÃ© sur le modÃ¨le classique des serveurs web applicatifs (modÃ¨le des trois tiers). Il se compose d'une base de donnÃ©es SQL (PostgreSQL), d'un framework applicatif (Plateforme applicative de Fractal Concept) et d'un serveur web (Apache 1.3). Le logiciel est utilisÃ© par des postes clients lÃ©gers (Internet Explorer). Cette documentation ne contient que les Ã©lÃ©ments spÃ©cifiques Ã  l'application. Elle ne contient pas les documentations de la base de donnÃ©es, de la plateforme applicative et du serveur web.")
     (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :top-margin 20)
 	 	  "Description")
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :top-margin 15)
-		  "Cette documentation contient la description de l'intégralité des éléments applicatifs constituant le projet "
+		  "Cette documentation contient la description de l'intÃ©gralitÃ© des Ã©lÃ©ments applicatifs constituant le projet "
 		  (tt::put-string (name project))"." :eol
 		  (tt::vspace 10)
-		  "Ces éléments sont:")
+		  "Ces Ã©lÃ©ments sont:")
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les paramètres généraux du projet: Nom, description, version, date, groupes d'utilisateurs, groupes de classes, liste des fichiers sources avec leur description et le graphe des dépendance des fichiers entre eux, etc."
+		  "Les paramÃ¨tres gÃ©nÃ©raux du projet: Nom, description, version, date, groupes d'utilisateurs, groupes de classes, liste des fichiers sources avec leur description et le graphe des dÃ©pendance des fichiers entre eux, etc."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
 		  "Les groupes de classes d'objets avec leur listes de classes."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les classes d'objets avec, pour chacune des classes, leurs propriétés, le graphes des classes ayant un rapport avec cette classe, (super-classes, sous-classes, classes utilisées par et classes utilisant cette classe) et la description des slots (attributs) directs et hérités pour cette classe."
+		  "Les classes d'objets avec, pour chacune des classes, leurs propriÃ©tÃ©s, le graphes des classes ayant un rapport avec cette classe, (super-classes, sous-classes, classes utilisÃ©es par et classes utilisant cette classe) et la description des slots (attributs) directs et hÃ©ritÃ©s pour cette classe."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les définitions SQL des tables utilisées dans la base de données PostgresQL pour le stockage des données."
+		  "Les dÃ©finitions SQL des tables utilisÃ©es dans la base de donnÃ©es PostgresQL pour le stockage des donnÃ©es."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les descriptions détailleés des slots des objets avec toutes leurs propriétés, les contraintes sur les valeurs, les prédicats de désactivation, etc."
+		  "Les descriptions dÃ©tailleÃ©s des slots des objets avec toutes leurs propriÃ©tÃ©s, les contraintes sur les valeurs, les prÃ©dicats de dÃ©sactivation, etc."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les fichiers sources sont inclus dans leur intégralité avec une colorisation syntaxique (keywords en rouge, commentaires en italique bleu, symboles standard en bleu foncé, etc.)"
+		  "Les fichiers sources sont inclus dans leur intÃ©gralitÃ© avec une colorisation syntaxique (keywords en rouge, commentaires en italique bleu, symboles standard en bleu foncÃ©, etc.)"
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
 		  "Un index permet de retrouver tous les noms des classes, des slots (avec leur classe) et des fonctions (aussi avec leur classe)."
 		  )
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 10 :top-margin 10)
-		  "Les autres documents tels que les cahiers des charges et les descriptions fonctionnelles sont aussi inclus à la fin de cette documentation ou joints en tant que documents séparés."
+		  "Les autres documents tels que les cahiers des charges et les descriptions fonctionnelles sont aussi inclus Ã  la fin de cette documentation ou joints en tant que documents sÃ©parÃ©s."
 		  )
 
     (tt:paragraph (:h-align :justified :font "Helvetica-Bold" :font-size 14 :left-margin 0 :top-margin 20)
-		  "Définition des propriétés des slots.")
+		  "DÃ©finition des propriÃ©tÃ©s des slots.")
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 0 :top-margin 10)
-		  "Les slots sont décrits dans une table de propriété du type de celle ci-dessous. Dans cette table les valeurs sont remplacées par une description de ces propriétés."
+		  "Les slots sont dÃ©crits dans une table de propriÃ©tÃ© du type de celle ci-dessous. Dans cette table les valeurs sont remplacÃ©es par une description de ces propriÃ©tÃ©s."
 		  )
 
     (tt:paragraph (:font "Helvetica-Bold" :font-size 16 :top-margin 10)
-		  (name-value-table (format nil "Caractéristiques générales d'un slot ")
+		  (name-value-table (format nil "CaractÃ©ristiques gÃ©nÃ©rales d'un slot ")
 	    (append
 	     (list
 	      "Nom de l'attribut" "Nom informatique du slot (fonction accessor)"
-	      "Nom français" "Nom français présenté à l'utilisateur"
-	      "Nom anglais" "Nom anglais présenté à l'utilisateur"
-	      "Nom dans la table SQL" "Le nom de la colone SQL dans la table associée à l'objet"
+	      "Nom franÃ§ais" "Nom franÃ§ais prÃ©sentÃ© Ã  l'utilisateur"
+	      "Nom anglais" "Nom anglais prÃ©sentÃ© Ã  l'utilisateur"
+	      "Nom dans la table SQL" "Le nom de la colone SQL dans la table associÃ©e Ã  l'objet"
 	      "Description" "La description du slot"
 	      "Commentaire" "Les commentaires sur ce slot"
 	      "Type" "Le type Lisp du slot"
 	      "Type d'objet" "La classe du l'objet (si le type du slot est objet)"
-	      "Texte FR si vide" "Le texte français à mettre en l'abscence d'objet (si le type du slot est objet)"
-	      "Texte EN si vide" "Le texte anglais à mettre en l'abscence d'objet (si le type du slot est objet)"
-	      "Peut créer nouvel obj." "l'utilisateur habilité peut créer un nouvel objet dans ce slot (si le type du slot est objet)"
-	      "Créer objet valeur" "Le système cré automatiquement l'objet contenu dans ce slot (si le type du slot est objet)"
-	      "Fn pour obtenir obj." "La fonction à appeller pour obtenir l'objet à mettre dans ce slot (si le type du slot est objet)"
-	      "Fn à appeler sur new obj." "La fonction à appeller (si elle est précisée) pour traiter l'objet retourné par la fonction précédente. La valeur retournée par cette fonction est mise dans le slot. (si le type du slot est objet)"
-	      "Titre FR pour dialog box de sélection" "Le titre français à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
-	      "Titre EN pour dialog box de sélection" "Le titre anglais à mettre sur la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
-	      "Texte FR pour dialog box de sélection" "Le texte français à mettre dans la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
-	      "Texte EN pour dialog box de sélection" "Le texte anglais à mettre dans la dialog box de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
-	      "Fn de génération HTML" "La fontion à appeler pour générer l'interface HTML de choix de l'objet à mettre dans le slot (si le type du slot est objet)"
-	      "Autre type" "Le nom du type Lisp de la valeur à mettre dans le slot (si le type du slot est autre type"
-	      "Enregistré dans base" "La valeur du slot doit être stockée dans la base de données"
-	      "Dans proxy" "La valeur du slot doit être stockée dans le proxy d'interface entre l'objet et sa représentation dans la base de données."
-	      "Indexé" "La colonne représentant le slot dans la base de donnée SQL doit être indexée"
-	      "Unique" "La colonne représentant le slot dans la base de donnée SQL doit être unique"
-	      "Ne pas afficher nuls" "Les valeurs nulles ne seront pas affichées (le champ sera vide dans l'interface)"
-	      "Valeur par défaut" "La valeur par défaut du slot au moment de la création d'un objet"
-	      "Unité" "L'unité de la valeur contenue dans le slot"
-	      "Visible par" "La liste des groupes d'utilisateurs habilités à voir ce slot"
-	      "Modifiable par" "La liste des groupes d'utilisateurs habilités à voir ce slot"
+	      "Texte FR si vide" "Le texte franÃ§ais Ã  mettre en l'abscence d'objet (si le type du slot est objet)"
+	      "Texte EN si vide" "Le texte anglais Ã  mettre en l'abscence d'objet (si le type du slot est objet)"
+	      "Peut crÃ©er nouvel obj." "l'utilisateur habilitÃ© peut crÃ©er un nouvel objet dans ce slot (si le type du slot est objet)"
+	      "CrÃ©er objet valeur" "Le systÃ¨me crÃ© automatiquement l'objet contenu dans ce slot (si le type du slot est objet)"
+	      "Fn pour obtenir obj." "La fonction Ã  appeller pour obtenir l'objet Ã  mettre dans ce slot (si le type du slot est objet)"
+	      "Fn Ã  appeler sur new obj." "La fonction Ã  appeller (si elle est prÃ©cisÃ©e) pour traiter l'objet retournÃ© par la fonction prÃ©cÃ©dente. La valeur retournÃ©e par cette fonction est mise dans le slot. (si le type du slot est objet)"
+	      "Titre FR pour dialog box de sÃ©lection" "Le titre franÃ§ais Ã  mettre sur la dialog box de choix de l'objet Ã  mettre dans le slot (si le type du slot est objet)"
+	      "Titre EN pour dialog box de sÃ©lection" "Le titre anglais Ã  mettre sur la dialog box de choix de l'objet Ã  mettre dans le slot (si le type du slot est objet)"
+	      "Texte FR pour dialog box de sÃ©lection" "Le texte franÃ§ais Ã  mettre dans la dialog box de choix de l'objet Ã  mettre dans le slot (si le type du slot est objet)"
+	      "Texte EN pour dialog box de sÃ©lection" "Le texte anglais Ã  mettre dans la dialog box de choix de l'objet Ã  mettre dans le slot (si le type du slot est objet)"
+	      "Fn de gÃ©nÃ©ration HTML" "La fontion Ã  appeler pour gÃ©nÃ©rer l'interface HTML de choix de l'objet Ã  mettre dans le slot (si le type du slot est objet)"
+	      "Autre type" "Le nom du type Lisp de la valeur Ã  mettre dans le slot (si le type du slot est autre type"
+	      "EnregistrÃ© dans base" "La valeur du slot doit Ãªtre stockÃ©e dans la base de donnÃ©es"
+	      "Dans proxy" "La valeur du slot doit Ãªtre stockÃ©e dans le proxy d'interface entre l'objet et sa reprÃ©sentation dans la base de donnÃ©es."
+	      "IndexÃ©" "La colonne reprÃ©sentant le slot dans la base de donnÃ©e SQL doit Ãªtre indexÃ©e"
+	      "Unique" "La colonne reprÃ©sentant le slot dans la base de donnÃ©e SQL doit Ãªtre unique"
+	      "Ne pas afficher nuls" "Les valeurs nulles ne seront pas affichÃ©es (le champ sera vide dans l'interface)"
+	      "Valeur par dÃ©faut" "La valeur par dÃ©faut du slot au moment de la crÃ©ation d'un objet"
+	      "UnitÃ©" "L'unitÃ© de la valeur contenue dans le slot"
+	      "Visible par" "La liste des groupes d'utilisateurs habilitÃ©s Ã  voir ce slot"
+	      "Modifiable par" "La liste des groupes d'utilisateurs habilitÃ©s Ã  voir ce slot"
 	      "Liste d'objets" "Le slot contient une liste de valeurs"
-	      "Nouveaux objets en haut" "Les nouvelles valeurs sont rajoutées en début de liste (si le slot est une liste)"
-	      "Type de vue" "Le type de vue HTML utilisée pour représenter le slot dans l'interface"
-	      "Attribut HTML" "Les attributs HTML à utiliser pour la représentation HTML de l'objet"
-	      "Dupl. valeur si copie" "En cas de copie de l'objet, la valeur du slot doit être dupliquée"
+	      "Nouveaux objets en haut" "Les nouvelles valeurs sont rajoutÃ©es en dÃ©but de liste (si le slot est une liste)"
+	      "Type de vue" "Le type de vue HTML utilisÃ©e pour reprÃ©senter le slot dans l'interface"
+	      "Attribut HTML" "Les attributs HTML Ã  utiliser pour la reprÃ©sentation HTML de l'objet"
+	      "Dupl. valeur si copie" "En cas de copie de l'objet, la valeur du slot doit Ãªtre dupliquÃ©e"
 	      "Ajouter \"Copie de\"" "En cas de copie de l'objet rajouter \"Copie de\" devant la valeur contenue dans le slot (valable pour les strings seulement)"
-	      "Fn pour dupliquer valeur" "La fonction à utiliser pour dupliquer la valeur contenue dans le slot"))))
+	      "Fn pour dupliquer valeur" "La fonction Ã  utiliser pour dupliquer la valeur contenue dans le slot"))))
     
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 0 :top-margin 10)
-		  "La description du slot comporte aussi éventuellement la liste des valeurs possibles ainsi que le prédicat pour désactivation (code source Lisp) et la contrainte sur la valeur du slot (code source Lisp).")
+		  "La description du slot comporte aussi Ã©ventuellement la liste des valeurs possibles ainsi que le prÃ©dicat pour dÃ©sactivation (code source Lisp) et la contrainte sur la valeur du slot (code source Lisp).")
     :fresh-page))
 
 (defun english-doc-help (project)

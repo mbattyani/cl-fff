@@ -7,7 +7,7 @@
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:fr) :name "ts" :source-code 
    `(((:tab :class "tabdv")
-      ("Français"
+      ("FranÃ§ais"
        ((:table :class "dvt" :style "width:100%")
 	((:tr :class "dvr")
 	 ((:td :class "dvcv") ((:slot-edit french :class "dvcve"))))))
@@ -138,7 +138,7 @@
 		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
-     ("Règles"
+     ("RÃ¨gles"
       (:slot-table indexed unique-p null-allowed enable-copy-paste 
 		   duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))

@@ -199,7 +199,7 @@
 (defmethod gen-slot-aux-tables-sql (class slot)
   (with-output-to-string (s)
     (when (or (list-of-values slot)(indexed slot))
-      (format s "Informations supplémentaires pour le slot ~a~%~%" (slot-definition-name slot)))
+      (format s "Informations supplÃ©mentaires pour le slot ~a~%~%" (slot-definition-name slot)))
     (if (list-of-values slot)
 	(progn
 	  (format s "CREATE TABLE ~a_~a (~%     parentid BIGINT NOT NULL,~%     ~a ~a NOT NULL,~%     ordernb INTEGER) WITHOUT OIDS~%~%~%"

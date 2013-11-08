@@ -71,12 +71,12 @@
 	((:td :class "dvch2" :colspan "2")
 	 ((:slot-list direct-functions :height "500px" :class "dvl")
 	  (:table (:tr ((:td :class "dvch2") "Fonctions"))))))))
-     ("Règles"
+     ("RÃ¨gles"
       ((:table :class "dvt")
        ((:tr :class "dvr")
 	((:td :class "dvch2" :colspan "2")
 	 ((:slot-list direct-rules :height "500px" :class "dvl")
-	  (:table (:tr ((:td :class "dvch2") "Règles"))))))))
+	  (:table (:tr ((:td :class "dvch2") "RÃ¨gles"))))))))
      ("Versions"
       (:slot-table current-version)
       ((:table :class "dvt")

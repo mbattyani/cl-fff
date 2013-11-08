@@ -20,7 +20,7 @@ as type and sets speed to 3 with safety 0 within its scope."
     '((#\> . "&gt;")
       (#\< . "&lt;")
       (#\& . "&amp;")
-      (#\ÿ . "<br>")
+      (#\Ã¿ . "<br>")
       (#\" . "&quot;")
       #+nil(#\space . "&nbsp;"))
     "&; delimited tokens are used to print special tokens."))
@@ -275,8 +275,8 @@ Arguments to directives are supported only as indicated."
              (format nil "~a ~2,'0d ~a ~d"
                      (svref '#("Lundi" "Mardi" "Mercredi" "Jeudi" "Vendredi" "Samedi" "Dimanche") day-of-week)
                      date
-                     (svref '#(nil "Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-                               "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre") month) year))
+                     (svref '#(nil "Janvier" "FÃ©vrier" "Mars" "Avril" "Mai" "Juin"
+                               "Juillet" "AoÃ»t" "Septembre" "Octobre" "Novembre" "DÃ©cembre") month) year))
             (t 
              (format nil "~a, ~2,'0d ~a ~d"
                      (svref '#("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday") day-of-week)
