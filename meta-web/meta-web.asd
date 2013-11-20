@@ -1,14 +1,15 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+; -*- mode:common-lisp -*-
 
-(in-package asdf)
+(in-package #:asdf)
 
 (defsystem :meta-web
   :name "meta-web"
   :author "Marc Battyani <marc.battyani@fractalconcept.com>"
   :maintainer "Marc Battyani <marc.battyani@fractalconcept.com>"
-  :description "Meta Interface for the Framework"
-  :long-description "Meta Interface for the Framework"
-  :components ((:file "global")
+  :description "Meta Web Interface for the Framework"
+  :long-description "Meta Web Interface for the Framework"
+  :components ((:file "defpackage")
+               (:file "global" :depends-on ("defpackage"))
 	       (:file "style" :depends-on ("global"))
 	       (:file "meta-classes" :depends-on ("global"))
 	       (:file "util-classes" :depends-on ("meta-classes"))
@@ -18,9 +19,6 @@
 	       (:file "sql-list" :depends-on ("class-info"))
 	       (:file "project-info" :depends-on ("class-info"))
 	       (:file "upgrade" :depends-on ("project-info"))
-	       (:file "upgrade-meta" :depends-on ("project-info"))
-	       (:file "upgrade-database" :depends-on ("global"))
 	       (:file "gen-doc" :depends-on ("meta-classes"))
 	       (:file "pages" :depends-on ("style")))
-  :depends-on (:interface :utility :psql-store :cl-typesetting :s-dot)
-  )
+  :depends-on (:interface :cl-typegraph :s-dot))

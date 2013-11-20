@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (require "comm")
 
@@ -21,21 +21,6 @@
 (defconstant +eval+ 7)
 (defconstant +fire-click+ 8))
 
-(defvar *log* ())
-(defvar *enable-log* nil)
-  
-(defun log-message (msg)
-  (when *enable-log*
-    (push msg *log*)))
-
-(defun clear-log ()
-  (setf *log* ()))
-
-(defun show-log (&optional (nb-lines 20))
-  (loop repeat nb-lines
-    for m in *log*
-    do (write-string m *standard-output*)))
-
 (defclass remote-interface ()
   ((socket-stream :accessor socket-stream :initarg socket-stream)
    (interface-id  :accessor interface-id  :initarg interface-id)
@@ -46,16 +31,17 @@
    ))
 
 (defmacro with-remote-interface (interface &body body)
-  `(let ((*interface* interface)
-	 (*object*  (object interface))
-	 (*page-root* (page-root interface))
-	 (*user*    (user interface)))
+  `(let ((*interface* ,interface)
+	 (*object*  (object ,interface))
+	 (*page-root* (page-root ,interface))
+	 (*user*    (user ,interface)))
     ,@body))
 
 (defun make-server-instream (handle)
   (log-message (format nil "open rpc socket~%"))
   (incf *nb-sockets*)
-  (mp:process-run-function nil '() 'server-listen (make-instance 'comm:socket-stream :socket handle :direction :io :element-type 'base-char)))
+  (bt:make-thread (lambda ()
+                    (server-listen (make-instance 'comm:socket-stream :socket handle :direction :io :element-type 'base-char)))))
 
 (defun start-server ()
   (comm:start-up-server :function 'make-server-instream :service *server-ip-port*))
@@ -83,10 +69,10 @@
 	 (let ((interface (gethash (second packet) *remote-interfaces*)))
 	   (when interface
 	     (with-remote-interface interface
-	       (case function-id
+	       (ecase function-id
 		 (#.+unregister-interface+ (unregister-interface *interface*))
-		 (#.+change-slot+ (change-slot *interface* (third packet)(fourth packet)))
-		 (#.+fire-click+ (fire-click *interface* (third packet)(fourth packet)))
+		 ;; (#.+change-slot+ (change-slot *interface* (third packet)(fourth packet)))
+		 ;; (#.+fire-click+ (fire-click *interface* (third packet)(fourth packet)))
 		 ))))))))
 ;	  (condition (c) (display-remote-message *interface* (format nil "~a" c)))))))
 ;   (condition (c) (log-message (format nil "~a" c)))))
@@ -115,7 +101,7 @@
   (log-message (format nil "register interface ~%" ))
   (let* ((interface (make-instance 'remote-interface))
 	 (dispatchers (make-hash-table :test #'equal))
-	 (decoded-params (read-from-string (html:decode-url-string encoded-params)))
+	 (decoded-params (read-from-string (decode-url-string encoded-params)))
 	 (interface-id (random 1000000))
 	 (user-id (getf decoded-params :user))
 	 (view-id (getf decoded-params :ui))

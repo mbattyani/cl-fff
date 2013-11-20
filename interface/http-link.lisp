@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 ;; explanations for fractal.js compression and obfuscation
 ;; v684 and v683 are time out and watchdog counters
@@ -9,13 +9,13 @@
 ;; v686 is URL pull for watchdog
 ;; F5641() is set URL pull and http-link-id for watchdog
 ;; v688 is push URL
-;; F5614() is set URL push 
+;; F5614() is set URL push
 ;; v687 is packet-sync
 ;; v689 is http-link-id
 ;; F5164() is set packet-sync
 ;; F5146() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink
-;; Fch is fire_on_change 
+;; Fch is fire_on_change
 ;; Fck is fire_on_click
 ;; Fad is fire_add
 ;; Fcl is fire_on_call
@@ -48,7 +48,7 @@
 
 (defmethod initialize-instance :after ((link http-link) &rest init-options &key views &allow-other-keys)
   (setf (gethash (interface-id link) *http-links*) link)
-  (setf (link-lock link) (mp:make-lock :name (format nil "link-~a-lock" (interface-id link))))
+  (setf (link-lock link) (bt:make-recursive-lock (format nil "link-~a-lock" (interface-id link))))
   (let ((url-values (list :link (interface-id link) :session (id (session link)))))
     (setf (url-push link)(encode-session-url nil (list* :func "lpush" url-values)))
     (setf (url-pull link)(encode-session-url nil (list* :func "lpull" url-values)))
@@ -83,21 +83,22 @@
 		   (progn
 		     (setf (output-queue http-link) '())
 		     (incf (output-counter http-link));alert(window.F5146+'  '+ parent.F5146 + x_.F5146);
-		     (html:html-to-string (html:ffmt "if(x_.F5146(~d)){" (output-counter http-link))
+		     (html:html-to-string (html:ffmt "if(x_.F5146(~d)){" (output-counter http-link)) ;; x_.F5146(~d)
 					  (dolist (string (nreverse queue))
 					    (write-string string html:*html-stream*))
-					  "};" :crlf))
+					  "} ;" :crlf)) ;; {alert('nie jest wiekksze?WTF!?');}
 		   nil)))))
   (when (output-sent http-link)
     (html:html (loop for string in (output-sent http-link)
 		     when string do (write-string string html:*html-stream*))
-	       (html:ffmt "x_.F5164(~d);x_.F5641(~s, ~s);x_.F5614(~s);"
+	       (html:ffmt "x_.F5164(~d);x_.F5641(~s, ~s);";x_.F5614(~s);"
 			  (output-counter http-link) (url-pull http-link)
-			  (interface-id http-link) (url-push http-link)) :crlf))
+			  (interface-id http-link) #+nil(url-push http-link)) :crlf))
   (pop (output-sent http-link)))
 
 (defun send-to-interface (string &optional (http-link *http-link*))
   (when string
+    ;(break)
     (push string (output-queue http-link))))
 
 (defun send-message-to-interface (message &optional (http-link *http-link*))
@@ -106,10 +107,11 @@
 		     http-link))
 
 (defun send-url-to-interface (url &optional (http-link *http-link*))
-  (let ((referer (normalize-referer (referer *request*))))
-    (when referer
-      (push (cons referer url)(url-history *session*))))
-  (send-to-interface (format nil "x_.location.href='~a';" url) http-link))
+  (when *request*
+    (let ((referer (normalize-referer (referer *request*))))
+      (when referer
+        (push (cons referer url)(url-history *session*)))))
+  (send-to-interface (format nil "var x_ = window; x_.location.href='~a';" url) http-link))
 
 (defun send-open-new-win-to-interface (url &optional (http-link *http-link*))
   (send-to-interface (format nil "x_.open('~a', '_blank', 'toolbar=yes, location=yes, directories=yes,status=yes,menubar=yes,scrollbars=yes,copyhistory=yes, resizable=yes');"
@@ -123,13 +125,13 @@
 #+ignore(defvar *refresh-prefix* "3")
 
 (defun process-http-link-pull (request &optional no-refresh)
+  (declare (ignore no-refresh))
   (incf *count*)
-  (setf (content-type request) "text/html; charset=iso-8859-1")
-  (let* ((interface-id (getf (session-params request) :link ))
+  (setf (content-type request) "text/html; charset=UTF-8")
+  (let* ((interface-id (getf (session-params request) :link))
 	 (*http-link* (when interface-id (gethash interface-id *http-links*))))
-    (log-message (format nil "process-http-link-pull ~s~%" (posted-content request)))
-    (if *http-link*
-      (with-output-to-request (request s)
+    (log:debug "process-http-link-pull" (posted-content request))
+    #+nil(with-output-to-string (s)
 	(unless (registered *http-link*) (register-http-link *http-link*))
 	(setf (last-access-time *http-link*) *session-timer-time*)
 	(if *xml-http*
@@ -140,7 +142,7 @@
 	     (html:ffmt "F5641(~s, ~s);F5614(~s);}"
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
-	     (:html ((:body :optional 
+	     (:html ((:body :optional
 			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
@@ -149,19 +151,42 @@
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
 		     )))))
+    (if *http-link*
+      (with-output-to-request (request s)
+	(unless (registered *http-link*)
+          (register-http-link *http-link*))
+	(setf (last-access-time *http-link*) *session-timer-time*)
+	(if *xml-http*
+	    (html:html-to-stream s
+	     "{var x_=window;"
+	     (send-packets *http-link*)
+	     ; "F6541();"
+	     (html:ffmt "F5641(~s, ~s);}" ;F5614(~s);}"
+			(url-pull *http-link*) interface-id #+nil(url-push *http-link*)))
+	    (html:html-to-stream s
+	     (:html ((:body :optional
+			    #+nil(:onload #+nil"if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
+		     (:jscript "{var x_=parent;"
+			       (send-packets *http-link*)
+			       ; "parent.F6541();"
+			       (html:ffmt "parent.F5641(~s, ~s);}" ;parent.F5614(~s);}"
+					  (url-pull *http-link*) interface-id #+nil(url-push *http-link*)))
+		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
+		     )))))
       (with-output-to-request (request s)
         (html:html-to-stream s
              (:html (:body
                      (:p "no-refresh")
-                     (:jscript "parent.location.href='/asp/index.html';"))))))
+                     (:jscript "parent.location.href='/index.html';"))))))
     t))
 
 (add-named-func "lpull" 'process-http-link-pull)
 ;(add-named-func "lpull" #'(lambda (r) (process-http-link-pull r t)))
 
-(defun process-http-link-push (request) 
+(defun process-http-link-push (request)
+  (break)
   (with-posted-strings (request (action "v654")(name "v645")(value "v465")(*xml-http* "v564"))
-    (log-message (format nil "process-http-link-push ~s~%" (posted-content request))) (setf %req% request) 
+    (log:debug "process-http-link-push" (posted-content request) request)
     (let ((action-func (gethash action *action-funcs*)))
       (when action-func
 	(let* ((link-id (getf (session-params request) :link ))
@@ -191,7 +216,7 @@
 (defun register-http-link (link)
   (let ((dispatchers (make-hash-table :test #'equal))
         (dispatcher-list ()))
-    (log-message (format nil "register-http-link ~s ~%" link))
+    (log:debug "register-http-link ~s ~%" link)
     (setf (dispatchers link) dispatchers)
     (loop for (view *object*) in (views link)
 	  when (and view *object*) do
@@ -205,18 +230,19 @@
                              (push dispatcher dispatcher-list))))
 		     (all-items view))))
   (dolist (dispatcher dispatcher-list)
-		     (update-dispatcher-item dispatcher t)))
+    (update-dispatcher-item dispatcher t)))
   (setf (registered link) t))
 
 (defun unregister-http-link (link)
   (when (dispatchers link)
-    (maphash #'(lambda (name dispatcher)
-		 (when dispatcher
-		   (unregister-dispatcher dispatcher)))
+    (maphash (lambda (name dispatcher)
+               (declare (ignore name))
+               (when dispatcher
+                 (unregister-dispatcher dispatcher)))
 	     (dispatchers link))))
 
 (defun change-slot (link item-name value)
-  (log-message (format nil "change slot ~s ~s~%" item-name value))
+  (log:debug "change slot ~s ~s~%" item-name value)
   (let ((dispatcher (gethash item-name (dispatchers link))))
     (unless value (setf value ""))
     (multiple-value-bind (new-value ok) (safely-convert-string-to-value dispatcher value)
@@ -227,18 +253,19 @@
 (add-action-func "4" 'change-slot)
 
 (defun fire-click (link item-name click-id-str)
-  (log-message (format nil "fire-click ~s ~s~%" item-name click-id-str))
+  (log:debug "fire-click ~s ~s~%" item-name click-id-str)
   (let ((dispatcher (gethash item-name (dispatchers link)))
 	(click-id (parse-integer click-id-str :junk-allowed t)))
-    (log-message (format nil "dispatcher ~s~%" dispatcher))
-    (when dispatcher (fire-action dispatcher click-id click-id-str))))
+    (log:debug "dispatcher ~s~%" dispatcher)
+    (when dispatcher
+      (fire-action dispatcher click-id click-id-str))))
 
 (add-action-func "8" 'fire-click)
 
 (defun fire-add (link item-name value)
-  (log-message (format nil "fire-add ~s ~s~%" item-name value))
+  (log:debug "fire-add ~s ~s~%" item-name value)
   (let ((dispatcher (gethash item-name (dispatchers link))))
-    (log-message (format nil "dispatcher ~s~%" dispatcher))
+    (log:debug "dispatcher ~s~%" dispatcher)
     (let ((new-value (decode-object-id value)))
       (when new-value
 	(fire-add-to-list dispatcher new-value)))))
@@ -246,6 +273,7 @@
 (add-action-func "12" 'fire-add)
 
 (defun http-link-timer ()
+  #+nil
   (maphash #'(lambda (id link)
 	       (declare (ignore id))
 	       (when (and link
@@ -260,41 +288,43 @@
 (defvar *http-link-timer* (start-http-link-timer))
 
 (defun connect-tag (attributes forms)
+  (declare (ignore attributes))
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
-      (html::optimize-progn
-       ,(html::html-gen `(:jscript "window.setInterval('F6451()', 1000);"
-			  (html:ffmt "v686=~s;" http-link-url)))
-       ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
-			   :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
-;       ,(html::html-gen `(:jscript "F6451();"))))
-    ))))
+       (html::optimize-progn
+         #+nil,(html::html-gen `(:jscript "window.setInterval('F6451()', 1000);"
+                                          (html:ffmt "v686=~s;" http-link-url)))
+         ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
+                                     :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
+         #+nil,(html::html-gen `(:jscript "F6451();"))))))
 
 ;example : :connect
 (html::add-func-tag :connect 'connect-tag)
 
 (defun encode-views (views func)
+  (break)
   (encode-session-url nil
      (list* :session (id *session*) :func func
 	    (loop for (view . object) in views
 		  nconc (list :view (name view) :object (encode-object-id object))))))
 
 (defun process-http-popup (request &optional no-refresh)
-(break)
+  (break)
   (let* ((interface-id (getf (session-params request) :link ))
 	 (interface (when interface-id (gethash interface-id *http-links*))))
-    (log-message (format nil "process-http-link-pull ~s~%" (posted-content request)))
+    (log:debug  "process-http-link-pull ~s~%" (posted-content request))
     (if interface
       (with-output-to-request (request s)
 	(unless (registered interface) (register-http-link interface))
 	(setf (last-access-time interface) *session-timer-time*)
 	(html:html-to-stream s
-	     (:html (:head ((:meta :http-equiv "Content-Type" :content "text/html; charset=iso-8859-1")))
-		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',2100);")))
+	     (:html (:head ((:meta :http-equiv "Content-Type" :content "text/html; charset=UTF-8")))
+		    ((:body :optional (:onload (unless no-refresh "" #+nil"if (!getxh()) setTimeout('location.reload(true)',2100);")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
-			       "parent.F6541();"
-			       (html:ffmt "parent.F5641(~s);parent.F5614(~s);" (url-pull interface)(url-push interface)))
+			       ; "parent.F6541();"
+			       (html:ffmt "parent.F5641(~s);";parent.F5614(~s);"
+                                          (url-pull interface) #+nil(url-push interface)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull interface)))
 		     ))))
       (redirect-to (url-pull (make-instance 'http-link :session *session* :params (session-params request))) request)))

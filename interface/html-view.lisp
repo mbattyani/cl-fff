@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defmethod initialize-instance :after ((item html-item) &rest init-options &key &allow-other-keys)
   (setf (id item) *next-id*)
@@ -9,11 +9,18 @@
     (setf (gethash (name item) (all-items *root-item*)) item)))
 
 (defun disabled-p (item)
-  (funcall ()))
+  (declare (ignore item))
+  (error "does nothing")
+  #+nil(funcall ()))
 
 (defmethod visible-p ((item html-item))
   (or (force-visible item)
       (visible-p (slot item))))
+
+(defmethod modifiable-p ((obj html-item))
+  (if (slot obj)
+      (modifiable-p (slot obj))
+      t))
 
 ;'" (name item)(name item)),@attributes))))
 
@@ -28,6 +35,7 @@
 
 ;;; ******* object dialog *******
 (defun object-dialog-tag (attributes form)
+  (declare (ignore attributes))
   (destructuring-bind ((dx dy &key title (border :etched)) description) form
     (let* ((panel-item (make-instance 'ui-root :border border :text title :floating-position t))
 	   (*top-level-item* panel-item))
@@ -57,8 +65,8 @@
   (loop with func = (second attributes)
 	for slot-name in (first attributes)
 	for slot = (find (symbol-name slot-name)
-			 (clos:class-slots *current-class*) :test #'string=
-			 :key #'clos:slot-definition-name)
+			 (c2mop:class-slots *current-class*) :test #'string=
+			 :key #'c2mop:slot-definition-name)
 	do (make-instance 'linked-html :slot slot :func func))
   (cons 'html::optimize-progn (mapcar 'html:html-gen forms)))
 
@@ -162,7 +170,7 @@
 	  :style "display:none;" ,@attrs) ,@form)
 	((:a :id ,(name item)
 	  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
-			      (format nil "HREF=\"javascript:open1('/asp/pick-val.html','250px','500px','~a');\"" (name item))
+			      (format nil "HREF=\"javascript:open1('/pick-val.html','250px','500px','~a');\"" (name item))
 			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
 	  ,@attrs) ,@form)))))
 
@@ -189,7 +197,7 @@
 	  :style "display:none;" ,@attrs) ,@(first form))
 	((:a :id ,(name item)
 	  :insert-string ,(if (choices-fn item)
-			      (format nil "HREF=\"javascript:open1('/asp/pick-val.html','250px','500px','~a');\"" (name item))
+			      (format nil "HREF=\"javascript:open1('/pick-val.html','250px','500px','~a');\"" (name item))
 			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
 	  ,@attrs) ,@(second form))))))
 
@@ -201,7 +209,7 @@
 (defun std-fn-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
 	 (item-name (name item))
-	 (object (object dispatcher))
+	 ;(object (object dispatcher))
 	 (fc-function (fc-function (item dispatcher))))
     (html:html
      (:head
@@ -255,6 +263,7 @@
 
 ;;; **** when-groups *****
 (defun when-group-tag (attributes forms)
+  (declare (ignore attributes))
   `(html:html
     (:when (intersection *user-groups* ,(car forms))
       ,@(cdr forms))))
@@ -263,6 +272,7 @@
 
 ;;; **** unless-groups *****
 (defun unless-group-tag (attributes forms)
+  (declare (ignore attributes))
   `(html:html
     (:when (not (intersection *user-groups* ,(car forms)))
       ,@(cdr forms))))

@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defvar *web-contexts* (make-hash-table))
 (defvar *context-id* 100)

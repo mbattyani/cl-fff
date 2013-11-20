@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defclass html-list ()
   ((limit  :initform 50 :accessor limit :initarg :limit)
@@ -69,6 +69,7 @@
 						 do (html:html (funcall col-fn index value))))))))))))
 
 (defun sql-list-action-func (object click-id)
+  (declare (ignore object))
   (let ((sql-list (sql-list *dispatcher*)))
     (case click-id
       (0 (fetch-first-values sql-list))
@@ -86,10 +87,10 @@
 
 (defun sql-list-tag (attributes forms)
   (destructuring-bind (&key (height 100) (width 500) (class "stdlist") query-fn
-			    (title-height 25)(buttons-height 25)(buttons-height 25)) attributes
+			    (title-height 25) (buttons-height 25)) attributes
     (let ((item (make-instance 'html-sql-list :action-func 'sql-list-action-func
 			       :query-fn query-fn)))
-      (loop for (title width . form) in forms
+      (loop for (nil width . form) in forms ; title
 	    for i from 1
 	    collect (compile nil
 		      `(lambda (index value)
@@ -102,7 +103,7 @@
 	  ((:div :class ,class :style ,(format nil "width:~dpx;height:~dpx;" width height))
 	   ((:table :class ,(concatenate 'string class "h")
 		    :style ,(format nil "width100%;height:~dpx;" title-height))
-	    (:tr ,@(loop for (title width . form) in forms
+	    (:tr ,@(loop for (title width . nil) in forms ;form
 			 for i from 1
 			 collect `(html:html ((:th :class ,(format nil "~ah~d" class i)
 					       :style ,(format nil "width:~dpx;" width))

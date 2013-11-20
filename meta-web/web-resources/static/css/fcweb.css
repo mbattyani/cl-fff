@@ -1,0 +1,199 @@
+body { 
+  font: normal small verdana, arial, helvetica, sans-serif;
+  font-size:10pt; 
+  margin: 15px;
+  background-color: white;
+ }
+
+a:link { color: #0000CC; background: transparent; text-decoration:none }
+a:visited { color: #0000BB; background: transparent; text-decoration:none }
+a:active { color: #0000BB; background: transparent; text-decoration:underline }
+a:hover { color: #FF3300; background: transparent; text-decoration:underline }
+
+h1, h2, h3, h4, h5, h6 { text-align: left }
+h1, h2, h3 { color: #333; background: white }
+h1 { font: 17pt sans-serif }
+h2 { font: 14pt sans-serif }
+h3 { font: bold 12pt sans-serif }
+h4 { font: bold 10pt sans-serif }
+h5 { font: italic 10pt sans-serif }
+h6 { font: small-caps 10pt sans-serif }
+
+td, p {font-size:10pt; color:#000}
+span {font-size:10pt}
+li {font-size:10pt}
+
+.hide { display: none }
+
+A.maintitlebar { color: #FFFFFF }
+A.maintitlebar:visited { color: #FFFFFF }
+
+A.sortbutton { color: #FFFFFF; text-decoration: underline; }
+A.sortbutton:visited { color: #FFFFFF; text-decoration: underline; }
+
+.tabs { color: #000000; }
+.tabs:visited { color: #000000; }
+.tabs:hover { color:#FF0000; }
+
+.tabselect { color: #000000; font-weight: bold; }
+.tabselect:visited { font-weight: bold;}
+.tabselect:hover { color:#FF0000; font-weight: bold; }
+
+.tab1{background-color:#c0c0c0; font-size:11pt;}
+.tab1unsel {cursor:hand; border-top:2px groove; border-bottom:2px groove; border-left:2px groove; border-right:2px groove;}
+.tab1sel {cursor:hand; background-color:#c0c0c0; 
+	border-top:1px outset; border-left:1px outset; border-right:1px outset;}
+.tab1void {background-color:#c0c0c0; border-bottom:1px inset;}
+.tab1pane { background-color:#c0c0c0;}
+
+.tabf
+{
+    BACKGROUND-COLOR: #ffffff;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.tabfSel
+{
+    BACKGROUND-COLOR: #344894;
+    BORDER-LEFT: #ffffff 2px solid;
+    BORDER-RIGHT: #ffffff 2px solid;
+    COLOR: #ffffff;
+    CURSOR: auto;
+    FONT-SIZE: 11pt;
+    PADDING-BOTTOM: 2px;
+    PADDING-LEFT: 2px;
+    PADDING-RIGHT: 2px;
+    PADDING-TOP: 2px;
+    TEXT-DECORATION: none
+}
+.tabfUnSel
+{
+    BACKGROUND-COLOR: #a0a0ff;
+    BORDER-LEFT: #ffffff 2px solid;
+    BORDER-RIGHT: #ffffff 2px solid;
+    COLOR: #225588;
+    CURSOR: hand;
+    FONT-SIZE: 11pt;
+    PADDING-BOTTOM: 2px;
+    PADDING-LEFT: 2px;
+    PADDING-RIGHT: 2px;
+    PADDING-TOP: 2px;
+    TEXT-DECORATION: underline
+}
+
+.table1
+{
+    BACKGROUND-COLOR: #ffffff;
+    BORDER-LEFT: #ffffff 2px solid;
+    BORDER-RIGHT: #ffffff 2px solid;
+    COLOR: #000000;
+    FONT-SIZE: 12pt;
+    WIDTH: 350px
+}
+.table1t
+{
+    BACKGROUND-COLOR: #336699;
+    COLOR: #ffffff;
+    FONT-WEIGHT: normal;
+}
+.table1d
+{
+    BACKGROUND-COLOR: #ffcc77;
+    TEXT-ALIGN: right;
+    COLOR: #344894;
+}
+
+.dvt
+{
+    BACKGROUND-COLOR: #ffffff;
+    COLOR: #000000;
+    FONT-SIZE: 10pt;
+    WIDTH: 500px
+}
+.dvt2
+{
+    BACKGROUND-COLOR: #ffffff;
+    COLOR: #000000;
+    FONT-SIZE: 10pt;
+    WIDTH: 500px
+}
+.dvr
+{
+}
+.dvch
+{
+    BACKGROUND-COLOR: #a0a0ff;
+    COLOR: #000000;
+    TEXT-ALIGN: right;
+    WIDTH: 150px;
+}
+.dvch2
+{
+    BACKGROUND-COLOR: #7070ff;
+    COLOR: #000000;
+    TEXT-ALIGN: Left;
+    FONT-WEIGHT: bold;
+}
+.dvcv
+{
+    BACKGROUND-COLOR: #e0e0e0;
+}
+.dvcve
+{
+    BACKGROUND-COLOR: #ffffff;
+    WIDTH: 280px;
+}
+.dvcved
+{
+    BACKGROUND-COLOR: #e0e0f0;
+    COLOR: #000000;
+    WIDTH: 280px;
+}
+.dvl
+{
+    BACKGROUND-COLOR: #7070ff;
+}
+.dvlh
+{
+    BACKGROUND-COLOR: #e0e0f0;
+}
+
+.tabdv
+{
+    BACKGROUND-COLOR: #a0a0ff;
+    FONT-WEIGHT: normal;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.tabdvSel
+{
+    BACKGROUND-COLOR: #a0a0ff;
+    BORDER-LEFT: #ffffff 0px solid;
+    BORDER-RIGHT: #ffffff 0px solid;
+    COLOR: #ffffff;
+    CURSOR: auto;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.tabdvUnSel
+{
+    BACKGROUND-COLOR: #a0a0ff;
+    BORDER-LEFT: #ffffff 0px solid;
+    BORDER-RIGHT: #ffffff 0px solid;
+    CURSOR: hand;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: underline
+}

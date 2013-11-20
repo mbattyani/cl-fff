@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defvar *layout-stream* t)
 (defvar *root-item* nil)
@@ -8,15 +8,12 @@
 (defvar *view* nil)
 
 (defun find-object-view (name &optional instance)
+  (declare (ignore instance))
   (gethash name *all-object-views*))
 
 (defmethod modifiable-p (obj)
   t)
 
-(defmethod modifiable-p ((obj html-item))
-  (if (slot obj)
-      (modifiable-p (slot obj))
-      t))
 
 (defmethod modifiable-p ((slot meta::fc-slot-definition-mixin))
   (or (meta::modifiable slot)
@@ -87,11 +84,11 @@
 
 (defun ensure-slot (slot class)
   (if (symbolp slot)
-    (find slot (clos:class-slots class)
-	  :test #'eql :key #'clos:slot-definition-name)
-    slot))
+      (find slot (c2mop:class-slots class)
+            :test #'eql :key #'c2mop:slot-definition-name)
+      slot))
 
-(defmethod html-func :around ((view object-view))
+(defmethod html-func :around ((view object-view))q
   (let ((func (call-next-method)))
     (unless func
       (let* ((*current-class* (object-class view))
@@ -113,7 +110,7 @@
 
 (defun make-std-object-slots-view (class slots no-table)
   (setf class (ensure-class class))
-  (unless slots (setf slots (clos::class-slots class)))
+  (unless slots (setf slots (c2mop:class-slots class)))
     (list
      (cons (if no-table :progn '(:table :class "dvt"))
 	   (loop for slot-name in slots
@@ -130,21 +127,21 @@
 		      (:list-val
 		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
 			 ((:td :class "dvcv")
-			  ((:slot-list ,(clos:slot-definition-name slot)
+			  ((:slot-list ,(c2mop:slot-definition-name slot)
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
 					  '(:class "dvl" :height "60px")))))))
 		      (:pick-mval
 		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
 			 ((:td :class "dvcv")
-			  ((:slot-pick-mval ,(clos:slot-definition-name slot)
+			  ((:slot-pick-mval ,(c2mop:slot-definition-name slot)
 					    ,@(html:merge-attributes
 					       (meta::html-tag-attributes slot)
 					       '(:class "dvcv")))))))
 		      (t
 		       `((:tr :class "dvr")
 			 ((:td :class "dvch2" :colspan "2")
-			  ((:slot-list ,(clos:slot-definition-name slot)
+			  ((:slot-list ,(c2mop:slot-definition-name slot)
 				       ,@(html:merge-attributes
 					  (meta::html-tag-attributes slot)
 					  '(:class "dvl")))
@@ -160,44 +157,44 @@
 			 ((:td :class "dvcv") (:object-view :object (,(meta::accessor slot) interface::*object*)))))
 		      (t
 		       `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-			 ((:td :class "dvcv")((:slot-obj-link ,(clos:slot-definition-name slot) :class "dvcv")))))))
+			 ((:td :class "dvcv")((:slot-obj-link ,(c2mop:slot-definition-name slot) :class "dvcv")))))))
 		   ((eq (meta::view-type slot) :named-slot-view)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
 		      ((:td :class "dvcv") ((,(meta::slot-view-name slot)
-					      ,(clos:slot-definition-name slot)
+					      ,(c2mop:slot-definition-name slot)
 					      ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) :color)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
 		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
-					      ,(clos:slot-definition-name slot) :class "dvcve"
+					      ,(c2mop:slot-definition-name slot) :class "dvcve"
 					      ,@(meta::html-tag-attributes slot))))))
 		   ((meta::get-object-func slot)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-		      ((:td :class "dvcv")((:slot-pick-val ,(clos:slot-definition-name slot) :class "dvcved"
+		      ((:td :class "dvcv")((:slot-pick-val ,(c2mop:slot-definition-name slot) :class "dvcved"
 							   ,@(meta::html-tag-attributes slot))))))
 		   ((meta::choices slot)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-		      ((:td :class "dvcv") ((:slot-combo ,(clos:slot-definition-name slot)
+		      ((:td :class "dvcv") ((:slot-combo ,(c2mop:slot-definition-name slot)
 							 ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) 'string)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
 		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
-					      ,(clos:slot-definition-name slot) :class "dvcve"
+					      ,(c2mop:slot-definition-name slot) :class "dvcve"
 					      ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) :date)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-date-edit ,(clos:slot-definition-name slot) :class "dvcve"
+		      ((:td :class "dvcv") ((:slot-date-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
 							     ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) :universal-time)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-date-edit ,(clos:slot-definition-name slot)
+		      ((:td :class "dvcv") ((:slot-date-edit ,(c2mop:slot-definition-name slot)
 							     :show-time t :class "dvcve"
 							     ,@(meta::html-tag-attributes slot))))))
 		   ((eq (meta::value-type slot) 'boolean)
 		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-check-box ,(clos:slot-definition-name slot))))))
+		      ((:td :class "dvcv") ((:slot-check-box ,(c2mop:slot-definition-name slot))))))
 		   (t `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-			((:td :class "dvcv") ((:slot-edit ,(clos:slot-definition-name slot) :class "dvcve"
+			((:td :class "dvcv") ((:slot-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
 							  ,@(meta::html-tag-attributes slot)))))))))))))
 
 (defun ensure-function (function class)
@@ -242,19 +239,18 @@
 (meta::add-finalization-class-hook 'clean-direct-views)
 
 (defun find-best-view (class country-language user-groups)
-  (let ((view nil))
-    (loop for v in (meta::direct-views class)
+  (loop for v in (meta::direct-views class)
 	  do (when (and (not (special-view v))
 			(find country-language (country-languages v))
 			(intersection user-groups (user-groups v)))
 	       (return-from find-best-view v)))
-    (loop for v in (meta::direct-views class)
-	  do (when (and (not (special-view v))
-			(find country-language (country-languages v))
-			(or (not (user-groups v))
-			    (intersection user-groups (user-groups v))))
-	       (return-from find-best-view v)))
-    (make-std-object-view class country-language user-groups)))
+  (loop for v in (meta::direct-views class)
+     do (when (and (not (special-view v))
+                   (find country-language (country-languages v))
+                   (or (not (user-groups v))
+                       (intersection user-groups (user-groups v))))
+          (return-from find-best-view v)))
+  (make-std-object-view class country-language user-groups))
 
 (defun %process-view (name object)
   (setf name (or name (getf (session-params *request*) :view)))
@@ -274,6 +270,7 @@
         (funcall (html-func view))))))
 
 (defun object-view-tag (attributes form)
+  (declare (ignore attributes))
   (destructuring-bind (&key name object-tag object) form
     (when object-tag (setf object `(get-application-data *session* ,object-tag)))
     (unless object (setf object '*object*))
@@ -283,7 +280,8 @@
 (html:add-func-tag :object-view 'object-view-tag)
 
 (defun connect-views-tag (attributes form)
-  (html::html-gen `(:when *request-views* (:connect *request-views*))))
+    (declare (ignore attributes form))
+    (html::html-gen `(:when *request-views* (:connect *request-views*))))
 
 ;syntax :connect-views
 (html:add-func-tag :connect-views 'connect-views-tag)
@@ -309,7 +307,7 @@
 
 (defun find-best-list-format (class country-language user-groups)
   (when class (setf class (ensure-class class)))
-  (let ((formats (iterate (for (name format) in-hashtable *all-list-formats*) 
+  (let ((formats (iterate (for (nil format) in-hashtable *all-list-formats*) ;name
 			  (when (eq class (object-class format)) (collect format)))))
     (loop for f in formats
 	  do (when (and (not (special-format f))
@@ -323,30 +321,3 @@
 			    (intersection user-groups (user-groups f))))
 	       (return-from find-best-list-format f)))
     (find-list-format "default-format")))
-
-(defun std-list-checkbox (index start-index)
-  (when t ;(modifiable-p *dispatcher*)
-    (decf index start-index)
-    (html::html ((:input :type "checkbox" 
-			 :fformat (:id "~aC~d" (name (item *dispatcher*)) index)
-			 :optional (:checked (and (find index (selected-objects-idx *dispatcher*)) "true")))))))
-
-(defun std-list-format-fn (start objects max-nb total-length)
-  (html:html
-    ((:table :class (table-class (item *dispatcher*)))
-     (loop repeat max-nb 
-           for object in objects
-   	   for index from start
-   	   for index1 = (1+ index) do
-	  (html:html
-	    (:tr
-	     ((:td :class "dvcv") index1)
-	     ((:td :class "dvcv") (std-list-checkbox index start))
-	     ((:td :class "dvcv")
-	      ((:a :href (encode-object-url object))
-	       (html:esc (meta:list-description object *object*))))))))))
-
-(make-instance 'slot-list-format :name "default-format"
-	       :header-fn #'(lambda (container-obj))
-	       :list-format-fn 'std-list-format-fn)
-

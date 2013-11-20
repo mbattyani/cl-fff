@@ -1,8 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+; -*- mode:common-lisp -*-
 
-(in-package asdf)
+(in-package #:asdf)
 
-(defsystem :interface
+(defsystem #:interface
   :name "interface"
   :author "Marc Battyani <marc.battyani@fractalconcept.com>"
   :maintainer "Marc Battyani <marc.battyani@fractalconcept.com>"
@@ -10,22 +10,26 @@
   :long-description "General HTML interface for the Framework"
   :components ((:file "defpackage")
 	       (:file "specials" :depends-on ("defpackage"))
-	       (:file "clipboard" :depends-on ("html-slot-view" "view"))
-	       (:file "localize" :depends-on ("specials"))
-	       (:file "sql-lists" :depends-on ("session" "dispatcher"))
-	       (:file "request" :depends-on ("apache" "http"))
-	       (:file "session" :depends-on ("request"))
-	       (:file "process-url" :depends-on ("session"))
-	       (:file "http-link" :depends-on ("session"))
-	       (:file "view" :depends-on ("html-view"))
-	       (:file "ui-desc" :depends-on ("specials"))
-	       (:file "dispatcher" :depends-on ("ui-desc"))
-	       (:file "ui-html" :depends-on ("ui-desc"))
-	       (:file "html-view" :depends-on ("ui-html" "dispatcher"))
-	       (:file "html-slot-view" :depends-on ("html-view" "process-url"))
-	       (:file "http" :depends-on ("specials"))
-	       (:file "rpc" :depends-on ("specials"))
+               (:file "http" :depends-on ("specials"))
+               (:file "request" :depends-on ("http"))
+               (:file "session" :depends-on ("request"))
+               (:file "process-url" :depends-on ("session"))
+               (:file "apache" :depends-on ("process-url"))
+               (:file "hunchentoot" :depends-on ("process-url"))
+               ;;;; (:file "rpc" :depends-on ("log" "request" "specials")) not used anymore?
+               (:file "localize" :depends-on ("process-url"))
+               (:file "sql-lists" :depends-on ("session" #+nil "dispatcher"))
+
+               (:file "view" :depends-on ("specials"))
+               (:file "pane" :depends-on ("specials"))
+	       (:file "http-link" :depends-on ("session" "view" #+nil "view-layout"))
+	       (:file "ui-desc" :depends-on ("pane"))
+               (:file "ui-html" :depends-on ("ui-desc" #+nil "view-layout"))
+	       (:file "dispatcher" :depends-on ("ui-desc" "ui-html"))
+	       (:file "html-view" :depends-on ("ui-html" "dispatcher" #+nil "view-layout" #+nil "layouts" #+nil "pane-utilities"))
+	       (:file "clipboard" :depends-on ("html-view" "view"))
+               (:file "html-slot-view" :depends-on ("html-view" "process-url" "clipboard"))
 	       (:file "std-web" :depends-on ("specials"))
-	       (:file "apache" :depends-on ("specials")))
-  :depends-on (:utility :iterate :meta :html)
-  )
+               (:file "clws-link" )
+               )
+  :depends-on (#:iterate #:bordeaux-threads #:meta #:html #:clws #:cl-json #:usocket #:babel #:closer-mop #:hunchentoot #:log4cl))

@@ -1,6 +1,4 @@
-(in-package interface)
-
-(require "comm")
+(in-package #:interface)
 
 (defvar *apache-port* 3000)
 (defvar *apache-socket* nil)
@@ -9,14 +7,19 @@
 (defvar *close-apache-socket* nil)
 (defvar *ignore-errors* nil)
 
-(defun make-apache-instream (handle)
+#+nil(defun make-apache-instream (handle)
   (mp:process-run-function (format nil "apache socket ~d" handle) '()
                             'apache-listen (make-instance 'comm:socket-stream :socket handle
-							  :direction :io :element-type 'base-char)))
+							  :direction :io :element-type 'base-char))) ;;fixme, it doesnt support UTF-8!
+
+(defconstant %max-content-length% 2000000)
 
 (defun start-apache-listener (&optional (port *apache-port*))
-  (comm:start-up-server :function 'make-apache-instream :service port))
+  ;; (comm:start-up-server :function 'make-apache-instream :service port)
+  (usocket:socket-server "127.0.0.1" port #'apache-listen nil :in-new-thread t :reuse-address t :multi-threading t :max-buffer-size %max-content-length%)
+  )
 
+(export 'sa)
 (defun sa (&optional (port *apache-port*))
   (start-apache-listener port))
 
@@ -31,16 +34,23 @@
 	   (if *ignore-errors*
 	       (ignore-errors (handle-request))
 	       (handle-request))
-	(progn (log-message (format nil "apache-close-socket ~a~%" *close-apache-socket*))
-	       (ignore-errors (close *apache-socket*)))))))
+	(progn
+          (log:debug "apache-close-socket" *close-apache-socket*)
+          (ignore-errors (usocket:socket-close *apache-socket*)))))))
 
-(defconstant %max-content-length% 2000000)
+(defun read-utf8-line (stream)
+  ;; (print (read-line stream nil nil))
+  (let ((line (loop
+                 for ch = (read-byte stream nil nil)
+                 if (and ch (/= ch (char-code #\NEWLINE))) collect ch into line
+                 else do (return line))))
+    (babel:octets-to-string (make-array (length line) :element-type '(unsigned-byte 8) :initial-contents line))))
 
 (defun get-apache-command ()
   (ignore-errors
-    (let* ((header (loop for key = (read-line *apache-socket* nil nil)
+    (let* ((header (loop for key = (read-utf8-line *apache-socket*)
 			 while (and key (string-not-equal key "end"))
-			 for value = (read-line *apache-socket* nil nil)
+                      for value = (read-utf8-line *apache-socket*)
 			 collect (cons key value)))
 	   (content-length (cdr (assoc "content-length" header :test #'equal)))
 	   (content nil))
@@ -59,7 +69,7 @@
       header)))
 
 (defun process-apache-command (command)
-  (log-message (format nil "process-apache-command ~s~%" command))
+  (log:debug "process-apache-command ~s~%" command)
   (incf *apache-nb-requests*)
   (util:with-logged-errors () (%process-apache-command% command)))
 
@@ -84,5 +94,11 @@
         (http-message "Blocked IP Address<br>Contact the web site administrator" request)
         (unless (process-http-request request)
           (http-debug-request request)))
-    (write-request request *apache-socket*)
+    (write-apache-request request *apache-socket*)
     (force-output *apache-socket*)))
+
+;;; a fix to load portable aserve instead of apache
+(handler-case 
+    (progn (intern "FIXNUMP" 'common-lisp)
+           (setf (symbol-function 'common-lisp::fixnump) (symbol-function 'lw:fixnump)))
+  (error (error)))

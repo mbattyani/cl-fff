@@ -27,12 +27,14 @@
   (setf (gethash page-name *named-pages*) func))
 
 (defun remove-named-page (page-name func)
+  (declare (ignore func))
   (remhash page-name *named-pages*))
 
 (defun add-named-func (func-name func)
   (setf (gethash func-name *named-funcs*) func))
 
 (defun remove-named-func (func-name func)
+  (declare (ignore func))
   (remhash func-name *named-funcs*))
 
 (defun add-post-func (func-name func)
@@ -42,10 +44,8 @@
   (setf (gethash web-name *web-404*) func))
 
 (defun remove-web-404 (web-name func)
+  (declare (ignore func))
   (remhash web-name *web-404*))
-
-(defun %command-param (name command)
-  (cdr (assoc name command :test #'equal)))
 
 (defparameter %accepted-lang% '(("fr" :fr) ("en" :en)))
 
@@ -69,7 +69,7 @@
       (process-asp-url request)))
 
 (defun process-http-request (request)
-  (log-message (format nil "process-http-request  ~%" ))
+  (log:debug "process-http-request" (url request))
   (let* ((command (command request))
 	 (url (url request)))
     (when url
@@ -80,29 +80,31 @@
                    (session-params (decode-session-url url))
                    (*session* (get-session request session-params)))
               (if *session*
-                                        ;	     (search-params (decode-search-params url))
-                                        ;	     (post-func (gethash (getf (cdr (assoc :fdata search-params)) :post) *post-functions*))
+                  ;; (search-params (decode-search-params url))
+                  ;; (post-func (gethash (getf (cdr (assoc :fdata search-params)) :post) *post-functions*))
                   (let* ((*session-id* (id *session*))
                          (*user-name* (user-name request))
                          (*user* (user *session*))
                          (*user-groups* (groups *user*))
                          (*object* (decode-object-id (getf session-params :object)))
-                         (*password* (password request))(first (rassoc *country-language* *country-language-ids*))
+                         (*password* (password request))
+                         ;; (first (rassoc *country-language* *country-language-ids*))
                          (*country-language* (find-country-lang command (getf session-params :lang) *session*))
                          (*country-language-id* (first (rassoc *country-language* *country-language-ids*))))
                     (unless (equal (cookie *session*) (cookie *request*))
                       (setf (cookie *session*) (cookie *request*)))
                     (setf (country-language *session*) *country-language*
                           (country-language-id *session*) *country-language-id*)
-					;	(setf (search-params request) search-params)
+                    ;; (setf (search-params request) search-params)
                     (let ((page-fn (or (gethash (getf session-params :func) *named-funcs*)
                                        (gethash (getf session-params :page) *named-pages*)
                                        (gethash  (%command-param "Host" command) *web-404*))))
-                      (log-message (format nil "process-http-request4 ~s session-params ~s page-func ~s ~%"
-                                           url session-params page-fn))
+                      (log:debug "process-http-request ~s session-params ~s page-func ~s ~%"
+                                           url session-params page-fn)
                       (process-page-fn *user* page-fn request)))
                   (let ((func (getf session-params :func "")))
-                    (if (or (string= func "lpush")(string= func "lpull"))
+                    (if (or (string= func "lpush")
+                            (string= func "lpull"))
                         (reload-remote-browser-from-push-pull request)
                         (let* ((session (create-session request))
                                (original-url (%command-param "url" command))
@@ -114,7 +116,9 @@
                             (setf new-url (concatenate 'string new-url (subseq original-url query-start))))
                           (interface::redirect-to new-url request)))))))))))
 
-(defun process-asp-url (request))
+(defun process-asp-url (request)
+  (declare (ignore request))
+  )
 
 (add-named-url "/asp/fixed.html"
    #'(lambda (request)
@@ -139,4 +143,5 @@
 
 (defun change-url-page (new-page params)
   (setf (getf params :page) new-page)
-  (apply 'encode-asp-url nil params))
+  (error "encode-asp-url undefined")
+  #+nil(apply 'encode-asp-url nil params))

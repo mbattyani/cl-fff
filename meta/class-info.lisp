@@ -1,4 +1,4 @@
-(in-package meta)
+(in-package #:meta)
 
 (export '*country-language*)
 (defvar *country-language* :en)
@@ -30,9 +30,11 @@
   (and string (> (length string) 0) string))
 
 (defmethod translate ((tr-string t) &key default (country-lang *country-language*))
+  (declare (ignore country-lang))
   (or (check-string tr-string) (translate default) ""))
 
 (defmethod translate ((tr-string string) &key default (country-lang *country-language*))
+  (declare (ignore country-lang))
   (or (check-string tr-string) (translate default) ""))
 
 (defmethod translate ((tr-string list) &key default (country-lang *country-language*))
@@ -102,12 +104,15 @@
    ))
 
 (defmethod tooltip ((help t) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
    "")
 
 (defmethod tooltip ((help string) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
    help)
 
 (defmethod tooltip ((slot fc-slot-definition-mixin) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
   (tooltip (object-help slot)))
 
 (defmethod tooltip ((help object-help) &optional (country-lang *country-language*))
@@ -121,12 +126,15 @@
     (or (check-string string)(check-string (english-tooltip help))(check-string (french-tooltip help)))))
 
 (defmethod help ((help t) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
    "")
 
 (defmethod help ((help string) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
    help)
 
 (defmethod help ((slot fc-slot-definition-mixin) &optional (country-lang *country-language*))
+  (declare (ignore country-lang))
   (help (object-help slot)))
 
 (defmethod help ((help object-help) &optional (country-lang *country-language*))
@@ -194,7 +202,7 @@
   (format stream "<FC-Object ~A ~A (~A)>"
 	  (class-name (class-of object))
 	  (id object)
-	  (ignore-errors (short-description obj))))
+	  (ignore-errors (short-description object))))
 #+nil (if *print-redably*
       (write-string (short-description object) stream)
       (format stream "<FC-Object ~A ~A>"

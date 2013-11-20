@@ -1,4 +1,6 @@
-(in-package interface)
+(in-package #:interface)
+
+(defparameter *dispatchers* '())
 
 (defclass dispatcher ()
   ((interface :accessor interface :initarg :interface)
@@ -21,12 +23,13 @@
    (dirty-value  :accessor dirty-value :initform t)))
 
 (defmethod initialize-instance :after ((dispatcher slot-dispatcher) &rest init-options &key &allow-other-keys)
+  (declare (ignore init-options))
   (let* ((item (item dispatcher))
 	 (object (object dispatcher))
 	 (slot (slot item))
 	 (*object* object))
     (setf (slot dispatcher) slot)
-    (setf (modifiable-p dispatcher)(modifiable-p item))
+    (setf (modifiable-p dispatcher) (modifiable-p item))
     (setf (get-value-fn dispatcher) (fdefinition (meta::accessor slot)))
     (setf (set-value-fn dispatcher) (fdefinition (list 'setf (meta::accessor slot))))
     (push (list slot
@@ -36,7 +39,8 @@
 		      (:status-changed (mark-dirty-status dispatcher value))))
 		dispatcher)
 	  (meta::listeners object))
-    (setf (disabled dispatcher) (meta::slot-disabled-p object slot))))
+    (setf (disabled dispatcher) (meta::slot-disabled-p object slot))
+    (push dispatcher *dispatchers*)))
 
 (defmethod mark-dirty-value ((dispatcher slot-dispatcher))
   (mp:with-lock ((link-lock (interface dispatcher)))
@@ -110,7 +114,8 @@
   (let* ((*dispatcher* dispatcher)
 	 (*object* (object dispatcher))
 	 (function (action-func (item dispatcher))))
-    (when function (funcall function *object* value click-str))))
+    (when function
+      (funcall function *object* value click-str))))
 
 (defmethod fire-add-to-list ((dispatcher slot-dispatcher) value)
   (let ((object (object dispatcher)))
@@ -138,3 +143,4 @@
 
 (defmethod make-dispatcher (interface object (item button-group))
   (make-instance 'button-group-dispatcher :interface interface :object object :item item))
+

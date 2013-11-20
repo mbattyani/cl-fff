@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defmacro with-fast-array-references (bindings &body body)
   "Declares the arrays in bindings (var value &optional type)

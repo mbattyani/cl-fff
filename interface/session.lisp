@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defvar *session-encoding-vector* "0123456789azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN-$")
 
@@ -131,7 +131,7 @@
                (write-string *request-id* stream))
 	     (write-string "/sdata" stream)
 ;internal format ::= <TokenChar><Value><Tab>
-	     (write-string (html:encode-url-string
+	     (write-string (encode-url-string
 			    (let ((string (make-string (+ (length values)
 							  (loop for (key val . rest) on values by 'cddr
 								if (eq key :page)
@@ -143,7 +143,7 @@
 				    for l of-type fixnum = (length val)
 				    if (eq key :page) do
 				    (setf page (concatenate 'string "/sdata"
-							    (html:encode-url-string
+							    (encode-url-string
 							     (concatenate 'string "P" val))))
 				    else do
 				    (setf (aref string i) (gethash key *session-token-to-char*))
@@ -161,14 +161,14 @@
 
 (defun encode-page (page)
   (concatenate 'string *request-id* "sdata"
-	       (html:encode-url-string (concatenate 'string "P" page))))
+	       (encode-url-string (concatenate 'string "P" page))))
 
 (defun encode-session-values (stream values)
   (declare (optimize (speed 3)(debug 0)(safety 0)(space 0)))
   (flet ((write-url (stream values)
 	   (write-string "sdata" stream)
 ;internal format ::= <TokenChar><Value><Tab>
-	   (write-string (html:encode-url-string
+	   (write-string (encode-url-string
 			  (let ((string (make-string (+ (length values)
 							(loop for (key val . rest) on values by 'cddr
 							      sum (length val))))))
@@ -190,7 +190,7 @@
 
 (defun decode-session-url (url)
   (or (gethash url *url-params-aliases*)
-      (gethash (concatenate 'string "/asp" (subseq url 7)) *url-params-aliases*) ;python
+      (gethash (concatenate 'string "/" (subseq url 7)) *url-params-aliases*) ;python
       (let (string
             (params nil)
             (next-char 0))
@@ -198,7 +198,7 @@
            do (setf (values string next-char) (extract-param-string "sdata" url next-char))
            while string
            do 
-             (setf string (html:decode-url-string (nsubstitute #\= #\* (nsubstitute #\= #\_ string))))
+             (setf string (decode-url-string (nsubstitute #\= #\* (nsubstitute #\= #\_ string))))
              (setf params (nconc (loop with i = 0 and l = (length string)
 				    while (< i l)
 				    for key = (gethash (aref string i) *session-char-to-token*)
@@ -316,16 +316,16 @@
                              (> (- *session-timer-time* (last-access-time session)) *session-timeout*)))
 		   (end-session session)))
 	     *sessions*)
-    (dump-session-log)))
+    #+nil(dump-session-log)))
 
 (defun dump-session-log ()
   (when *session-log*
-    #+nil(with-open-file (s *session-file* :direction :output :if-exists :append :if-does-not-exist :create)
+    (with-open-file (s *session-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *session-log*
 	    do (format s "~s~%" session)))
     (setf *session-log* nil))  
   (when *robot-log*
-    #+nil(with-open-file (s *robot-file* :direction :output :if-exists :append :if-does-not-exist :create)
+    (with-open-file (s *robot-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *robot-log*
 	    do (format s "~s~%" session)))
     (setf *robot-log* nil)))
@@ -487,7 +487,8 @@
     (setf (url-history session) ()))
 
 (defun normalize-referer (url)
-  (when url
+  url
+  #+nil(when url
     (let ((start (search "/asp" url)))
       (when start (subseq url start)))))
   

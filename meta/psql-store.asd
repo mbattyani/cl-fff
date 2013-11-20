@@ -1,15 +1,15 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+; -*- mode:common-lisp -*-
 
-(in-package asdf)
+(in-package #:asdf)
 
-(defsystem :psql-store
+(defsystem #:psql-store
   :name "psql-store"
   :author "Marc Battyani <marc.battyani@fractalconcept.com>"
   :maintainer "Marc Battyani <marc.battyani@fractalconcept.com>"
-  :description "Postgresql back-end for the Framework"
-  :long-description "Postgresql back-end for the Framework"
-  :components ((:file "lw-psql" :depends-on ())
-	       (:file "psql-store" :depends-on ("lw-psql"))
-	       (:file "sql" :depends-on ())
-	       #+nil(:file "psql-export" :depends-on ("sql" "psql-store")))
+  :description "Postgresql back-end for the Framework using lispworks's SQL interface"
+  :long-description "Postgresql back-end for the Framework using lispworks's SQL interface"
+  :components ((:file "lw-psql")
+               (:file "sql")
+	       (:file "psql-store" :depends-on ("lw-psql" "sql"))
+               (:file "lw-store" :depends-on ("psql-store")))
   :depends-on (:meta))

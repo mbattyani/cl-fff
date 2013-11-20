@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defun write-header-line (socket key value)
   (if *reply-protocol*
@@ -18,7 +18,7 @@
   ((command :initform nil :accessor command :initarg :command)
    (clear-content :initform nil :accessor clear-content)
    (status :initform "200 OK" :accessor status)
-   (content-type :initform "text/html; charset=iso-8859-1" :accessor content-type)
+   (content-type :initform "text/html; charset=UTF-8" :accessor content-type)
    (content-length :initform nil :accessor content-length)
    (content-value :initform "" :accessor content-value)
    (date :initform (get-universal-time) :accessor date)
@@ -50,17 +50,17 @@
     (when param-pos
       (push (cons "url-params" (subseq (url request) (1+ param-pos)))(command request))
       (setf (url request) (subseq (url request) 0 param-pos))))
-  (decode-authentication request)
+;  (decode-authentication request)
   (unless (web-robot-request? request)
     (process-cookie request)))
 
 (defun push-header (header value request)
   (setf (header-alist request) (acons header value (header-alist request))))
 
-(defun write-header (request socket)
+(defun write-apache-header (request socket)
   (unless (header-sent request)
     (if *reply-protocol*
-	(progn 
+	(progn
 	  (write-string "HTTP/1.0 " socket)
 	  (write-string (status request) socket)
 	  (write-char #\Return socket)
@@ -95,7 +95,10 @@
   (length obj))
 
 (defmethod write-content-value ((obj string) stream)
-  (write-string obj stream))
+  ;; (write-string obj stream)
+  (map nil (lambda (char)
+             (write-byte char stream))
+       (babel:string-to-octets obj)))
 
 (defconstant +disk-block-size+ 8192)
 
@@ -113,12 +116,13 @@
 	    until (zerop read)
 	    do (write-sequence buffer stream :end read)))))
 
-(defun write-request (request socket)
+(defun write-apache-request (request socket)
   (when (clear-content request)
     (setf (content-value request) nil
 	  (content-length request) 0))
-  (write-header request socket)
-  (when (and (content-value request)(not (content-sent request)))
+  (write-apache-header request socket)
+  (when (and (content-value request)
+             (not (content-sent request)))
     (write-content-value (content-value request) socket)
     (setf *close-apache-socket* (or *reply-protocol*
 				    (not (and (content-length request)(keep-socket request)))))
@@ -134,6 +138,10 @@
       (when (stringp (content-value *request*))
 	(setf (content-length *request*) (length (content-value *request*))))))
 
+(defun %command-param (name command)
+  (cdr (assoc name command :test #'equal)))
+
+#+nil
 (defun decode-authentication (request)
   (let ((authentication (%command-param "Authorization" (command request))))
     (when authentication
@@ -170,12 +178,14 @@
 (cache-request-value user-agent "User-Agent")
 (cache-request-value referer "Referer")
 
-(defun redirect-to (new-url request &key definitive)
-  (log-message (format nil "redirect-to ~s ~s ~%" new-url request))
+(defun redirect-to (new-url request &key definitive) ;; fixme, it overwrites function.
+  (log:debug "redirect-to ~s ~s ~%" new-url request)
   (setf (status request) (if definitive "302 Moved" "301 Moved"))
   (setf (clear-content request) t)
   (setf (keep-socket request) nil)
-  (push-header "Location" new-url request))
+  (ecase *web-server*
+    (:hunchentoot (setf (hunchentoot:header-out :location) new-url))
+    (:apache (push-header "Location" new-url request))))
 
 (defun set-request-to-file (request filename &key (content-type "application/data"))
   (setf filename (pathname filename))
@@ -218,7 +228,8 @@
 (defun modern-browser (&optional (request *request*))
   (let ((user-agent (user-agent request)))
     (declare (optimize (speed 3)(space 0)(debug 0)(safety 0))
-	     (type simple-base-string user-agent))
+	     (type (or null
+                       simple-base-string) user-agent))
     (when user-agent
       (search "MSIE " user-agent))))
 
@@ -235,7 +246,7 @@
       (push-header "Log-Error" message request))))
 
 (defun http-debug-request (request)
-  (log-message (format nil "http-debug-request ~%"))
+  (log:debug "http-debug-request ~%")
   (with-output-to-request (request)
     (html::html-to-stream *request-stream*
 			  "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
@@ -248,8 +259,7 @@
 				   (loop for (key . value) in (command request)
 					 do (html::html ((:tr "bgcolor" "#F0F0c0")
 							 (:td key)(:td value))))))))
-    (push-header "Log-Error" (html::fast-format nil "request ~s not processed." (url request)) request)
-    ))
+    (push-header "Log-Error" (html::fast-format nil "request ~s not processed." (url request)) request)))
 
 (defun reload-opener-and-close (request)
   (interface::with-output-to-request (request)

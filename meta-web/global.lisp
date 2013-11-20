@@ -1,25 +1,160 @@
-(eval-when (:load-toplevel :compile-toplevel :execute)
-(defpackage meta-web
- (:use common-lisp)
- (:nicknames metaw)
- (:shadowing-import-from meta-level defclass)
-   )
-)
+(in-package #:meta-web)
 
-(in-package meta-web)
-
-(defparameter *graph-file-prefix*
-  #+win32 "d:/sources/web-sites/fractal/"
-  #+ (or macosx linux) "/var/www/html/fractal/")
+(defparameter *graph-file-prefix* (asdf:system-relative-pathname :meta-web "./web-resources/"))
 
 (defvar *current-class* nil)
 (defvar *current-slot* nil)
 (defvar *current-slot-attribute* nil)
 
-(defvar *database-pool* nil); (clsql:find-or-create-connection-pool '("213.11.22.163" "MetaStore" "lisp" "") :postgresql))
-(defvar *meta-store* nil); (make-instance 'meta::psql-store :db-pool *database-pool*))
+(defvar *database-pool* nil)
+(defvar *meta-store* nil)
 (defvar *save-database* t)
 (defvar *in-store-timer* nil)
+(defvar *projects-list* nil)
+
+(defparameter *page* nil)
+(defparameter *pages* (make-hash-table :test #'equal))
+(defparameter *web-root-name* "home")
+(defparameter *static-pages-root* "/fcweb/")
+(defparameter *static-pages-url-root* "/asp/fcweb/")
+(defparameter *source-pages-root* #-win32"/tmp/fcweb/src/" #+win32"f:/fcweb/src/")
+(defparameter *source-pages-default* "~/repository-static/xxx.html")
+
+(defparameter *database-ip* "127.0.0.1")
+(defparameter *database-name* "MetaFractal")
+(defparameter *database-user* "lisp")
+(defparameter *database-pwd* "")
+(defparameter *mod-lisp-port* 3100)
+(defparameter *local-port* 25142)
+
+(setf interface:*server-name* "127.0.0.1")
+(setf interface:*clws-address* interface:*server-name*)
+;(setf interface:*clws-port* 1339)
+
+(defparameter *init-file*
+  #+macosx #P"~/initfc.lisp"
+  #+linux #P"~/initfc.lisp"
+  #+win32 #P"s:/sources/svn/fractal/initfc.lisp")
+
+(defparameter *web-directory* (asdf:system-relative-pathname :meta-web "./web-resources/"))
+
+(defvar *create-store* nil)
+
+(defmacro encode-page (page-name)
+  (assert (stringp page-name))
+  `(if (interface::new-cookie *request*)
+       ,(interface::encode-page page-name)
+       ,(concatenate 'string "/" page-name)))
+
+(defparameter *hunchentoot-acceptor* nil)
+
+(defun start-hunchentoot ()
+  (setf *hunchentoot-acceptor* (make-instance 'hunchentoot:easy-acceptor :port *local-port*  :document-root (namestring *web-directory*)))
+  (hunchentoot:start *hunchentoot-acceptor*))
+
+(defun stop-hunchentoot ()
+  (hunchentoot:stop *hunchentoot-acceptor*))
+
+(defun create-mongo-store ()
+  (meta::initialize-store *meta-store*))
+
+;; mongo store
+(defconstant +mongo-collection-name+ "fw-objects")
+
+(defun clear-db ()
+  (mapcar (lambda (x)
+            (cl-mongo:db.delete +mongo-collection-name+ x))
+          (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
+
+#+nil
+(defun project-list () ;;mongo only
+  (or *projects-list*
+      (sort (remove nil (mapcar #'(lambda (x)
+                                    (let ((object (meta::load-object (cl-mongo:get-element "object-id" x) *meta-store*)))
+                                      (when (typep object 'project)
+                                        (push object *projects-list*)
+                                        object)))
+                                (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
+            #'string< :key #'name)))
+
+#+nil
+(defun project-list () ;; postgres
+  (or *projects-list*
+      (sort (mapcar #'(lambda (x)
+                        (meta::load-object (first x) *meta-store*))
+                    (meta::sql-query "select id from project"))
+            #'string< :key #'name)))
+
+
+(defun create-store ()
+  (meta::initialize-store *meta-store*)
+  (when (or (not (typep *meta-store* 'meta:ascii-store))
+            (not (typep *meta-store* 'meta:mongo-store)))
+    (create-meta-classes *meta-store*)))
+
+(defun start-apache () ;; apache
+  (interface:sa *mod-lisp-port*))
+
+(defun start (&key (webserver :hunchentoot) (database :postgres) (first-start nil) (mongo-db-name "mydb") (mongo-db-collection-name +mongo-collection-name+) debug
+                (init-file nil)
+                ascii-store-path)
+  (assert (and (member webserver '(:hunchentoot :apache))
+               (member database '(:postgres :mongo-db))))
+  (setf interface:*web-server* webserver)
+  (when debug
+    (log:config debug))
+  (when init-file
+    (load init-file))
+  (cond
+    ((eq database :postgres)
+     (meta::init-psql)
+     (setf *database-pool* (meta:psql-create-db-pool *database-ip* *database-name* *database-user* *database-pwd*))
+     (setf *meta-store* (make-instance 'meta:psql-store :db-pool *database-pool*))
+     (setf (symbol-function 'project-list)
+           (lambda () ;; postgres
+             (or *projects-list*
+                 (sort (mapcar #'(lambda (x)
+                                   (meta::load-object (first x) *meta-store*))
+                               (meta::sql-query "select id from project"))
+                       #'string< :key #'name)))))
+    ((eq database :mongo-db)
+     (setf *meta-store* (make-instance 'meta:mongo-store :database-name mongo-db-name :collection-name mongo-db-collection-name))
+     (setf *projects-list* nil)
+     (setf (symbol-function 'project-list)
+           (lambda () ;;mongo only
+             (or *projects-list*
+                 (sort (remove nil (mapcar #'(lambda (x)
+                                               (let ((object (meta::load-object (cl-mongo:get-element "object-id" x) *meta-store*)))
+                                                 (when (typep object 'project)
+                                                   (push object *projects-list*)
+                                                   object)))
+                                           (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
+                       #'string< :key #'name)))))
+    (ascii-store-path
+     (setf *meta-store*
+           (make-instance 'meta::ascii-store :file-directory ascii-store-path))
+     (setf *projects-list* nil #+nil(list (meta::load-named-object *meta-store* "project"))))
+    )
+  (when first-start
+    (create-store))
+  ;; (setf *clipboard* (make-instance 'interface::clipboard :store meta::*memory-store*))
+  (interface:ws-start)
+  (case webserver
+    (:hunchentoot
+     (setf (symbol-function 'interface::write-request)
+           #'interface::write-hunchentoot-request) ;; FIXME hack
+     (setf (symbol-function 'interface::write-header)
+           #'interface::write-hunchentoot-header) ;; FIXME hack
+     (start-hunchentoot))
+    (:apache
+     (start-apache))))
+
+(defun stop (&optional (hunchentoot? t))
+  (when hunchentoot?
+    (stop-hunchentoot)))
+
+(unless meta::*memory-store*
+  (setf meta::*memory-store* (make-instance 'meta::void-store)))
 
 (defun meta-store-timer-fn ()
   (unless *in-store-timer*
@@ -27,14 +162,14 @@
     (unwind-protect
 	 (when (and *meta-store* *save-database*)
 	   (setf *save-database* nil)
-	   (util:with-logged-errors (:ignore-errors t)
+	   (util:with-logged-errors (:ignore-errors nil) ; t
 	     (meta::save-modified-objects *meta-store*))
 	   (setf *save-database* t))
       (setf *in-store-timer* nil))))
 
 (defun start-meta-store-timer ()
   (let ((timer (mp:make-timer 'meta-store-timer-fn)))
-    (mp:schedule-timer-relative timer 30 30)))
+    (mp:schedule-timer-relative timer 10 10))) ; 30 30
 
 (defvar *meta-store-timer* (start-meta-store-timer))
 

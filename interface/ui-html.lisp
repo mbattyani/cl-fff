@@ -1,19 +1,23 @@
-(in-package interface)
+(in-package #:interface)
 
 (defmacro %html-string% (&body body)
   `(html:html-to-string ,body))
   
 (defun write-item-id&style (item &optional add remove)
+  (declare (ignore remove))
   (html:fast-format html:*html-stream* " id=~s" (name item))
-  (when (tooltip item) (html:fast-format html:*html-stream* " TITLE=~s" (tooltip item)))
-  (when (tab-id item) (html:fast-format html:*html-stream* " TABINDEX=~s" (tab-id item)))
-  (when (html-class item)(html:fast-format html:*html-stream* " CLASS=~s" (html-class item)))
+  (when (tooltip item)
+    (html:fast-format html:*html-stream* " TITLE=~s" (tooltip item)))
+  (when (tab-id item)
+    (html:fast-format html:*html-stream* " TABINDEX=~s" (tab-id item)))
+  (when (html-class item)
+    (html:fast-format html:*html-stream* " CLASS=~s" (html-class item)))
   (write-string " STYLE=\"" html:*html-stream*)
   (unless (stand-alone item)
     (if (floating-position item)
-      (html:ffmt "width:~dpx;height:~dpx;position:relative;" (round (dx item))(round (dy item)))
-      (html:ffmt "top:~dpx;left:~dpx;width:~dpx;height:~dpx;position:absolute;"
-		 (round (y item))(round (x item))(round (dx item))(round (dy item)))))
+        (html:ffmt "width:~dpx;height:~dpx;position:relative;" (round (dx item))(round (dy item)))
+        (html:ffmt "top:~dpx;left:~dpx;width:~dpx;height:~dpx;position:absolute;"
+                   (round (y item))(round (x item))(round (dx item))(round (dy item)))))
   (write-css-style-string (style item) t)
   (write-css-style-string add t)
   (write-char #\" html:*html-stream*))
@@ -29,8 +33,8 @@
   (when full-string (write-string "style=" html:*html-stream*))
   (unless no-quotation (write-char #\" html:*html-stream*))
   (loop for (style value) in style-values
-	do
-	(html:fast-format html:*html-stream* "~a:~a;" style value))
+        do
+        (html:fast-format html:*html-stream* "~a:~a;" style value))
   (unless no-quotation (write-char #\" html:*html-stream*)))
 
 (defun input-type (ui-item)
@@ -45,26 +49,26 @@
 
 (defmethod write-construction ((item pane) container language)
   (mapcar #'(lambda (sub-pane)
-	      (write-construction sub-pane container language))
-	  (sub-panes item)))
+              (write-construction sub-pane container language))
+          (sub-panes item)))
 
 (defmethod write-construction ((item ui-item) container (language (eql :html)))
   (html:html-to-string
    ((:input type (input-type item) 
-	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item))))))
+            :exec (write-item-id&style item)
+            :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item))))))
 
 (defmethod write-construction ((item button) container (language (eql :html)))
   (html:html-to-string
    ((:input type (input-type item) 
-	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onclick ='Fck(~s,~a.value);'" (name item)(name item))))))
+            :exec (write-item-id&style item)
+            :exec (html:fast-format html:*html-stream* " onclick ='Fck(~s,~a.value);'" (name item)(name item))))))
 
 (defmethod write-construction ((item check-box-button) container (language (eql :html)))
   (html:html-to-string
    ((:input type (input-type item) 
-	    :exec (write-item-id&style item)
-	    :exec (html:fast-format html:*html-stream* " onclick ='Fch(~s,~a.checked);'" (name item)(name item))))))
+            :exec (write-item-id&style item)
+            :exec (html:fast-format html:*html-stream* " onclick ='Fch(~s,~a.checked);'" (name item)(name item))))))
 
 (defmethod write-construction ((item radio-button) container (language (eql :html)))
   (html:html-to-string
@@ -89,7 +93,7 @@
 (defmethod write-construction ((item tabbed-pane) container (language (eql :html)))
   `((:tab :name ,(name item) :class ,(html-class item) :remove-sibling-borders t)
     ,@(loop for tab-item in (tab-items item)
-	    collect (list (text tab-item) (write-construction (item tab-item) item :html)))))
+         collect (list (text tab-item) (write-construction (item tab-item) item :html)))))
 
 (defmethod write-construction ((item label) container (language (eql :html)))
   (html:html-to-string ((:span :exec (write-item-id&style item ))
@@ -110,18 +114,20 @@
 (defmethod write-construction ((item combo-box) container (language (eql :html)))
   (html:html-to-string
    ((:select :exec (write-item-id&style item)
-	     :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item)))(defun translate-tag (attributes form)
-  (if (and (consp (first form))(eq (caar form) 'quote)(= (length form) 1))
-      `(write-string
-	(meta::translate ',(mapcar #'(lambda(x)(if (stringp x)(html::quote-string x) x))
-				   (cadar form))) html:*html-stream*)
-      `(html:esc (meta::translate ,@form))))
+	     :exec (html:fast-format html:*html-stream* " onchange='Fch(~s,~a.value);'" (name item)(name item))) ;;missing ) ?
+    (defun translate-tag (attributes form) 
+      (declare (ignore attributes))
+      (if (and (consp (first form))(eq (caar form) 'quote)(= (length form) 1))
+          `(write-string
+            (meta::translate ',(mapcar #'(lambda(x)(if (stringp x)(html::quote-string x) x))
+                                       (cadar form))) html:*html-stream*)
+          `(html:esc (meta::translate ,@form))))
 
-(html::add-func-tag :translate 'translate-tag)
+    (html::add-func-tag :translate 'translate-tag)
 
     (loop for combo-item in (combo-items item)
-	  for i from 0
-	  do (format html:*html-stream* "<option value = ~d>~a~%" i combo-item)))))
+       for i from 0
+       do (format html:*html-stream* "<option value = ~d>~a~%" i combo-item)))))
 
 (defmethod make-set-value-javascript ((item combo-box) value slot)
   (let ((position (position value (meta::choices slot) :key #'first)))
@@ -206,10 +212,11 @@ function f8532(Tabs, table, SelClass) {
       }
 
 ")
-			   ((:style "TYPE" "text/css") (%map-all-items 'write-item-styles item nil :html))
+			   ((:style "TYPE" "text/css") (error "%map-all-items not used") #+nil (%map-all-items 'write-item-styles item nil :html))
 			   (write-construction item nil :html)))))
 
 (defun translate-tag (attributes form)
+  (declare (ignore attributes))
   (if (and (consp (first form))(eq (caar form) 'quote)(= (length form) 1))
       `(write-string
 	(meta::translate ',(mapcar #'(lambda(x)(if (stringp x)(html::quote-string x) x))

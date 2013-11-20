@@ -6,6 +6,10 @@
 (defvar *memory-store* nil)
 (defvar *duplication-root* t)
 
+#+sbcl
+(defmethod sb-mop::validate-superclass ((class standard-class) (superclass STANDARD-OBJECT))
+  t)
+
 (export 'root-object)
 (defclass root-object ()
   ((id :accessor id :in-proxy t :stored nil :visible nil :duplicate-value nil) ;0 for anonymous objects
@@ -28,11 +32,12 @@
 ;1 creating new object (option parent store)
 ; 1.1 named object (option anonymous nil)
 ; 1.2 anonymous object (option anonymous t)
-;2 creating in-memory instance of existing object that can be anonymous (option force-id) => no data 
+;2 creating in-memory instance of existing object that can be anonymous (option force-id) => no data
 
 (defmethod initialize-instance :around ((object root-object) &rest init-options
 					&key (parent *parent-of-root-object-initialized*)
 					anonymous store force-id no-init-forms &allow-other-keys)
+  (declare (ignore no-init-forms))
   (setf (data-object object) nil)
   (unless store
     (setf store (if parent (object-store parent) *default-store*)))
@@ -63,6 +68,7 @@
 (defmethod initialize-instance :after ((object root-object) &rest init-options
 					&key (parent *parent-of-root-object-initialized*)
 					anonymous store force-id no-init-forms &allow-other-keys)
+  (declare (ignore force-id store anonymous parent))
   (unless no-init-forms
     (initialize-unbound-slots object)
     (initialize-disable-predicates object))
@@ -72,7 +78,7 @@
 						       &rest initargs &key &allow-other-keys)
   (when (slot-boundp old-object 'data-object)
     (load-object-data old-object)))
-  
+
 (defmethod update-instance-for-different-class :after ((old-object root-object) (new-object root-object)
 						       &rest initargs &key &allow-other-keys)
   (when (and (slot-boundp new-object 'data-object)(data-object new-object))
@@ -103,14 +109,15 @@
 (defmethod duplicate-object (object &key parent store)
   (load-object-data object)
   (let* ((class (class-of object))
-	 (new-object (make-instance (class-of object) :no-init-forms t
+	 (new-object (make-instance class
+                                    :no-init-forms t
 				    :parent (or parent *parent-of-root-object-initialized* (parent object))
 				    :store store))
 	 (*parent-of-root-object-initialized* new-object)
 	 (data-object (data-object object))
 	 (new-data-object (data-object new-object)))
-    (loop for slot in (class-slots (class-of object))
-	  for slot-name = (slot-definition-name slot)
+    (loop for slot in (c2mop:class-slots class)
+	  for slot-name = (c2mop:slot-definition-name slot)
 	  do
 	  (when (duplicate-value slot)
 	    (let ((value (if (in-proxy slot)
@@ -180,20 +187,12 @@
     (let ((*preloaded-objects-stack* (cons object *preloaded-objects-stack*)))
       (incf *nb-of-object-loaded*)
       (setf (gethash object *preloaded-objects*) object)
-      (when (zerop (mod *nb-of-object-loaded* 10000))
-        (let ((room1 (system:room-values))
-              room2)
- ;      (when (= *nb-of-object-loaded* 100000) (throw :pre-load nil))
- ;      (hcl:mark-and-sweep 2)
- ;      (sys:force-promote-0)
-          (setf room2 (system:room-values))
-          (push (append room1 room2) *room-values*)))
       (util:with-logged-errors (:ignore-errors t)
         (load-object-data object)
         (let* ((class (class-of object))
                (data-object (data-object object)))
-          (loop for slot in (class-slots (class-of object))
-             for slot-name = (slot-definition-name slot)
+          (loop for slot in (c2mop:class-slots class)
+             for slot-name = (c2mop:slot-definition-name slot)
              do
                (unless (or (in-proxy slot) (not (stored slot)) (linked-value slot))
                  (load-all-sub-objects (slot-value data-object slot-name)))))))))

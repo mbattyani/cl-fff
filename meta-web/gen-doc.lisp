@@ -1,4 +1,4 @@
-(in-package meta-web)
+(in-package #:meta-web)
 
 (defvar *page-number* nil)
 (defvar *header* nil)
@@ -28,7 +28,7 @@
    x y (tt::dx box) (tt::dy box) :border 0.1 :v-align :center))
 
 (defun edge-color (color)
-  (list 
+  (list
    (min (max (+ (first color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)
    (min (max (+ (second color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)
    (min (max (+ (third color)  (* (random 2000) 0.0001) -0.1) 0) 1.0)))
@@ -112,7 +112,7 @@
 		    (push slot (gethash object-type members-by-value-class))))
 	    (maphash #'(lambda(val-class slots)
 			 (make-instance 'tt::graph-edge  :graph g
-					:head (gethash class nodes) :tail (gethash val-class nodes) 
+					:head (gethash class nodes) :tail (gethash val-class nodes)
 					:label (if (< (length slots) 3)
 						   (format nil "~{~a~^\\n~}" (mapcar 'name slots))
 						   (format nil "~{~a~^\\n~}..." (mapcar 'name (subseq slots 0 2))))
@@ -270,7 +270,7 @@
 		 "Nom dans la table SQL" (meta::convert-name-to-sql-name (or (sql-name slot) (name slot)))
 		 "Description" (description slot)
 		 "Commentaire" (comment slot)
-		 "Type" (meta::translated-choice-value 'value-type slot))		
+		 "Type" (meta::translated-choice-value 'value-type slot))
 	       (when (eq (value-type slot) :object)
 		 (list "Type d'objet" (name (object-type slot))
 		       "Texte FR si vide" (french (void-link-text slot))
@@ -488,7 +488,7 @@
 				   :left-margin 5 :right-margin 5 :font "courier" :font-size 11)
 			 (tt::verbatim
 			  (meta::gen-sql-create-table real-class))
-			 (loop for slot in (clos:class-slots real-class)
+			 (loop for slot in (c2mop:class-slots real-class)
 			       when (meta::stored slot) do
 			       (tt::vspace 10)
 			       (tt::verbatim
@@ -537,7 +537,7 @@
 	  (tt::vspace 20)
 	  :fresh-page)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)
-    
+
     (dolist (class (classes group))
       (gen-doc-content class))))
 
@@ -597,7 +597,6 @@
 				  :left-margin 25 :right-margin 25)
 			"Goupes de classes")
 	     (tt::vspace 10)
-#+nil
 	     (dolist (group (class-groups project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 14 :color '(0.0 0 0.4)
 				    :left-margin 25 :right-margin 25)
@@ -626,7 +625,6 @@
 				  :left-margin 25 :right-margin 25)
 			    "Fichiers sources" )
 	     (tt::vspace 10)
-#+nil
 	     (dolist (file (files project))
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 12 :color '(0.0 0 0.4)
 				    :left-margin 65 :right-margin 25)
@@ -647,7 +645,6 @@
 				      :left-margin 25 :right-margin 25)
 			    "Fin" (tt::dotted-hfill)
 			    (tt::format-string "~d" (tt::find-ref-point-page-number :the-end)))
-#+nil
 	     (when (other-documents project)
 	       (tt::vspace 20)
 	       (tt::paragraph (:h-align :fill :font "Helvetica" :font-size 16 :color '(0.0 0 0.4)
@@ -686,7 +683,7 @@
 					      "Nombre de groupes d'utilisateurs" (format nil "~d" (length (user-groups project)))
 					      )))
 	     (tt::vspace 20)
-;********************	  
+;********************
 	     (tt::table (:col-widths '(100 315 35) :splittable-p t)
 			(tt::header-row ()
 		     (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
@@ -722,7 +719,7 @@
 					    (tt::put-string (description group))))
 		 )))
 	  (tt::vspace 20)
-;********************	  
+;********************
 	  (tt::table (:col-widths '(100 315 35) :splittable-p t)
 	     (tt::header-row ()
 		     (tt::cell (:col-span 3 :background-color '(0.6 0.6 0.9))
@@ -745,21 +742,19 @@
 	  (tt::user-drawn-box :dx 200 :dy 12 :stroke-fn 'draw-file-graph-legend) :eol
 	  (tt::paragraph (:h-align :center :font "Times-Italic" :font-size 16 :top-margin 6)
 			 (trans-string :en "File dependency graph." :fr "Graphe des dépendances de fichier."))
-;********************	  
+;********************
 	  :eop)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
 
-#+nil
   (dolist (group (class-groups project))
     (when (print-in-doc group)
       (gen-doc-content group)))
 
-#+nil
   (when (print-source-files project)
     (dolist (file (files project))
       (when (print-in-doc file)
 	(gen-doc-content file))))
-  
+
   (when pdf:*page* (tt::finalize-page pdf:*page*))
   (setf *index* (remove-duplicates (sort *index* #'string<= :key #'first) :test #'equal))
   (let ((content
@@ -801,7 +796,7 @@
       (tt::draw-pages content :margins *margins* :header *header* :footer *footer*))
     (when pdf:*page* (tt::finalize-page pdf:*page*)))
 
-      
+
 
 (defun gen-doc (project)
   (create-project-classes project)
@@ -935,7 +930,7 @@
 	      "Dupl. valeur si copie" "En cas de copie de l'objet, la valeur du slot doit être dupliquée"
 	      "Ajouter \"Copie de\"" "En cas de copie de l'objet rajouter \"Copie de\" devant la valeur contenue dans le slot (valable pour les strings seulement)"
 	      "Fn pour dupliquer valeur" "La fonction à utiliser pour dupliquer la valeur contenue dans le slot"))))
-    
+
     (tt:paragraph (:h-align :justified :font "Helvetica" :font-size 12 :left-margin 0 :top-margin 10)
 		  "La description du slot comporte aussi éventuellement la liste des valeurs possibles ainsi que le prédicat pour désactivation (code source Lisp) et la contrainte sur la valeur du slot (code source Lisp).")
     :fresh-page))
@@ -1000,7 +995,7 @@
                   next-new-classes ()))
       (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")(s-dot::fontname "Arial")))
               (loop for class in classes
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id (third (gethash class entities)))
                                         (list 's-dot::label (name class))
                                         '(s-dot::height "1.0")
@@ -1008,14 +1003,14 @@
                                         '(s-dot::shape "box")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id id1) in relations
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id id)
                                         (list 's-dot::label (name slot))
                                         '(s-dot::fontname "Arial")
                                         '(s-dot::shape "diamond")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id id1) in relations
-                    collect (list 's-dot::edge 
+                    collect (list 's-dot::edge
                                   (list (list 's-dot::from (third (gethash class1 entities)))
                                         (list 's-dot::to id)
                                         '(s-dot::labeldistance "3.0")
@@ -1057,7 +1052,7 @@
                                        (list 's-dot::label "id")
                                        '(s-dot::shape "box")
                                        '(s-dot::style "filled")))
-                           (loop for (slot class1 class2 nb1 nb2 id id1) in relations 
+                           (loop for (slot class1 class2 nb1 nb2 id id1) in relations
                                  when (and (eql class1 class) (not (list-of-values slot))) collect
                                  (list 's-dot::node
                                        (list (list 's-dot::id id1)
@@ -1069,7 +1064,7 @@
                     (list 's-dot::record '((s-dot::fontname "Arial"))
                           (list 's-dot::node
                                 (list (list 's-dot::id id)
-                                      (list 's-dot::label (meta::convert-name-to-sql-name 
+                                      (list 's-dot::label (meta::convert-name-to-sql-name
                                                            (format nil "~a_~a" (name class1)(name slot))))
                                       '(s-dot::shape "box")
                                       '(s-dot::style "filled")))
@@ -1167,7 +1162,7 @@
 	 (all-classes (get-project-classes project))
 	 (new-classes classes)
 	 (next-new-classes ()))
-    (loop for class in all-classes 
+    (loop for class in all-classes
           for entity1 = (make-instance 'mcd-entity)
           do
           (setf (gethash class entities) entity1
@@ -1203,19 +1198,19 @@
                   next-new-classes ()))
       (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")))
               (loop for class in classes
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id (third (gethash class entities)))
                                         (list 's-dot::label (name class))
                                         '(s-dot::shape "box")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id) in relations
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id id)
                                         (list 's-dot::label (name slot))
                                         '(s-dot::shape "diamond")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id) in relations
-                    collect (list 's-dot::edge 
+                    collect (list 's-dot::edge
                                   (list (list 's-dot::from (third (gethash class1 entities)))
                                         (list 's-dot::to id)
                                         '(s-dot::labeldistance "3.0")
@@ -1248,7 +1243,7 @@
 	 (all-classes (get-project-classes project))
 	 (new-classes classes)
 	 (next-new-classes ()))
-    (loop for class in all-classes 
+    (loop for class in all-classes
           for entity1 = (make-instance 'mcd-entity)
           do
           (setf (gethash class entities) entity1
@@ -1284,19 +1279,19 @@
                   next-new-classes ()))
       (append (list 's-dot::graph '((s-dot::label "MCD")(s-dot::ratio "1.0")(s-dot::rankdir "LR")))
               (loop for class in classes
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id (third (gethash class entities)))
                                         (list 's-dot::label (name class))
                                         '(s-dot::shape "box")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id) in relations
-                    collect (list 's-dot::node 
+                    collect (list 's-dot::node
                                   (list (list 's-dot::id id)
                                         (list 's-dot::label (name slot))
                                         '(s-dot::shape "diamond")
                                         '(s-dot::style "filled"))))
               (loop for (slot class1 class2 nb1 nb2 id) in relations
-                    collect (list 's-dot::edge 
+                    collect (list 's-dot::edge
                                   (list (list 's-dot::from (third (gethash class1 entities)))
                                         (list 's-dot::to id)
                                         '(s-dot::labeldistance "3.0")

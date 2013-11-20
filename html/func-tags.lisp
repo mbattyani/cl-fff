@@ -1,6 +1,7 @@
 (in-package html)
 
 (defun comment-tag (attributes form)
+  (declare (ignore attributes))
   `(optimize-progn
     (write-string "<!--" *html-stream*)
     ,@(mapcar #'html-gen form)
@@ -9,18 +10,22 @@
 (add-func-tag :comment 'comment-tag)
 
 (defun progn-tag (attributes form)
+  (declare (ignore attributes))
   `(optimize-progn ,@(mapcar #'html-gen form)))
 
 (add-func-tag :progn 'progn-tag)
 
 (defun merge-attributes (attributes defaults)
-  (loop for (attribute value . rest) on defaults do
+  (loop
+     for (attribute value . nil) on defaults
+     do
 	(unless (find attribute attributes :test #'eq)
 	  (push value attributes)
 	  (push attribute attributes)))
   attributes)
 
 (defun if-tag (attributes form)
+  (declare (ignore attributes))
   `(if ,(first form)
     ,(html-gen (second form))
     ,(html-gen (third form))))
@@ -28,6 +33,7 @@
 (add-func-tag :if 'if-tag)
 
 (defun when-tag (attributes form)
+  (declare (ignore attributes))
   `(when ,(first form)
     (optimize-progn ,@(mapcar #'html-gen (cdr form)))))
 
@@ -52,6 +58,7 @@
 (add-func-attr :format 'format-attr)
 
 (defun format-tag (attributes form)
+  (declare (ignore attributes))
   `(format *html-stream* ,@form))
 
 (add-func-tag :format 'format-tag)
@@ -64,11 +71,13 @@
 (add-func-attr :fformat 'fformat-attr)
 
 (defun fformat-tag (attributes form)
+  (declare (ignore attributes))
   `(fast-format *html-stream* ,@form))
 
 (add-func-tag :fformat 'fformat-tag)
 
 (defun imgz-tag (attributes form)
+  (declare (ignore form))
   (let* ((src (getf attributes :src ""))
          (pos (search "-s.jpg" src))
 	 (srcz (getf attributes :srcz
@@ -93,11 +102,13 @@
 (add-func-attr :optional 'optional-attr)
 
 (defun esc-tag (attributes form)
+  (declare (ignore attributes))
   `(esc ,@form))
 
 (add-func-tag :esc 'esc-tag)
 
 (defun insert-string-tag (attributes form)
+  (declare (ignore attributes))
   `(write-string ,(first form) *html-stream*))
 
 (add-func-tag :insert-string 'insert-string-tag)
@@ -106,12 +117,13 @@
 (defvar *html-insert-file-defaults* ".htm")
 
 (defun insert-file-tag (attributes forms)
+  (declare (ignore attributes))
   (destructuring-bind (file-name) forms
     (let ((data nil))
       (ignore-errors
 	(with-open-file (s (if *html-insert-file-defaults*
-			     (merge-pathnames file-name *html-insert-file-defaults*)
-			     file-name)
+                               (merge-pathnames file-name *html-insert-file-defaults*)
+                               file-name)
 			   :direction :input :external-format '(:default :eol-style :lf))
 	  (let* ((file-length (file-length s)))
 	    (setf data (make-string file-length))
@@ -131,10 +143,19 @@
 (defparameter *jscript-lib-file* (merge-pathnames #P"fractal.js"
                                                   (asdf:system-source-directory :html)))
 
+(defparameter *jscript-ws-lib-file* (merge-pathnames #P"fractal-ws.js"
+                                                  (asdf:system-source-directory :html)))
+
 (defun use-ui-tag (attributes form)
-  `(html (:jscript (:insert-file ,*jscript-lib-file*))))
+  (declare (ignore attributes form))
+  #+nil`(html (:jscript (:insert-file ,*jscript-lib-file*))))
+
+(defun use-ui-ws-tag (attributes form)
+  (declare (ignore attributes form))
+  #+nil`(html (:jscript (:insert-file ,*jscript-ws-lib-file*))))
 
 (add-func-tag :use-ui 'use-ui-tag)
+(add-func-tag :use-ui-ws 'use-ui-ws-tag)
 
 (defvar *tab-unsel-class-name* nil)
 (defvar *tab-sel-class-name* nil)
@@ -145,7 +166,7 @@
 (defvar *tab-items* nil)
 
 (defun tab-tag (attributes tab-forms)
-  (destructuring-bind (&key (name (string (gensym)))(class "tab0") (remove-sibling-borders t)) attributes
+  (destructuring-bind (&key (name (string (gensym))) (class "tab0") (remove-sibling-borders t)) attributes
     (let ((unsel-class-name (concatenate 'string class "UnSel"))
 	  (sel-class-name (concatenate 'string class "Sel"))
 	  (void-class-name (concatenate 'string class "Void"))
@@ -154,41 +175,42 @@
 	  (pane-array-name (concatenate 'string name "Panes"))
 	  (table-name (concatenate 'string name "Table")))
       `(optimize-progn
-	,(html-gen
-	  `((:table :id ,table-name :class ,class :cellspacing "0")
-	    ((:tr :valign "middle")
-	     ,@(loop for (tab-text . tab-form) in tab-forms
-		     as tab-class = sel-class-name then unsel-class-name
-		     as i from 0
-		     as item-name = (format nil "~a~d" tab-array-name i)
-		     collect (html-gen `((:td :id ,item-name :class ,tab-class
-;					  :onmouseover ,(format nil "this.className='~aOver';" tab-class)
-;					  :onmouseout ,(format nil "this.className='~a';" tab-class)
-					  :onclick ,(format nil "f85425(~a, ~a, ~d, '~a', '~a', ~d);"
-							    tab-array-name pane-array-name i unsel-class-name
-							    sel-class-name (if remove-sibling-borders 1 0)))
-					 "&nbsp;" ,tab-text "&nbsp;")))
-	     ((:td "align" "center" "width" "100%" :class ,void-class-name) "&nbsp;"))))
-;	(write-string ,(format nil "<SCRIPT>~a.style.display=\"\";</SCRIPT>" table-name) *html-stream*)
-	,@(loop for (tab-text . tab-form) in tab-forms
-		as visibility = "" then "none"
-		as i from 0
-		as pane-name = (format nil "~a~d" pane-array-name i)
-		collect (html-gen `((:div :id ,pane-name :class ,pane-class-name
-					  :style ,(format nil "display:~a;" visibility))
-				    ,@tab-form)))
-	,(html-gen `(:jscript
-		     ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
-			      pane-array-name pane-array-name
-			      tab-array-name tab-array-name)
-		     ,@(loop for i from 0 below (length tab-forms)
-			     collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
-					     pane-array-name i pane-array-name i
-					     tab-array-name i tab-array-name i))))))))
+         ,(html-gen
+           `((:table :id ,table-name :class ,class :cellspacing "0")
+             ((:tr :valign "middle")
+              ,@(loop for (tab-text . nil) in tab-forms
+                   as tab-class = sel-class-name then unsel-class-name
+                   as i from 0
+                   as item-name = (format nil "~a~d" tab-array-name i)
+                   collect (html-gen `((:td :id ,item-name :class ,tab-class
+                                            ;; :onmouseover ,(format nil "this.className='~aOver';" tab-class)
+                                            ;; :onmouseout ,(format nil "this.className='~a';" tab-class)
+                                            :onclick ,(format nil "f85425(~a, ~a, ~d, '~a', '~a', ~d);"
+                                                              tab-array-name pane-array-name i unsel-class-name
+                                                              sel-class-name (if remove-sibling-borders 1 0)))
+                                       "&nbsp;" ,tab-text "&nbsp;")))
+              ((:td "align" "center" "width" "100%" :class ,void-class-name) "&nbsp;"))))
+         ;; (write-string ,(format nil "<SCRIPT>~a.style.display=\"\";</SCRIPT>" table-name) *html-stream*)
+         ,@(loop for (nil . tab-form) in tab-forms
+              as visibility = "" then "none"
+              as i from 0
+              as pane-name = (format nil "~a~d" pane-array-name i)
+              collect (html-gen `((:div :id ,pane-name :class ,pane-class-name 
+                                        :style ,(format nil "display:~a;" visibility))
+                                  ,@tab-form)))
+         ,(html-gen `(:jscript
+                      ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
+                               pane-array-name pane-array-name
+                               tab-array-name tab-array-name)
+                      ,@(loop for i from 0 below (length tab-forms)
+                           collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
+                                           pane-array-name i pane-array-name i
+                                           tab-array-name i tab-array-name i))))))))
 
-; :name :class :remove-sibling-borders are optional attributes
-;syntax ((:tab :name "tt1" :class "tab0" :remove-sibling-borders t)
-;        ("tab-name1" <lhtml>)("tab-name2" <lhtml>))
+;; :name :class :remove-sibling-borders are optional attributes
+;; syntax
+#+nil ((:tab :name "tt1" :class "tab0" :remove-sibling-borders t)
+       ("tab-name1" <lhtml>)("tab-name2" <lhtml>))
 
 (add-func-tag :tab 'tab-tag)
 
@@ -224,19 +246,21 @@
 
 (defun tab-ex-tag (attributes tab-forms)
   (destructuring-bind (&key (name (string (gensym)))(class "tab0") (remove-sibling-borders t)) attributes
+    (declare (ignore remove-sibling-borders))
     (let ((*tab-unsel-class-name* (concatenate 'string class "UnSel"))
 	  (*tab-sel-class-name* (concatenate 'string class "Sel"))
 	  (*tab-tab-array-name* (concatenate 'string name "Tabs"))
 	  (*tab-pane-array-name* (concatenate 'string name "Panes"))
 	  (*tab-items* nil)
-	  (table-name (concatenate 'string name "Table")))
+	  ;(table-name (concatenate 'string name "Table"))
+          )
       `(optimize-progn
 	,@(mapcar 'html-gen tab-forms)
 	,(html-gen `(:jscript
 		     ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
 			      *tab-pane-array-name* *tab-pane-array-name*
 			      *tab-tab-array-name* *tab-tab-array-name*)
-		     ,@(loop for tab-item in *tab-items*
+		     ,@(loop for nil in *tab-items*
 			   as i from 0
 			   collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
 					   *tab-pane-array-name* i *tab-pane-array-name* i
@@ -273,11 +297,74 @@
 	    (off-name (concatenate 'string name "h"))
 	    (div-name (concatenate 'string name "d")))
 	`(optimize-progn
-	  ,(html-gen `((,tag :id ,on-name :class ,(concatenate 'string class "o") :style "display:none;"
-			:onclick ,(format nil "f825h('~a');f825s('~a');f825h('~a');" on-name off-name div-name)) ,on-forms))
-	  ,(html-gen `((,tag :id ,off-name :class ,(concatenate 'string class "h"); :style "display:;"
-			 :onclick ,(format nil "f825s('~a');f825h('~a');f825s('~a');" on-name off-name div-name)) ,off-forms))
-	  ,(when pane-forms (html-gen `((:div :id ,div-name :class ,(concatenate 'string class "d") :style "display:none;") ,@pane-forms))))))))
+           ,(html-gen `((,tag :id ,on-name :class ,(concatenate 'string class "o") :style "display:none;"
+                              :onclick ,(format nil "f825h('~a');f825s('~a');f825h('~a');" on-name off-name div-name)) ,on-forms))
+           ,(html-gen `((,tag :id ,off-name :class ,(concatenate 'string class "h") ; :style "display:;"
+                              :onclick ,(format nil "f825s('~a');f825h('~a');f825s('~a');" on-name off-name div-name)) ,off-forms))
+           ,(when pane-forms (html-gen `((:div :id ,div-name :class ,(concatenate 'string class "d") :style "display:none;") ,@pane-forms))))))))
 
 ;example : (:on-off ("change password")("hide password")(:p "div to hide"))
 (add-func-tag :on-off 'on-off-tag)
+
+(defun doctype-tag (attributes forms)
+  (declare (ignore attributes forms))
+  (html-gen
+   `((:!doctype "html"))))
+
+(add-func-tag :doctype 'doctype-tag)
+
+(defvar *ng-tab-name* )
+
+(defun ng-tab-ex (attributes tab-forms)
+  (destructuring-bind (&key (name (gensym "selected"))) attributes
+    (let ((*ng-tab-name* name)
+          (*tab-items* nil))
+      `(optimize-progn
+	,@(mapcar 'html-gen tab-forms)))))
+
+(add-func-tag :ng-tab-ex 'ng-tab-ex)
+
+(defun ng-tab-item-tag (attributes forms)
+  (destructuring-bind (item-number) attributes
+    ;(assert (numberp item-number))
+    (let ((item-click `(ps:ps (setf ,*ng-tab-name* ,item-number)) #+nil(format nil "~a = ~d" *ng-tab-name* item-number)))
+      ;(push (list item-number item-name) *tab-items*)
+      (html-gen
+       `((:a :href "#/tabs" :ng-click ,item-click)
+	 ,@forms)))))
+
+(add-func-tag :ng-tab-item 'ng-tab-item-tag)
+
+(defun ng-tab-pane-tag (attributes forms)
+  (destructuring-bind (item-number) attributes
+    (let ((show-if `(ps:ps (equal ,*ng-tab-name* ,item-number)) #+nil(format nil "~a == ~d" *ng-tab-name* item-number)))
+      (html-gen
+       `((:div :ng-show ,show-if) ,@forms)))))
+
+(add-func-tag :ng-tab-pane 'ng-tab-pane-tag)
+
+(defun ng-on-off-tag (attributes forms)
+  (destructuring-bind (&key (name (string (gensym))) (class "onoff") (tag :span)) attributes
+    (destructuring-bind (on-forms off-forms &rest pane-forms) forms
+      (let ((var (string (gensym)))
+            (on-off-name (concatenate 'string name "on-off"))
+	    (div-name (concatenate 'string name "d"))
+            (on-off-class (concatenate 'string class "-sh"))
+            (div-class (concatenate 'string class "-div")))
+	`(optimize-progn
+           ,(html-gen `((,tag :id ,on-off-name :class ,on-off-class :ng-click ,(format nil "~a=!~:*~a" var))
+                        ((:div :ng-show ,var) ,on-forms) ((:div :ng-hide ,var) ,off-forms)))
+           
+           ,(when pane-forms
+              (html-gen `((,tag :id ,div-name :class ,div-class :ng-show ,var) ,@pane-forms)))))))
+  )
+
+(add-func-tag :ng-on-off 'ng-on-off-tag)
+
+(defun %ps (attributes forms)
+  (declare (ignore attributes))
+  `(optimize-progn
+     ,@(mapcar (lambda (x)
+                 (html-gen (ps:ps* x))) forms)))
+
+(add-func-tag :ps '%ps)

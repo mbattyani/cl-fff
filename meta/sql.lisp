@@ -1,25 +1,25 @@
-(in-package meta)
+(in-package #:meta)
 
 (defun compute-sql-type (slot)
-  (if (subtypep (value-type slot) 'root-object)
-    "BIGINT"
-  (ecase (value-type slot)
-    (boolean "BOOLEAN")
-    (integer "INTEGER")
-    (:ip-address "INET")
-    (float   "FLOAT")
-    (string   (if (and (sql-length slot)(> (sql-length slot) 1))
-		(format nil "VARCHAR(~d)" (sql-length slot))
-		"TEXT"))
-    (pathname "TEXT")
-    (:decimal "DECIMAL")
-    (:date   "DATE")
-    (:time-of-day "TIME")
-    (:universal-time "TIMESTAMP")
-    (:color "TEXT")
-    (:timestamp "INTEGER")
-    (symbol "TEXT")
-    ((t) "TEXT"))))
+  (if (ignore-errors (subtypep (value-type slot) 'root-object)) ;; fixme how do this nicer?
+      "BIGINT"
+      (ecase (value-type slot)
+        (boolean "BOOLEAN")
+        (integer "INTEGER")
+        (:ip-address "INET")
+        (float   "FLOAT")
+        (string   (if (and (sql-length slot)(> (sql-length slot) 1))
+                      (format nil "VARCHAR(~d)" (sql-length slot))
+                      "TEXT"))
+        (pathname "TEXT")
+        (:decimal "DECIMAL")
+        (:date   "DATE")
+        (:time-of-day "TIME")
+        (:universal-time "TIMESTAMP")
+        (:color "TEXT")
+        (:timestamp "INTEGER")
+        (symbol "TEXT")
+        ((t) "TEXT"))))
 
 (defun gen-sql-for-slot (slot stream)
   (write-string "     " stream)
@@ -82,7 +82,8 @@
 
 (defun gen-sql-change-parent (object)
   (let* ((class (class-of object))
-	 (data-object (data-object object)))
+	 ;(data-object (data-object object))
+         )
     (unless (new-object object)
       (with-output-to-string (s)
         (write-string "UPDATE " s)
@@ -93,7 +94,8 @@
 
 (defun gen-sql-read-object (object)
   (let ((class (class-of object))
-	(data-object (data-object object)))
+	;(data-object (data-object object))
+        )
     (with-output-to-string (s)
       (write-string "SELECT " s)
       (write-sql-slot-names-list s class)
@@ -105,7 +107,7 @@
   (multiple-value-bind
 	(sec min hour date month year day-of-week dsp tz)
       (decode-universal-time time)
-      (declare (ignore tz dsp))
+      (declare (ignore tz dsp day-of-week))
       (format stream
 	      "'~2,'0d-~2,'0d-~d ~2,'0d:~2,'0d:~2,'0d'"
 	      year month date hour min sec)))
@@ -114,5 +116,5 @@
   (multiple-value-bind
 	(sec min hour date month year day-of-week dsp tz)
       (decode-universal-time time)
-      (declare (ignore tz dsp))
+      (declare (ignore sec min day-of-week hour tz dsp))
       (format stream "'~d-~2,'0d-~2,'0d'" year month date)))

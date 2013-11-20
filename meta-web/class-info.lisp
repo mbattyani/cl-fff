@@ -47,7 +47,7 @@
   )
 
 (make-instance 'interface::object-view :object-class 'class-info
-	       :country-languages '(:fr) :name "class-fr" :source-code 
+	       :country-languages '(:fr) :name "class-fr" :source-code
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name description comment class-status guid version sql-name
@@ -92,7 +92,7 @@
     ))
 
 (make-instance 'interface::object-view :object-class 'class-info
-	       :country-languages '(:en) :name "class-en" :source-code 
+	       :country-languages '(:en) :name "class-en" :source-code
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name description comment class-status guid version sql-name
@@ -202,7 +202,7 @@
       (gen-sub-graph projet classes depth dotfile)
       (sys:call-system
        (format nil
-	       #+win32 "D:\\Program Files\\ATT\\Graphviz\\bin\\dot.exe -Tps2 ~s -o ~s"
+	       #+win32 "dot.exe -Tps2 ~s -o ~s"
 	       #+linux "dot -Tps2 ~s -o ~s"
 	       dotfile psfile) :wait t)
       (sys:call-system (format nil "ps2pdf.cmd ~s ~s" psfile pdffile) :wait t)
@@ -263,5 +263,3 @@
       (setf p2 (logand (+ p2 f) #xfffff))
       (unless (eq o1 o2)(incf ratio)))
     (values (float (/ ratio n)) ratio)))
-
-    

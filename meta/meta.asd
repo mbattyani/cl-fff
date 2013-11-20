@@ -1,6 +1,6 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+; -*- mode:common-lisp -*-
 
-(in-package asdf)
+(in-package #:asdf)
 
 (defsystem :meta
   :name "meta"
@@ -10,11 +10,12 @@
   :long-description "Meta Level for the Framework"
   :components ((:file "defpackage")
 	       (:file "specials" :depends-on ("defpackage"))
-	       (:file "rules" :depends-on ("object"))
+               (:file "rules" :depends-on ("object"))
 	       (:file "meta-class" :depends-on ("specials"))
 	       (:file "slot" :depends-on ("meta-class"))
 	       (:file "object" :depends-on ("meta-class" "slot"))
-	       (:file "store" :depends-on ("object"))
+               (:file "store" :depends-on ("object")) ;; utilities
 	       (:file "class-info" :depends-on ("object"))
-	       (:file "utilities" :depends-on ("store")))
-  :depends-on (:utility))
+	       (:file "utilities" :depends-on ("store"))
+               (:file "mongo-store" :depends-on ("store")))
+  :depends-on (:utility :cl-mongo :closer-mop :bordeaux-threads))

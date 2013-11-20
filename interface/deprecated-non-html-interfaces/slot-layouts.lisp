@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defun get-user-name (slot &optional (language *country-language*))
   (meta:translate (meta::user-name slot) language))
@@ -85,7 +85,7 @@
 (defmethod initialize-instance :after ((p bis-object-embedded-pane) &rest init-options &key view &allow-other-keys)
   (declare (ignore init-options))
   (let ((group-box (make-instance 'controls::group-box :x-align :left :text (string-capitalize (bis::user-name (slot p)) :end 1) :parent (wll::window p) :parent-pane p))
-	(location (clos:slot-definition-location (slot p))))
+	(location (c2mop:slot-definition-location (slot p))))
     (setf (wll::sub-panes group-box) (list (create-pane-for-object view (bis::get-stored-location-value (object p) location) group-box)))
     (setf (wll::sub-panes p) group-box)
     (setf (wll::need-to-recompute p) t)
@@ -95,8 +95,8 @@
 (defmethod make-effective-slot-layout (slot listp (choices (eql nil))(type-name (eql 'meta::translated-string)) container &rest args &key stand-alone tooltip)
     (let* ((slot-name (get-user-name slot))
 	   (translated-string-class (find-class 'meta::translated-string))
-	   (french-slot-name (meta::user-name (find 'meta::french (clos:class-slots translated-string-class) :key 'clos:slot-definition-name)))
-	   (english-slot-name (meta::user-name (find 'meta::english (clos:class-slots translated-string-class) :key 'clos:slot-definition-name)))
+	   (french-slot-name (meta::user-name (find 'meta::french (c2mop:class-slots translated-string-class) :key 'c2mop:slot-definition-name)))
+	   (english-slot-name (meta::user-name (find 'meta::english (c2mop:class-slots translated-string-class) :key 'c2mop:slot-definition-name)))
 	   (*top-level-item* (make-instance 'panel :parent *top-level-item* :text slot-name))
 	   (edit1 (make-instance 'edit :slot slot  :stand-alone stand-alone
 				:x-min 30 :x-value 100 :x-elasticity 10.0 :x-compressibility 2.0

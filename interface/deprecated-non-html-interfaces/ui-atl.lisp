@@ -206,22 +206,22 @@ public:
 '(make-atl-interface "Test" 0 0 350 500
   '(:v
     (:t (("Lisp" (:v 
-		  (:label "Description" (:combo ("Génial" "Trop cool" "Fantastique")))
-		  (:label "Qualités" (:combo ("Toutes" "voire plus")))))
+		  (:label "Description" (:combo ("GÃ©nial" "Trop cool" "Fantastique")))
+		  (:label "QualitÃ©s" (:combo ("Toutes" "voire plus")))))
 	 ("C++" (:v 
-		 (:label "Description" (:combo ("Macro-assembleur" "pénible" "rase moquette")))
-		 (:label "Qualités" (:combo ("verbeux" "pas OO")))))
+		 (:label "Description" (:combo ("Macro-assembleur" "pÃ©nible" "rase moquette")))
+		 (:label "QualitÃ©s" (:combo ("verbeux" "pas OO")))))
 	 ("Buttons" (:h (:g "Column A" (:v (:push-button "button 11")(:push-button "button 12")(:push-button "button 13")))
 			  (:g "Column B" (:v (:push-button "button 11")(:push-button "button 12")(:push-button "button 13"))) :align :fill))))
     (:label "Langage" (:combo ("Lisp" "CLOS" "MOP" "Assembler")))
     (:g "Lisp"
      (:v 
-      (:label "Description" (:combo ("Génial" "Trop cool" "Fantastique")))
-      (:label "Qualités" (:combo ("Toutes" "voire plus")))))
+      (:label "Description" (:combo ("GÃ©nial" "Trop cool" "Fantastique")))
+      (:label "QualitÃ©s" (:combo ("Toutes" "voire plus")))))
     (:g "C++"
      (:v 
-      (:label "Description" (:combo ("Macro-assembleur" "pénible" "rase moquette")))
-      (:label "Qualités" (:combo ("verbeux" "pas OO")))))
+      (:label "Description" (:combo ("Macro-assembleur" "pÃ©nible" "rase moquette")))
+      (:label "QualitÃ©s" (:combo ("verbeux" "pas OO")))))
     (:h (:label "Data") (:edit)(:push-button "read value")(:push-button "write value"))
     (:g "Bouttons"
      (:h
@@ -236,24 +236,24 @@ public:
 '(make-atl-interface "Test" 0 0 350 500
   '(:v
     (:t (("Lisp" (:v 
-		  (:label "Description" (:combo ("Génial" "Trop cool" "Fantastique")))
-		  (:label "Qualités" (:combo ("Toutes" "voire plus")))))
+		  (:label "Description" (:combo ("GÃ©nial" "Trop cool" "Fantastique")))
+		  (:label "QualitÃ©s" (:combo ("Toutes" "voire plus")))))
 	 ("C++" (:v 
-		 (:label "Description" (:combo ("Macro-assembleur" "pénible" "rase moquette")))
-		 (:label "Qualités" (:combo ("verbeux" "pas OO")))))
+		 (:label "Description" (:combo ("Macro-assembleur" "pÃ©nible" "rase moquette")))
+		 (:label "QualitÃ©s" (:combo ("verbeux" "pas OO")))))
 	 ("Buttons" (:h (:g "Column A" (:v (:push-button "button 11")(:push-button "button 12")(:push-button "button 13")))
 			  (:g "Column B" (:v (:push-button "button 11")(:push-button "button 12")(:push-button "button 13"))) :align :fill))))
     (:h (:vt (("Lisp" "Gr1")("C++" "Gr2")("Buttons" "Gr3")))
      (:stack
       (:g "Lisp"
 	  (:v 
-	   (:label "Description" (:combo ("Génial" "Trop cool" "Fantastique")))
-	   (:label "Qualités" (:combo ("Toutes" "voire plus"))))
+	   (:label "Description" (:combo ("GÃ©nial" "Trop cool" "Fantastique")))
+	   (:label "QualitÃ©s" (:combo ("Toutes" "voire plus"))))
 	  :name "Gr1")
       (:g "C++"
 	  (:v 
-	   (:label "Description" (:combo ("Macro-assembleur" "pénible" "rase moquette")))
-	   (:label "Qualités" (:combo ("verbeux" "pas OO"))))
+	   (:label "Description" (:combo ("Macro-assembleur" "pÃ©nible" "rase moquette")))
+	   (:label "QualitÃ©s" (:combo ("verbeux" "pas OO"))))
 	  :name "Gr2")
       (:g "Bouttons"
 	  (:h

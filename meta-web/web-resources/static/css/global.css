@@ -1,0 +1,138 @@
+/* --- GLOBAL STYLES --- */
+body { font-size:12px; line-height:16px; font-family:Arial, Helvetica, Verdana, sans-serif; margin:0; padding:0; background:#ffffff url(../images/bodyBg.gif) top left repeat-x; color:#333333; text-align:left;}
+#img { display:block; border:0; }
+p { padding:0; margin:0; }
+address { font-style:normal;}
+
+/* --- GENERAL IDS --- */
+#container { width:980px; margin:0 auto;}   
+
+/* --- HEADER --- */
+#header { widows:977px; height:74px; background: url(../images/headerBg.gif) top left no-repeat; position:relative; margin-top:10px;}
+#header #logo { position:absolute; top:14px; left:63px;}
+#header #tagline { position:absolute; top:33px; left:647px; text-indent:-9999px; background:url(../images/tagline.gif) top left no-repeat; width:279px; height:14px;}
+
+/* ----- TOP NAVIGATION ----- */
+#topNav { width:977px; height:32px; background:url(../images/topNavBg.gif) top left repeat-x;}
+#topNav ul { margin:0; padding:5px 0 0 53px; list-style:none; text-transform:uppercase;}
+#topNav ul li { display:inline; float:left; background:url(../images/topNavDivider.gif) 100% 7px no-repeat; position:relative;}
+#topNav ul li.last { background:none;}
+#topNav ul li a { display:inline; float:left; color:#ffffff; font-size:10px; text-decoration:none; padding: 3px 10px 8px 10px;}
+#topNav ul li a:hover { text-decoration:underline;}
+#topNav ul li.active a { text-decoration:underline;}
+
+/* ----- TOP NAV DROPDOWN ----- */
+#topNav ul li ul { width:200px; position:absolute; left:-9999px; top:26px; clear:both; margin:0; padding: 0; z-index:100; background:#003864;}
+#topNav ul li:hover ul { left:auto; display:block; margin:0px;}
+#topNav ul li.over ul { left:auto; margin:0px;}
+#topNav ul ul li { width:200px; padding:0; height:auto !important; height:1px; min-height:1px; background:none; border-bottom:1px solid #cccccc;}
+#topNav ul ul li a { width:182px ;  background:none; height:auto !important; height:1px; min-height:1px; line-height:18px; padding:5px 9px !important; cursor:pointer; font-size:10px; }
+#topNav ul .active ul li a { text-decoration:none;}
+#topNav ul .active ul li a:hover { text-decoration:underline;}
+#topNav ul li a:hover {}
+#topNav ul ul .last { background:none; border:none;}
+
+/* --- CONTENT CONTAINER --- */
+#contentContainer { background:url(../images/contentBg.gif) top left repeat-y;}
+#content { background: url(../images/contentContainerBg.gif) bottom left no-repeat; width:980px; height:auto !important; height:550px; min-height:450px; padding-bottom:55px;}
+#internalContent { width:840px; margin: 0 0 0 73px;}
+#internalRightCol { float:left; width:530px;}
+#internalRightCol .btnLearnMore { background:url(../images/btnNextBenefit.png) 0px 0px no-repeat; width:92px; height:23px; text-indent:-9999px; display:block;}
+#internalRightCol .btnLearnMore:hover { background:url(../images/btnNextBenefit.png) 0px no-repeat;}
+
+#internalContentAlt { padding: 0 40px 16px 64px;}
+#internalContentAlt #text { padding:0 0 0 0;}
+#internalLeftColAlt { width:570px; float:left;}
+#internalRightColAlt { width:203px; float:left; padding:60px 0 0 0;}
+#internalRightColAlt p { padding:0 0 8px 0;}
+
+/* --- HOME CONTENT --- */
+#homeContent { color:#555659; font-size:16px; line-height:22px; padding: 0 40px 16px 64px;}
+#homeContent p { padding-bottom:8px;}
+#homeCols { background:url(../images/homeColsBg.gif) top left repeat-y; margin-top:35px; float:left;}
+#homeLeftCol { width:637px; float:left;}
+#homeRightCol { width:343px; float:left;}
+
+/* --- HOME JUMPS --- */
+#whatIsFPGA { padding: 0 0 0 64px; border-right:1px solid #d6d6d6;}
+#whatWeOffer { padding: 0 0 0 40px;}
+.homeJump {  float:left; width:250px;}
+.homeJump .title { color:#0065a4; padding-bottom:10px; font-size:15px; font-weight:bold;}
+.homeJump p { padding: 0 40px 18px 0;}
+.homeJump .btnLearnMore { background:url(../images/btnLearnMore.gif) 0px 0px no-repeat; width:94px; height:23px; text-indent:-9999px; display:block;}
+.homeJump .btnLearnMore:hover { background:url(../images/btnLearnMore.gif) -94px 0px no-repeat;}
+
+/* --- HOME LATEST NEWS --- */
+#latestNews { padding: 0 60px 0 42px; font-weight:lighter;}
+#latestNews .title { color:#0065a4; padding: 11px 0 22px 0; font-size:15px; font-weight:bold;}
+#latestNews ul { margin:0; padding:0 0 15px 0; list-style:none;}
+#latestNews ul li { padding-bottom:9px;}
+#latestNews a { text-decoration:none; font-weight:normal;}
+#latestNews a:hover { text-decoration:underline;}
+#latestNews .btnLearnMore { background:url(../images/btnLearnMore.gif) 0px 0px no-repeat; width:94px; height:23px; text-indent:-9999px; display:block;}
+#latestNews .btnLearnMore:hover { background:url(../images/btnLearnMore.gif) -94px 0px no-repeat;}
+
+/* --- BREADCRUMBS --- */
+#breadcrumbs { font-weight:bold; color:#0065a4; width:840px; border-bottom:1px solid #d1d2d4; padding:31px 0 10px 0; font-size:11px;}
+#breadcrumbs a { color:#0065a4; text-decoration:none;}
+#breadcrumbs a:hover { text-decoration:underline;}
+
+/* --- LIST --- */
+#list { width:310px; float:left;}
+#list .title { color:#0065a4; padding: 30px 0 25px 0; font-size:18px; line-height:20px; font-weight:normal;}
+#list ul { margin:0; padding:0 20px 0 0; list-style:none; font-weight:bold; font-size:13px;}
+#list ul li { padding: 0 0 10px 26px; background:url(../images/iconBlueArrowMedium.gif) 2px 2px no-repeat;}
+
+/* --- TEXT --- */
+#text { padding-right:40px;}
+#text h1 { color:#0065a4; padding: 15px 0 15px 0; font-size:30px; line-height:32px; font-weight:normal;}
+#text p { padding-bottom:15px;}
+#text .subtitle { text-transform:uppercase; font-size:18px; line-height:22px; padding-bottom:18px; padding-top:5px;}
+
+/* ----- SUB NAVIGATION ----- */
+#subNav { font-size:13px;}
+#subNav ul { margin:0 0 0 -10px; padding:0; list-style:none; height:50px; }
+#subNav ul li { display:inline; float:left; background:url(../images/subNavDivider.gif) 100% 7px no-repeat;}
+#subNav ul li.last { background:none;}
+#subNav ul li a { display:inline; float:left; color:#0065a4; text-decoration:none; padding: 3px 10px;}
+#subNav ul li a:hover { text-decoration:underline;}
+#subNav ul li.active a { text-decoration:underline;}
+
+/* ----- PRESS RELEASES ----- */
+#pressReleases ul { margin:0; padding:0 0 0 0; list-style:none; font-size:14px; line-height:18px;}
+#pressReleases ul li { border-bottom:1px solid #d1d2d4; padding: 10px 0 10px 0;}
+#pressReleases .announcementDate { float:left; width:170px; cursor:pointer;}
+#pressReleases .announcementTitle { float:left; width:630px; font-weight:normal; cursor:pointer;}
+#pressReleases a { text-decoration:none;}
+#pressReleases a:hover { text-decoration:underline;}
+
+/* --- GENERAL CLASSES --- */
+.clear { clear:both;}
+
+/* --- HEADINGS & PARAGRAPHS --- */
+h1, h2, h3, h4, h5, h6 { margin:0; padding:0; font-size:12px; line-height:16px; font-weight:bold;}
+h2 { margin:0; padding:0; font-size:16px; line-height:22px; font-weight:bold;}
+
+/* --- FOOTER --- */
+#footer { color:#bebfc0; font-size:9px; line-height:11px; text-align:right; padding: 5px 30px 0 0; height:29px;}
+#footer a { color:#bebfc0; text-decoration:none; font-weight:normal;}
+#footer a:hover { text-decoration:underline;}
+
+/* ----- LINKS ----- */
+a { color:#333333; font-weight:bold; text-decoration:underline; }
+a:hover { text-decoration:none; }
+a:focus, a:hover, a:active { outline:none;}
+
+/* ----- FORMS ----- */
+form { padding:0; margin:0; }
+form div { clear:both;}
+fieldset { padding:0; margin:0; border:0px none; display:inline; }
+legend { padding:0; margin:0; display:none; }
+textarea, input, select { font:12px; font-family:Arial, Helvetica, Verdana, sans-serif;}
+label { float:left; display:block; width:150px; margin:0 0 5px 0;}
+.input { float:left; width:265px; border:1px solid #cccccc; padding:3px; margin:0 0 5px 0;}
+.textarea { float:left; width:265px; border:1px solid #cccccc; padding:3px; margin:0 0 5px 0; height:75px; font-size:12px;}
+.selectBox { width:240px; margin:0 0 5px 0;}
+.btnSubmit { background:url(../images/btnSubmit.gif) 0px 0px no-repeat; width:94px; height:23px; text-indent:-9999px; display:block; border:none;}
+.btnSubmit:hover { background:url(../images/btnSubmit.gif) -94px 0px no-repeat; cursor:pointer;}
+.error { color:#d01e40;}

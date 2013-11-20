@@ -1,23 +1,23 @@
 (in-package meta)
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
-(defparameter +slot-initargs+ '(:user-name :description :object-help :stored :in-proxy 
-			       :indexed :unique :null-allowed :vaccessor :initarg
-			       :initform :choices :list-of-values :value-type :linked-value
-			       :modifiable :modifiable-groups :visible :visible-groups :sql-name
-			       :unit :disable-predicate :new-objects-first
-			       :value-constraint :sql-length :nb-decimals
-			       :void-link-text :pathname-filter :list-format
-			       :make-copy-string :duplicate-value-fn
-			       :get-value-html-fn :get-value-title :get-value-text :get-value-sql
-			       :value-to-string-fn :string-to-value-fn :value-to-sql-fn :sql-to-value-fn
-			       :can-create-new-object :create-new-object :get-object-func :process-new-object-fn
-			       :dont-display-null-value :view-type :slot-view-name :duplicate-value
-			       :html-tag-attributes)))
+  (defparameter +slot-initargs+ '(:user-name :description :object-help :stored :in-proxy 
+                                  :indexed :unique :null-allowed :vaccessor :initarg
+                                  :initform :choices :list-of-values :value-type :linked-value
+                                  :modifiable :modifiable-groups :visible :visible-groups :sql-name
+                                  :unit :disable-predicate :new-objects-first
+                                  :value-constraint :sql-length :nb-decimals
+                                  :void-link-text :pathname-filter :list-format
+                                  :make-copy-string :duplicate-value-fn
+                                  :get-value-html-fn :get-value-title :get-value-text :get-value-sql
+                                  :value-to-string-fn :string-to-value-fn :value-to-sql-fn :sql-to-value-fn
+                                  :can-create-new-object :create-new-object :get-object-func :process-new-object-fn
+                                  :dont-display-null-value :view-type :slot-view-name :duplicate-value
+                                  :html-tag-attributes)))
 
 ;; ------------------------------------------------------------------------
 ;; Mixin metaclass for stored slots
-(clos:defclass fc-slot-definition-mixin ()
+(cl:defclass fc-slot-definition-mixin ()
   ((user-name     :initform ""  :accessor user-name :initarg :user-name)
    (description   :type string :initarg :description :initform "" :accessor description)
    (object-help   :initarg :object-help :initform "" :accessor object-help)
@@ -61,7 +61,7 @@
    (used-by-rules :initform nil :type boolean :accessor used-by-rules)
    (used-by-predicates      :initform nil :accessor used-by-predicates)
    (void-link-text          :initform nil :accessor void-link-text
-			    :initarg :void-link-text)
+                            :initarg :void-link-text)
    (pathname-filter         :initform nil :accessor pathname-filter :initarg :pathname-filter)
    (create-new-object       :initform nil :accessor create-new-object :initarg :create-new-object)
    (can-create-new-object   :initform nil :accessor can-create-new-object :initarg :can-create-new-object)
@@ -74,8 +74,9 @@
    ))
 
 (defmethod initialize-instance :after ((slot fc-slot-definition-mixin) &rest init-options &key &allow-other-keys)
+  (declare (ignore init-options))
   (unless (sql-name slot)
-    (setf (sql-name slot) (convert-name-to-sql-name (slot-definition-name slot))))
+    (setf (sql-name slot) (convert-name-to-sql-name (c2mop:slot-definition-name slot))))
   (when (stored slot)
     (unless (sql-to-value-fn slot)
       (setf (sql-to-value-fn slot) (default-sql-to-value-fn (value-type slot) slot)))
@@ -94,34 +95,35 @@
 (defun get-choices (slot object)
   (let ((choices (choices slot)))
     (if (and choices (or (symbolp choices)(functionp choices)))
-      (funcall choices object)
-      choices)))
+        (funcall choices object)
+        choices)))
 
-(clos:defclass stored-slot-definition (standard-slot-definition fc-slot-definition-mixin)
+(cl:defclass stored-slot-definition (standard-slot-definition fc-slot-definition-mixin)
   ())
 
 ;; ------------------------------------------------------------------------
 ;; Class of direct stored slots and methods to construct them when
 ;; appropriate.
 
-(clos:defclass stored-direct-slot-definition (standard-direct-slot-definition stored-slot-definition)
+(cl:defclass stored-direct-slot-definition (standard-direct-slot-definition stored-slot-definition)
   ())
 
 ;; Called when the class is being made, to choose the metaclass of a
 ;; given direct slot.  It should return the class of slot definition
 ;; required.
-#-(or lispworks4.3 lispworks4.4 lispworks5 lispworks6)
+#+(and lispworks (not (or lispworks4.3 lispworks4.4 lispworks5 lispworks6)))
 (defmethod direct-slot-definition-class ((slotd fc-class) stored-specification)
   (find-class 'stored-direct-slot-definition)) ;; Use stored-direct-slot-definition
 
-#+(or lispworks4.3 lispworks4.4 lispworks5 lispworks6)
+#+(or (not lispworks) lispworks4.3 lispworks4.4 lispworks5 lispworks6)
 (defmethod direct-slot-definition-class ((slotd fc-class) &rest initargs)
+  (declare (ignore initargs))
   (find-class 'stored-direct-slot-definition))
 
 (defmethod slot-definition-allocation ((slot stored-slot-definition))
   (if (in-proxy slot)
-    (call-next-method)
-    :data-object))
+      (call-next-method)
+      :data-object))
 
 (defmethod (setf slot-definition-allocation) (allocation (slot stored-slot-definition))
   (unless (eq allocation :data-object) (call-next-method)))
@@ -131,75 +133,88 @@
 ;; already-processed-options.
 (defmethod process-a-slot-option ((class fc-class) option value already-processed-options slot)
   ;; Handle the :function option by adding it to the list of processed options.
-					;  (if (eq option :function)
-					;      (list* :function value already-processed-options)
+  ;;  (if (eq option :function)
+  ;;      (list* :function value already-processed-options)
   (if (member option +slot-initargs+)
       (list* option value already-processed-options)
-    (call-next-method)))
+      (call-next-method)))
 
 ;; ------------------------------------------------------------------------
 ;; Class of effective stored slots and methods to construct them when appropriate.
-(clos:defclass stored-effective-slot-definition (standard-effective-slot-definition stored-slot-definition)
+(cl:defclass stored-effective-slot-definition (standard-effective-slot-definition stored-slot-definition)
   ())
 
 ;; Called then the class is being finalized, to choose the metaclass
 ;; of a given effective slot.  It should return the class of slot definition required.
-#-(or lispworks4.3 lispworks4.4 lispworks5 lispworks6)
-(defmethod clos:effective-slot-definition-class ((class fc-class) direct-slot-definitions)
+#+(and lispworks (not (or lispworks4.3 lispworks4.4 lispworks5 lispworks6)))
+(defmethod cl:effective-slot-definition-class ((class fc-class) direct-slot-definitions)
   (find-class 'stored-effective-slot-definition)) ;; Use stored-effective-slot-definition
 
-#+(or lispworks4.3 lispworks4.4 lispworks5 lispworks6)
-(defmethod clos:effective-slot-definition-class ((class fc-class) &rest initargs)
+#+(or (not lispworks) lispworks4.3 lispworks4.4 lispworks5 lispworks6)
+(defmethod c2mop:effective-slot-definition-class ((class fc-class) &rest initargs)
+  (declare (ignore initargs))
   (find-class 'stored-effective-slot-definition))
 
 ;; Called then the class is being finalized, to compute the initargs
 ;; used to construct the effective slot.  It should return the list of initargs.
 ;; WARNING CLOS PORTABILITY ?
-;(defmethod clos::compute-effective-slot-definition-initargs ((class fc-class) name direct-slot-definitions)
-;  (macrolet ((copy-slots (initargs)
-;	       (cons 'list (loop for initarg in initargs
-;				 nconc `(,initarg (,(intern (symbol-name initarg)) direct-slot))))))
-;    (let ((direct-slot (first direct-slot-definitions)))
-;      (append (copy-slots #.+slot-initargs+)(call-next-method)))))
+#+nil
+(defmethod cl::compute-effective-slot-definition-initargs ((class fc-class) name direct-slot-definitions)
+  (macrolet ((copy-slots (initargs)
+               (cons 'list (loop for initarg in initargs
+                              nconc `(,initarg (,(intern (symbol-name initarg)) direct-slot))))))
+    (let ((direct-slot (first direct-slot-definitions)))
+      (append (copy-slots #.+slot-initargs+)(call-next-method)))))
 
-(defmethod clos::compute-effective-slot-definition-initargs ((class fc-class) name direct-slot-definitions)
+#+sbcl
+(defmethod sb-pcl::compute-effective-slot-definition-initargs ((class fc-class) direct-slot-definitions)
   (let ((direct-slot (first direct-slot-definitions)))
     (append #.(cons 'list (loop for initarg in +slot-initargs+
-				nconc `(,initarg (,(intern (symbol-name initarg)) direct-slot))))
-	    (call-next-method))))
+                             nconc `(,initarg (,(intern (symbol-name initarg)) direct-slot))))
+            (call-next-method))))
+
+#+lispworks
+(defmethod clos::compute-effective-slot-definition-initargs ((class fc-class) name direct-slot-definitions) ;; FIXME
+  (let ((direct-slot (first direct-slot-definitions)))
+    (append #.(cons 'list (loop for initarg in +slot-initargs+
+                             nconc `(,initarg (,(intern (symbol-name initarg)) direct-slot))))
+            (call-next-method))))
+
+#-(or lispworks sbcl)
+(warn "compute-effective-slot-definition-initargs method not found")
 
 ;; ------------------------------------------------------------------------
 
 (defmethod slot-value-using-class ((class fc-class) object slot-name)
-  (let* ((slot (find slot-name (class-slots class) :key 'slot-definition-name))
-	 (value (if (in-proxy slot)
-		    (call-next-method)
-		      (let ((data (data-object object)))
-			(unless data (setf data (load-object-data object)))
-			(slot-value data slot-name)))))
+  (let* ((slot (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name))
+         (value (if (in-proxy slot)
+                    (call-next-method)
+                    (let ((data (data-object object)))
+                      (unless data (setf data (load-object-data object)))
+                      (slot-value data slot-name)))))
     (if (eq (value-type slot) :decimal)
-	(float (/ value (expt 10 (nb-decimals slot))) 1.0d0)
-	value)))
+        (float (/ value (expt 10 (nb-decimals slot))) 1.0d0)
+        value)))
 
 (defmethod (setf slot-value-using-class) (value (class fc-class) object slot-name)
-  (let ((slot (find slot-name (class-slots class) :key 'slot-definition-name)))
+  (let ((slot (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)))
     (when (eq (value-type slot) :decimal)(setf value (fround (* value (expt 10 (nb-decimals slot))))))
     (if (in-proxy slot)
-	(call-next-method)
-	(let ((data (data-object object)))
-	  (unless data (setf data (load-object-data object)))
-	  (setf (slot-value data slot-name) value)))
-      (when (eq (value-type slot) :decimal)(setf value (float (/ value (expt 10 (nb-decimals slot))) 1.0d0)))
-      value))
+        (call-next-method)
+        (let ((data (data-object object)))
+          (unless data (setf data (load-object-data object)))
+          (setf (slot-value data slot-name) value)))
+    (when (eq (value-type slot) :decimal)(setf value (float (/ value (expt 10 (nb-decimals slot))) 1.0d0)))
+    value))
 
 (defmethod slot-boundp-using-class ((class fc-class) object slot-name)
-  (let ((slot (find slot-name (class-slots class) :key 'slot-definition-name)))
+  (let ((slot (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)))
     (if (in-proxy slot)
-      (call-next-method)
-      (or (not (data-object object))(slot-boundp (data-object object) slot-name))))) ;data not loaded <=> slot is bound because in store
+        (call-next-method)
+        (or (not (data-object object))(slot-boundp (data-object object) slot-name))))) ;data not loaded <=> slot is bound because in store
 
 (defmethod slot-makunbound-using-class ((class fc-class) object slot-name)
-  (let ((slot (find slot-name (class-slots class) :key 'slot-definition-name)))
+  (let ((slot (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)))
     (when (in-proxy slot) (call-next-method))))
 
 
@@ -212,7 +227,7 @@
 (defun recompute-disable-predicate (object slot)
   (unless (data-object object)(load-object-data object))
   (when (symbolp slot)
-    (setf slot (find slot (class-slots (class-of object)) :key 'slot-definition-name)))
+    (setf slot (find slot (c2mop:class-slots (class-of object)) :key 'c2mop:slot-definition-name)))
   (when (disable-predicate-fn slot)
     (funcall (disable-predicate-fn slot) object)))
 
@@ -242,25 +257,26 @@
 ;--------------------------------------------------------------------------
 ;;;------------------------------------------------
 (defun std-value-to-string (value slot)
+  (declare (ignore slot))
   (format nil "~a" value))
 
 (defun %string-to-float% (string)
   (let* ((*read-eval* nil)
-	 (first-digit (position-if #'(lambda (c)
-				       (find c "0123456789+-.,"))
-				   string))
-	 (last-digit (position-if-not #'(lambda (c)
-					  (find c "0123456789+-.,"))
-				      string
-				      :start (if first-digit first-digit 0))))
+         (first-digit (position-if #'(lambda (c)
+                                       (find c "0123456789+-.,"))
+                                   string))
+         (last-digit (position-if-not #'(lambda (c)
+                                          (find c "0123456789+-.,"))
+                                      string
+                                      :start (if first-digit first-digit 0))))
     (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit))) 1.0d0)))
 
 (defun find-value-from-choice (choice-nb choices)
   (let* ((choice-nb (parse-integer choice-nb :junk-allowed t))
-	 (choice (and choice-nb (elt choices choice-nb))))
+         (choice (and choice-nb (elt choices choice-nb))))
     (if choice
-      (first choice)
-      :choice-not-found)))
+        (first choice)
+        :choice-not-found)))
 
 (defvar *names-for-true* '("true" "1" "yes" "oui" "vrai" "t"))
 
@@ -268,20 +284,20 @@
 
 (defun parse-date (string)
   (let* ((pos1 (position #\/ string))
-	 (pos2 (when pos1 (position #\/ string :start (1+ pos1))))
-	 (pos3 (position #\Space string))
-	 (pos4 (when pos3 (position #\: string :start pos3)))
-	 (pos5 (when pos4 (position #\: string :start (1+ pos4)))))
+         (pos2 (when pos1 (position #\/ string :start (1+ pos1))))
+         (pos3 (position #\Space string))
+         (pos4 (when pos3 (position #\: string :start pos3)))
+         (pos5 (when pos4 (position #\: string :start (1+ pos4)))))
     (when (and pos1 pos2)
       (let ((n1 (parse-integer string :start 0 :end pos1 :junk-allowed t))
-	    (n2 (parse-integer string :start (1+ pos1) :end pos2 :junk-allowed t))
-	    (n3 (parse-integer string :start (1+ pos2) :junk-allowed t))
-	    (h (or (and pos3 (parse-integer string :start (1+ pos3) :junk-allowed t)) 0))
-	    (m (or (and pos4 (parse-integer string :start (1+ pos4) :junk-allowed t)) 0))
-	    (s (or (and pos5 (parse-integer string :start (1+ pos5) :junk-allowed t)) 0)))
-	(when (< n3 100) (incf n3 2000))
-	(unless (and n1 n2 n3 (<= 1 n2 12) (<= 0 h 23) (<= 0 m 59) (<= 0 s 59))
-	  (error "bad date : ~s" string))
+            (n2 (parse-integer string :start (1+ pos1) :end pos2 :junk-allowed t))
+            (n3 (parse-integer string :start (1+ pos2) :junk-allowed t))
+            (h (or (and pos3 (parse-integer string :start (1+ pos3) :junk-allowed t)) 0))
+            (m (or (and pos4 (parse-integer string :start (1+ pos4) :junk-allowed t)) 0))
+            (s (or (and pos5 (parse-integer string :start (1+ pos5) :junk-allowed t)) 0)))
+        (when (< n3 100) (incf n3 2000))
+        (unless (and n1 n2 n3 (<= 1 n2 12) (<= 0 h 23) (<= 0 m 59) (<= 0 s 59))
+          (error "bad date : ~s" string))
         (if *GMT-time*
             (encode-universal-time s m h n1 n2 n3 0)
             (encode-universal-time s m h n1 n2 n3))))))
@@ -292,36 +308,36 @@
     
 (defun std-string-to-value (string slot)
   (let* ((*read-eval* nil)
-	 (type (value-type slot))
-	 (unique-value (cons nil nil))
-	 (value unique-value)
-	 temp-value)
- ;   (ignore-errors
-      (if (choices slot)
-	(let ((slot-value (find-value-from-choice string (choices slot))))
-	  (unless (eq slot-value :choice-not-found)
-	    (setf value slot-value)))
-	(cond
-	  ((eq type :date) (setf value (parse-date string)))
-	  ((fc-class-p type) (setf value (decode-object-id string)))
-	  ((subtypep type 'string) (setf value string))
-	  ((subtypep type 'float)  (setf temp-value (string-to-float string t))
-	   (when (typep temp-value 'float)(setf value temp-value)))
-	  ((subtypep type 'integer)(setf temp-value (parse-integer string :junk-allowed t))
-	   (when (typep temp-value 'integer)(setf value temp-value)))
-	  ((subtypep type 'boolean) (setf value (not (null (member string *names-for-true* :test #'string-equal)))))
-	  (t (setf value (read-from-string string)))))
-      (if (eq value unique-value)
-	(values nil t)
-	(values value nil))))
+         (type (value-type slot))
+         (unique-value (cons nil nil))
+         (value unique-value)
+         temp-value)
+    ;;   (ignore-errors
+    (if (choices slot)
+        (let ((slot-value (find-value-from-choice string (choices slot))))
+          (unless (eq slot-value :choice-not-found)
+            (setf value slot-value)))
+        (cond
+          ((eq type :date) (setf value (parse-date string)))
+          ((fc-class-p type) (setf value (decode-object-id string)))
+          ((subtypep type 'string) (setf value string))
+          ((subtypep type 'float)  (setf temp-value (string-to-float string t))
+           (when (typep temp-value 'float)(setf value temp-value)))
+          ((subtypep type 'integer)(setf temp-value (parse-integer string :junk-allowed t))
+           (when (typep temp-value 'integer)(setf value temp-value)))
+          ((subtypep type 'boolean) (setf value (not (null (member string *names-for-true* :test #'string-equal)))))
+          (t (setf value (read-from-string string)))))
+    (if (eq value unique-value)
+        (values nil t)
+        (values value nil))))
 
 (defun setf-string-to-slot-value (object slot string)
   (when (symbolp slot)
-    (setf slot (find slot (class-slots (class-of object)) :key 'slot-definition-name)))
+    (setf slot (find slot (c2mop:class-slots (class-of object)) :key 'c2mop:slot-definition-name)))
   (when slot
     (multiple-value-bind (value ok)(safe-string-to-value string slot)
       (when ok
-	(funcall (fdefinition (list 'setf (meta::accessor slot))) value object)))))
+        (funcall (fdefinition (list 'setf (meta::accessor slot))) value object)))))
 
 ;;sql conversion functions. those functions take a value and a stream
 (defun safe-subtypep (type1 type2)
@@ -335,82 +351,85 @@
 
 (defun date-to-sql (value stream)
   (if value
-    (multiple-value-bind (s mn h d m y) 
-        (if *GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-      (format stream "'~4,'0d-~2,'0d-~2,'0d'" y m d))
-    (write-string "null" stream)))
+      (multiple-value-bind (s mn h d m y)
+          (if *GMT-time*
+              (decode-universal-time value 0)
+              (decode-universal-time value))
+        (declare (ignore s mn h))
+        (format stream "'~4,'0d-~2,'0d-~2,'0d'" y m d))
+      (write-string "null" stream)))
 
 (defun utime-to-sql (value stream)
   (if value
-    (multiple-value-bind (s mn h d m y) 
-        (if *GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-      (format stream "'~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d'" y m d h mn s))
-    (write-string "null" stream)))
+      (multiple-value-bind (s mn h d m y) 
+          (if *GMT-time* (decode-universal-time value 0)(decode-universal-time value))
+        (format stream "'~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d'" y m d h mn s))
+      (write-string "null" stream)))
 
 (defun unknown-to-sql (value s)
   (if value
-    (progn
-      (setf value (write-to-string value))
-      (write-char #\' s)
-      (loop with length = (length value)
-	    for start = 0 then (when stop (1+ stop))
-	    while (and start (< start length))
-	    for stop = (position #\' value :start start)
-	    do (write-string value s :start start :end stop)
-	    (when stop (write-string "''" s)))
-      (write-char #\' s))
-    (write-string "null" s)))
+      (progn
+        (setf value (write-to-string value))
+        (write-char #\' s)
+        (loop with length = (length value)
+           for start = 0 then (when stop (1+ stop))
+           while (and start (< start length))
+           for stop = (position #\' value :start start)
+           do (write-string value s :start start :end stop)
+             (when stop (write-string "''" s)))
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun string-to-sql (value s)
   (if value
-    (progn
-      (ignore-errors
-        (when (> (length value) 7500)
-          (setf value (subseq value 0 7500))))
-      (write-char #\' s)
-      (loop with length = (length value)
-	    for start = 0 then (when stop (1+ stop))
-	    while (and start (< start length))
-	    for stop = (position #\' value :start start)
-	    do (write-string value s :start start :end stop)
-	    (when stop (write-string "''" s)))
-      (write-char #\' s))
-    (write-string "null" s)))
+      (progn
+        (ignore-errors
+          (when (> (length value) 7500)
+            (setf value (subseq value 0 7500))))
+        (write-char #\' s)
+        (loop with length = (length value)
+           for start = 0 then (when stop (1+ stop))
+           while (and start (< start length))
+           for stop = (position #\' value :start start)
+           do (write-string value s :start start :end stop)
+             (when stop (write-string "''" s)))
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun ip-to-sql (value s)
   (if (and value (not (zerop (length value))))
       (progn
-	(write-char #\' s)
-	(write-string value s)
-	(write-char #\' s))
-    (write-string "null" s)))
+        (write-char #\' s)
+        (write-string value s)
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun symbol-to-sql (value s)
   (if value
-    (progn
-      (write-char #\' s)
-      (write-string (symbol-name value) s)
-      (write-char #\' s))
-    (write-string "null" s)))
+      (progn
+        (write-char #\' s)
+        (write-string (symbol-name value) s)
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun number-to-sql (value s)
   (when (floatp value)
     (setf value (float value 1.0d0)))
   (if value
-    (prin1 value s)
-    (write-string "null" s)))
+      (prin1 value s)
+      (write-string "null" s)))
 
 (defun fc-object-to-sql (value s)
   (if value
-    (prin1 (id value) s)
-    (write-string "null" s)))
+      (prin1 (id value) s)
+      (write-string "null" s)))
 
 (defun decimal-to-sql (value s &optional (format "'~,2f'"))
   (when (floatp value)
     (setf value (float value 1.0d0)))
   (if value
-    (format s format value)
-    (write-string "null" s)))
+      (format s format value)
+      (write-string "null" s)))
 
 (defun default-value-to-sql-fn (type slot)
   (cond
@@ -418,9 +437,9 @@
     ((eq type :date) 'date-to-sql)
     ((eq type :universal-time) 'utime-to-sql)
     ((eq type :decimal) 'decimal-to-sql
-        (let ((format (format nil "'~~,~df'" (nb-decimals slot))))
-	  (lambda (value stream)
-	    (decimal-to-sql value stream format))))
+     (let ((format (format nil "'~~,~df'" (nb-decimals slot))))
+       (lambda (value stream)
+         (decimal-to-sql value stream format))))
     ((eq type :ip-address) 'ip-to-sql)
     ((safe-subtypep type 'string) 'string-to-sql)
     ((eq type 'symbol) 'symbol-to-sql)
@@ -432,27 +451,27 @@
 
 (defun parse-iso-date (string)
   (if (stringp string)
-    (let ((length (length string)))
-      (if *GMT-time*
-          (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
-                                 (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
-                                 (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
-                                 (parse-integer string :start 8 :end 10)
-                                 (parse-integer string :start 5 :end 7)
-                                 (parse-integer string :start 0 :end 4)
-                                 0)
-          (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
-                                 (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
-                                 (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
-                                 (parse-integer string :start 8 :end 10)
-                                 (parse-integer string :start 5 :end 7)
-                                 (parse-integer string :start 0 :end 4))))
-    string))
+      (let ((length (length string)))
+        (if *GMT-time*
+            (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
+                                   (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
+                                   (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
+                                   (parse-integer string :start 8 :end 10)
+                                   (parse-integer string :start 5 :end 7)
+                                   (parse-integer string :start 0 :end 4)
+                                   0)
+            (encode-universal-time (if (>= length 19) (parse-integer string :start 17 :end 19) 0)
+                                   (if (>= length 16) (parse-integer string :start 14 :end 16) 0)
+                                   (if (>= length 13) (parse-integer string :start 11 :end 13) 0)
+                                   (parse-integer string :start 8 :end 10)
+                                   (parse-integer string :start 5 :end 7)
+                                   (parse-integer string :start 0 :end 4))))
+      string))
 
 (defun parse-sql-boolean (value)
   (if (characterp value)
-    (char-equal (aref value 0) #\t)
-    value))
+      (char-equal (aref value 0) #\t)
+      value))
 
 (defun parse-sql-symbol (value)
   (when value
@@ -465,13 +484,14 @@
 (defun parse-sql-unknown (value)
   (when value
     (if (stringp value)
-	(read-from-string value)
-	value)))
+        (read-from-string value)
+        value)))
 
 (defun parse-sql-ip (value)
   (if value value ""))
 
 (defun default-sql-to-value-fn (type slot)
+  (declare (ignore slot))
   (cond
     ((safe-subtypep type 'boolean) 'parse-sql-boolean)
     ((eq type :date) 'parse-iso-date)
@@ -482,8 +502,8 @@
     ((safe-subtypep type 'number) 'identity)
     ((fc-class-p type) 'parse-sql-obj)
     ((eq type t) 'parse-sql-unknown)
-    (t ;(format t "Error unkown type : ~a assuming fc-object~%" type)
-       'parse-sql-obj)))
+    (t                                  ;(format t "Error unkown type : ~a assuming fc-object~%" type)
+     'parse-sql-obj)))
 
 ;;string conversion functions. those functions take a value and a stream
 
@@ -492,225 +512,224 @@
 
 (defun date-to-string (value stream)
   (if value
-    (utime-to-string-date value stream)
-    (write-string "null" stream)))
+      (utime-to-string-date value stream)
+      (write-string "null" stream)))
 
 (defun utime-to-string (value stream)
   (if value
-    (utime-to-string-time value stream)
-    (write-string "null" stream)))
+      (utime-to-string-time value stream)
+      (write-string "null" stream)))
 
-(defun string-to-string (value s)
+#+nil(defun string-to-string (value s) ;; FIXME function redefined later
   (if value
-    (progn
-      (write-char #\' s)
-      (loop with length = (length value)
-	    for start = 0 then (when stop (1+ stop))
-	    while (and start (< start length))
-	    for stop = (position #\' value :start start)
-	    do (write-string value s :start start :end stop)
-	    (when stop (write-string "''" s)))
-      (write-char #\' s))
-    (write-string "null" s)))
+      (progn
+        (write-char #\' s)
+        (loop with length = (length value)
+           for start = 0 then (when stop (1+ stop))
+           while (and start (< start length))
+           for stop = (position #\' value :start start)
+           do (write-string value s :start start :end stop)
+             (when stop (write-string "''" s)))
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun symbol-to-string (value s)
   (if value
-    (progn
-      (write-char #\' s)
-      (write-string (symbol-name value) s)
-      (write-char #\' s))
-    (write-string "null" s)))
+      (progn
+        (write-char #\' s)
+        (write-string (symbol-name value) s)
+        (write-char #\' s))
+      (write-string "null" s)))
 
 (defun number-to-string (value s)
   (when (floatp value)
     (setf value (float value 1.0d0)))
   (if value
-    (prin1 value s)
-    (write-string "null" s)))
+      (prin1 value s)
+      (write-string "null" s)))
 
 (defun fc-object-to-string (value s)
   (if value
-    (prin1 (id value) s)
-    (write-string "null" s)))
+      (prin1 (id value) s)
+      (write-string "null" s)))
 
 (defun decimal-to-string (value s &optional (format "'~,2f'"))
   (when (floatp value)
     (setf value (float value 1.0d0)))
   (if value
-    (format s format value)
-    (write-string "null" s)))
+      (format s format value)
+      (write-string "null" s)))
 
 (defun translated-choice-value (slot obj &optional (country *country-language*))
+  (declare (ignore country))
   (let* ((slot (if (symbolp slot)
-		   (find slot (class-slots (class-of obj)) :key 'slot-definition-name)
-		   slot))
-	 (value (when slot (funcall (fdefinition (accessor slot)) obj)))
-	 (choice (find value (meta::choices slot) :key #'first :test #'equal)))
+                   (find slot (c2mop:class-slots (class-of obj)) :key 'c2mop:slot-definition-name)
+                   slot))
+         (value (when slot (funcall (fdefinition (accessor slot)) obj)))
+         (choice (find value (meta::choices slot) :key #'first :test #'equal)))
     (when choice
       (translate (second choice)))))
 
 (defun default-value-to-string-fn (type slot)
+  (declare (ignore slot))
   (cond
     ((safe-subtypep type 'boolean) #'(lambda(value stream)
-				  (write-string (if value "true" "false") stream)))
+                                       (write-string (if value "true" "false") stream)))
     ((eq type :date) #'(lambda (value stream)
-			 (if value
-			   (utime-to-string-date value stream)
-			   (write-string "null" stream))))
+                         (if value
+                             (utime-to-string-date value stream)
+                             (write-string "null" stream))))
     ((eq type :universal-time) #'(lambda (value stream)
-			 (if value
-			   (utime-to-string-time value stream)
-			   (write-string "null" stream))))
+                                   (if value
+                                       (utime-to-string-time value stream)
+                                       (write-string "null" stream))))
     ((safe-subtypep type 'string) #'(lambda (value s)
-				 (if value
-				   (progn
-				     (write-char #\' s)
-				     (loop with length = (length value)
-					   for start = 0 then (when stop (1+ stop))
-					   while (and start (< start length))
-					   for stop = (position #\' value :start start)
-					   do (write-string value s :start start :end stop)
-					   (when stop (write-string "''" s)))
-				     (write-char #\' s))
-				   (write-string "null" s))))
+                                      (if value
+                                          (progn
+                                            (write-char #\' s)
+                                            (loop with length = (length value)
+                                               for start = 0 then (when stop (1+ stop))
+                                               while (and start (< start length))
+                                               for stop = (position #\' value :start start)
+                                               do (write-string value s :start start :end stop)
+                                                 (when stop (write-string "''" s)))
+                                            (write-char #\' s))
+                                          (write-string "null" s))))
     ((eq type 'symbol) #'(lambda (value s)
-			   (if value
-			     (progn
-			       (write-char #\' s)
-			       (write-string (symbol-name value) s)
-			       (write-char #\' s))
-			     (write-string "null" s))))
+                           (if value
+                               (progn
+                                 (write-char #\' s)
+                                 (write-string (symbol-name value) s)
+                                 (write-char #\' s))
+                               (write-string "null" s))))
     ((safe-subtypep type 'number) #'(lambda (value s)
                                       (when (floatp value)
                                         (setf value (float value 1.0d0)))
-				      (if value
-					(prin1 value s)
-					(write-string "null" s))))
+                                      (if value
+                                          (prin1 value s)
+                                          (write-string "null" s))))
     ((fc-class-p type) #'(lambda (value s)
-			   (if value
-			     (prin1 (id value) s)
-			     (write-string "null" s))))
+                           (if value
+                               (prin1 (id value) s)
+                               (write-string "null" s))))
     ((eq type t) #'(lambda (value s)
-		     (if value
-		       (progn
-			 (write-char #\' s)
-			 (prin1 value s)
-			 (write-char #\' s))
-		       (write-string "null" s))))
+                     (if value
+                         (progn
+                           (write-char #\' s)
+                           (prin1 value s)
+                           (write-char #\' s))
+                         (write-string "null" s))))
     (t ;(format t "Error unkown type : ~a assuming fc-object~%" type)
      #'(lambda (value s)
-	 (if value
-	   (prin1 (id value) s)
-	   (write-string "null" s))))))
+         (if value
+             (prin1 (id value) s)
+             (write-string "null" s))))))
 
 ;;; String to Value
 
 (defun string-choice-to-value (string choices null-allowed)
   (if (and null-allowed (string-equal string "nil"))
-    nil
-    (find-value-from-choice string choices)))
+      nil
+      (find-value-from-choice string choices)))
 
 (defun string-to-boolean (string null-allowed)
+  (declare (ignore null-allowed))
   (not (null (member string *names-for-true* :test #'string-equal))))
 
 (defun string-to-date (string null-allowed)
   (if (and null-allowed (or (string-equal string "nil")(string-equal string "")))
-    nil
-    (parse-date string)))
+      nil
+      (parse-date string)))
 
 (defun string-to-utime (string null-allowed)
   (if (and null-allowed (or (string-equal string "nil")(string-equal string "")))
-    nil
-    (parse-date string)))
+      nil
+      (parse-date string)))
 
 (defun string-to-ip (string null-allowed)
   (if (and null-allowed (or (string-equal string "nil")(zerop (length string))))
-    ""
-    string))
+      ""
+      string))
 
 (defun string-to-string (string null-allowed)
   (if (and null-allowed (string-equal string "nil"))
-    nil
-    string))
+      nil
+      string))
 
 (defun string-to-symbol (string null-allowed)
   (if (and null-allowed (string-equal string "nil"))
-    nil
-    (intern string :keyword)))
+      nil
+      (intern string :keyword)))
 
 (defun string-to-integer (string null-allowed)
-  (if (and null-allowed (or (string-equal string "nil")(string-equal string "")))
-    nil
+  (unless (and null-allowed (or (string-equal string "nil") (string-equal string "")))
     (let ((integer (parse-integer string :junk-allowed t)))
       (if integer
-	integer
-	(error "~s is not an integer" string)))))
+          integer
+          (error "~s is not an integer" string)))))
 
 (defun string-to-float (string &optional null-allowed)
-  (if (and null-allowed (string-equal string "nil"))
-    nil
+  (unless (and null-allowed (string-equal string "nil"))
     (let* ((*read-eval* nil)
-	   (first-digit (position-if #'(lambda (c)
-					 (find c "0123456789+-.,"))
-				     string))
-	   (last-digit (position-if-not #'(lambda (c)
-					    (find c "0123456789+-.,"))
-					string
-					:start (if first-digit first-digit 0))))
+           (first-digit (position-if #'(lambda (c)
+                                         (find c "0123456789+-.,"))
+                                     string))
+           (last-digit (position-if-not #'(lambda (c)
+                                            (find c "0123456789+-.,"))
+                                        string
+                                        :start (if first-digit first-digit 0))))
       (float (read-from-string (nsubstitute #\. #\, (subseq string first-digit last-digit))) 1.0d0))))
 
 (defun string-to-number (string null-allowed)
-  (if (and null-allowed (string-equal string "nil"))
-    nil
+  (unless (and null-allowed (string-equal string "nil"))
     (let* ((*read-eval* nil)
-	   (value (read-from-string (substitute #\. #\, string))))
+           (value (read-from-string (substitute #\. #\, string))))
       (if (numberp value)
-	value
-	(error "~s is not a number" value)))))
+          value
+          (error "~s is not a number" value)))))
 
 (defun string-to-fc-object (string null-allowed)
-  (if (and null-allowed (string-equal string "nil"))
-    nil
+  (unless (and null-allowed (string-equal string "nil"))
     (decode-object-id string)))
 
 (defun default-string-to-value-fn (type slot)
   (let ((choices (choices slot))
-	(null-allowed (null-allowed slot)))
+        (null-allowed (null-allowed slot)))
     (cond
       ((choices slot) #'(lambda (string)
-			  (string-choice-to-value string choices null-allowed)))
+                          (string-choice-to-value string choices null-allowed)))
       ((safe-subtypep type 'boolean) #'(lambda (string)
-					 (string-to-boolean string null-allowed)))
+                                         (string-to-boolean string null-allowed)))
       ((eq type :date) #'(lambda (string)
-			   (string-to-date string null-allowed)))
+                           (string-to-date string null-allowed)))
       ((eq type :universal-time) #'(lambda (string)
-				     (string-to-utime string null-allowed)))
+                                     (string-to-utime string null-allowed)))
       ((eq type :decimal) #'(lambda (string)
-			      (string-to-decimal string null-allowed)))
+                              (string-to-decimal string null-allowed)))
       ((eq type :ip-address) #'(lambda (string)
-					(string-to-ip string null-allowed)))
+                                 (string-to-ip string null-allowed)))
       ((safe-subtypep type 'string) #'(lambda (string)
-					(string-to-string string null-allowed)))
+                                        (string-to-string string null-allowed)))
       ((safe-subtypep type 'float) #'(lambda (string)
-				       (string-to-float string null-allowed)))
+                                       (string-to-float string null-allowed)))
       ((eq type 'symbol) #'(lambda (string)
-			     (string-to-symbol string null-allowed)))
+                             (string-to-symbol string null-allowed)))
       ((eq type 'integer) #'(lambda (string)
-			     (string-to-integer string null-allowed)))
+                              (string-to-integer string null-allowed)))
       ((eq type 'number) #'(lambda (string)
-			     (string-to-number string null-allowed)))
+                             (string-to-number string null-allowed)))
       ((fc-class-p type) #'(lambda (string)
-			     (string-to-fc-object string null-allowed)))
-      (t ;(format t "Error unkown type : ~a assuming fc-object~%" type)
+                             (string-to-fc-object string null-allowed)))
+      (t ; (format t "Error unkown type : ~a assuming fc-object~%" type)
        #'(lambda (string)
-	   (string-to-fc-object string null-allowed)))
+           (string-to-fc-object string null-allowed)))
       )))
 
 (defun safe-string-to-value (string slot)
   (let ((ok nil)
-	(value nil))
+        (value nil))
     (ignore-errors
       (setf value (funcall (string-to-value-fn slot) string)
-	    ok t))
+            ok t))
     (values value ok)))
 

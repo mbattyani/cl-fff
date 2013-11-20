@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defun write-header-line (socket key value)
   (write-string key socket)
@@ -50,7 +50,7 @@
 (defun decode-search-params (url)
   (let* ((params (html::parse-url-search-part url))
 	 (fdata (cdr (assoc "fdata" params :test #'equal))))
-    (when fdata (setf fdata (read-from-string (html:decode-url-string fdata))))
+    (when fdata (setf fdata (read-from-string (decode-url-string fdata))))
     (acons :fdata fdata params)))
 
 (defparameter *country-items* '(:en ("en" "/sen.gif" "Switch to English")
@@ -68,16 +68,17 @@
 (defun language-choices ()
   (html:html ((:form "method" "GET")
 ;  (html:html (:table
-	      ((:input "type" "hidden" "name" "fdata" "value" #.(html:encode-url-string "(:post \"switch-lang\")")))
+	      ((:input "type" "hidden" "name" "fdata" "value" #.(encode-url-string "(:post \"switch-lang\")")))
 	      (loop for country in *country-items* by 'cddr
 		    do (language-choice country)))))
 
 (defmacro with-html-page (args &body forms)
-  (destructuring-bind (stream &key no-header title style-sheet description keywords script-lib icon 
-			      (encoding "text/html; charset=ISO-8859-1")) args
+  (destructuring-bind (stream &key no-header title style-sheet description keywords script-lib icon
+			      (encoding "text/html; charset=UTF-8")) args
+    (declare (ignore no-header))
     `(progn
-      (html::html-to-stream ,stream "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >"
-       (:html (:head 
+      (html::html-to-stream ,stream "<!doctype html>"
+       (:html (:head
 	       ,@(when icon `(((:link :rel "Shortcut icon" :href ,icon))))
 	       ,@(when title `((:title ,title)))
 	       ,@(when style-sheet `(((:link :rel "stylesheet" :type "text/css" :href ,style-sheet))))
@@ -142,10 +143,12 @@
                  (write-char #\- stream)
                  (write-char #\+ stream))
              (when (< (abs hours) 10) (write-char #\0 stream))
-             (write-positive-fixnum (abs hours) 10 stream)
+             (error "write-positive-fixnum undefined!")
+             ;(write-positive-fixnum (abs hours) 10 stream)
              (let ((mins (abs (truncate sec 60))))
                (when (< mins 10) (write-char #\0 stream))
-               (write-positive-fixnum mins 10 stream)))))
+               (error "write-positive-fixnum undefined!")
+               #+nil(write-positive-fixnum mins 10 stream)))))
     (declare (inline gmt-offset))
     (multiple-value-bind (secs mins hours day month year weekday daylight-savings timezone)
         (if time-zone

@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defparameter *layouts* `(:html make-html-layout :view make-object-view-layout
 			  :h make-horizontal-layout :v make-vertical-layout :g make-group-layout
@@ -52,7 +52,7 @@
       (push view (view-layouts object-view)))
     (let ((*country-language* country-language)
 	  (*root-item* (make-instance 'page-root))
-	  (*top-level-item* (make-instance 'ui-root :border :etched :text "Démo Fractal Concept" :view-layout view)))
+	  (*top-level-item* (make-instance 'ui-root :border :etched :text "DÃ©mo Fractal Concept" :view-layout view)))
       (setf (page-root view) *root-item*)
       (let ((root *top-level-item*))
 	(setf (html-func *root-item*) #'(lambda (socket) (let ((html::*html-stream* socket))

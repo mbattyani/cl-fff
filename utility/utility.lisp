@@ -319,3 +319,10 @@ with their key-extraction function.")
      current))))
 
 (export 'ap)
+
+(defun build-symbol (&rest things)
+  "Return a symbol in current package with a name assembled from things"
+  (intern
+   (format nil "~@:(~{~A~}~)" things)))
+
+(export 'build-symbol)

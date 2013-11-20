@@ -1,11 +1,14 @@
-(in-package html)
+(in-package #:html)
+
+(defun dc-string (obj)
+  (string-downcase (string obj)))
 
 (defun join-strings (forms string result)
   (let* ((form (first forms))
-	 (new-string (or (and (eq (first form) 'write-string)(stringp (second form))
-			      (eq (third form) '*html-stream*)(second form))
-			 (and (eq (first form) 'write-char)(typep (second form) 'base-char)
-			      (eq (third form) '*html-stream*)(make-string 1 :initial-element (second form))))))
+	 (new-string (or (and (eq (first form) 'write-string) (stringp (second form))
+			      (eq (third form) '*html-stream*) (second form))
+			 (and (eq (first form) 'write-char) (typep (second form) 'base-char)
+			      (eq (third form) '*html-stream*) (make-string 1 :initial-element (second form))))))
     (setf forms (rest forms))
     (if string
       (if (not new-string)
@@ -16,11 +19,11 @@
 	(setf string new-string)))
     (when (and (null forms) new-string)
       (push (list 'write-string string '*html-stream*) result))
-    (when (and form (not new-string)(not string))
+    (when (and form (not new-string) (not string))
       (push form result))
     (cond
-      ((not forms)(nreverse result))
-      ((not new-string)(join-strings forms nil result))
+      ((not forms) (nreverse result))
+      ((not new-string) (join-strings forms nil result))
       (t (join-strings forms string result)))))
 
 (defun %optimize-progn (forms)
@@ -62,17 +65,18 @@
   (values (gethash tag *empty-table*)))
 
 (defmacro define-empty-tags (&rest tags)
-  `(loop for tag in ',tags
-    do (setf (gethash tag *empty-table*) tag)
-    finally (return ',tags)))
+  `(loop
+      for tag in ',tags
+      do (setf (gethash tag *empty-table*) tag)
+      finally (return ',tags)))
 
-(define-empty-tags :br :hr :crlf :input :link :img :meta)
+(define-empty-tags :br :hr :crlf :input :link :img :meta :!doctype)
 
 (defmethod html-gen ((form cons))
    (let ((elt (first form)))
-     (if (or (keywordp elt)(stringp elt)
+     (if (or (keywordp elt) (stringp elt)
 	     (and (consp elt)
-		  (or (keywordp (first elt))(stringp (first elt)))))
+		  (or (keywordp (first elt)) (stringp (first elt)))))
        (let ((tag (if (consp elt) (first elt) elt))
 	     (attributes (if (consp elt) (rest elt) nil)))
 	 (cond
@@ -83,20 +87,20 @@
 	    (funcall (func-tag tag) attributes (rest form)))
 	   (t `(optimize-progn
 		,(open-tag tag attributes)
-		,@(mapcar #'(lambda (e) (html-gen e))(rest form))
+		,@(mapcar #'(lambda (e) (html-gen e)) (rest form))
 		,(close-tag tag)))))
        form)))
 
 (defmethod html-gen ((form symbol))
- (when form
-   (if (keywordp form)
-     (cond
-       ((empty-tag-p form) (open-tag form nil))
-       ((func-tag form)(funcall (func-tag form) nil nil))
-       (t `(optimize-progn
-	    ,(open-tag form nil)
-	    ,(close-tag form))))
-     `(princ ,form *html-stream*))))
+  (when form
+    (if (keywordp form)
+        (cond
+          ((empty-tag-p form) (open-tag form nil))
+          ((func-tag form) (funcall (func-tag form) nil nil))
+          (t `(optimize-progn
+                ,(open-tag form nil)
+                ,(close-tag form))))
+        `(princ ,form *html-stream*))))
 
 (defmethod html-gen ((form string))
  `(write-string ,form *html-stream*))
@@ -108,10 +112,10 @@
   `(princ ,form *html-stream*))
 
 (defmethod open-tag ((tag symbol) (attributes (eql nil)))
- `(write-string ,(format nil "<~A>" (substitute #\: #\. (string tag))) *html-stream*))
+ `(write-string ,(format nil "<~A>" (substitute #\: #\. (dc-string tag))) *html-stream*))
 
 (defmethod open-tag ((tag string) (attributes (eql nil)))
- `(write-string ,(format nil "<~A>" (substitute #\: #\. (string tag))) *html-stream*))
+ `(write-string ,(format nil "<~A>" (substitute #\: #\. (dc-string tag))) *html-stream*))
 
 (defvar *func-attr-table* (make-hash-table))
 
@@ -123,7 +127,7 @@
 
 (defmethod open-tag (tag (attributes cons))
  `(optimize-progn
-   (write-string ,(format nil "<~a" (substitute #\: #\. (string tag))) *html-stream*)
+   (write-string ,(format nil "<~a" (substitute #\: #\. (dc-string tag))) *html-stream*)
    ,@(loop with forms
 	   for attr = attributes then (cddr attr)
 	   while attr
@@ -137,21 +141,29 @@
 	      (setf forms (nconc (reverse (funcall (func-attr attribute) value)) forms)))
 	     (t (cond
 		  ((stringp value)
-		   (push `(write-string ,(format nil " ~a=\"~a\"" (string attribute) value) *html-stream*) forms))
+		   (push `(write-string ,(format nil " ~a=\"~a\"" (dc-string attribute) value) *html-stream*) forms))
+                  #+nil((and (listp value)
+                       (eq (car value) :ps))
+                   (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
+                   (push `(write-string ,(funcall #'ps:ps* (cadr value)) *html-stream*) forms)
+                   (push `(write-char #\" *html-stream*) forms)
+                   )
 		  (value
-		   (push `(write-string ,(format nil " ~a=\"" (string attribute)) *html-stream*) forms)
+		   (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
 		   (push `(write-string-quoting-specials ,value) forms)
 		   (push `(write-char #\" *html-stream*) forms))
 		  (t (push `(write-char #\Space *html-stream*) forms)
-		     (push `(write-string ,(string attribute) *html-stream*) forms)))))
+		     (push `(write-string ,(dc-string attribute) *html-stream*) forms)))))
 	   finally return (nreverse forms))
+
    (write-char #\> *html-stream*)))
 
 (defmethod open-tag ((tag (eql :crlf)) attributes)
+  (declare (ignore attributes))
   `(write-string +crlf+ *html-stream*))
 
 (defun close-tag (tag)
-  `(write-string ,(format nil "</~A>" (substitute #\: #\. (string tag))) *html-stream*))
+  `(write-string ,(format nil "</~A>" (substitute #\: #\. (dc-string tag))) *html-stream*))
 
 (defmacro html-to-stream (stream &rest forms)
   `(let ((*html-stream* ,stream)) (html ,@forms)))

@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defvar *next-id* 1000)
 (defvar *current-sub-object-path* nil)
@@ -26,7 +26,8 @@
 ;  (setf (name page) (format nil "P~a" (id page)))
 ;  (setf (gethash (name page) *all-page-roots*) page))
 
-(defvar *default-disabled-p-fn* #'(lambda (obj slot) nil))
+(defvar *default-disabled-p-fn* #'(lambda (obj slot)
+                                    (declare (ignore obj slot)) nil))
 
 (defclass html-item ()
   ((name     :initform nil :accessor name :type string)
@@ -208,8 +209,8 @@
    ))
 
 ;; Std ListBox class
-
-(defclass list-box (ui-item)
+;; already defined
+#+nil(defclass list-box (ui-item) 
   (
    ))
 

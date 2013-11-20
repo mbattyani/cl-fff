@@ -21,25 +21,30 @@
 (defmethod meta::short-description ((obj project))
     (if (plusp (length (name obj))) (name obj) "(no name)"))
 
-(interface::add-named-url "/asp/new-project.html"
+(interface::add-named-url "/new-project.html"
   #'(lambda (request)
       (let* ((project (make-instance 'project :store *meta-store*)))
+        (push project *projects-list*)
 	(interface::redirect-to (interface::encode-object-url project) request))
       t))
 
-(defun project-list()
-  (sort (mapcar #'(lambda (x)
-                    (meta::load-object (first x) meta-web::*meta-store*))
-                (sql:query "select id from project"))
-        #'string< :key #'meta-web::name))
+(defun project-list ()
+  (or *projects-list*
+      (sort (mapcar #'(lambda (x)
+                        (meta::load-object (first x) meta-web::*meta-store*))
+                    (sql:query "select id from project"))
+            #'string< :key #'meta-web::name)))
 
-(defun html-project-list()
+(defun html-project-list ()
   (html:html
-   (loop for project in (project-list)
-         do (html:html ((:a :href (interface::encode-object-url project))
-                        (:esc (meta::short-description project))) ": "
-                        (:i (:insert-string (description project))) :br))
-   :br ((:a :href "/asp/new-project.html") "New projet")))
+    (loop
+       for project in (project-list)
+       when project
+       do
+         (html:html ((:a :href (interface::encode-object-url project))
+                     (:esc (meta::short-description project))) ": "
+                     (:i (:insert-string (description project))) :br))
+    :br ((:a :href "/new-project.html") "New projet")))
 
 (defparameter *meta-web-classes*
   '(slot-info class-info project choice-value user-group translated-string sql-list
@@ -121,7 +126,7 @@ rankdir=LR;
 		      (unless (and class-list-supplied (not (member super class-list)))
 			(format s "~s -> ~s [color=blue,labelfontcolor=blue,label=\"subclass\"];~%"
 				(name super) (name class))))
-		(loop for slot in (direct-slots class) 
+		(loop for slot in (direct-slots class)
 		      for object-type = (object-type slot) do
 		      (when (and (eq (value-type slot) :object)
 				 (not (and class-list-supplied (not (member object-type class-list)))))
@@ -228,18 +233,17 @@ rankdir=LR;
 (defun view-group-classes-source (group &optional pathname)
   (let* ((*package* (ensure-package (project-package (project group))))
 	 (*print-right-margin* 2000)
+         (*print-readably* t)
 	 (file-id (interface::make-session-id))
 	 (src-file (or pathname (concatenate 'string *graph-file-prefix* file-id ".lisp"))))
     (with-open-file (s src-file :direction :output :if-exists :supersede)
       (format s "(in-package ~s)~%" (package-name *package*))
-      (format s "
-(defvar *~a-classes-list* '~a)
-
+      (format s
+              "~%(defvar *~a-classes-list* '~a)~%
 (defun create-~a-classes (store)
   (dolist (class *~a-classes-list*)
-     (meta::create-class-table store (find-class class))))
+     (meta::create-class-table store (find-class class))))~%"
 
-"
 	      (name group)
 	      (mapcar 'name (remove-if-not 'instanciable (classes group)))
 	      (name group)
@@ -252,7 +256,7 @@ rankdir=LR;
 
 (defun make-update-file (proj)
   (make-update-project-fn proj nil (concatenate 'string	(sources-directory proj) "upgrade-database.lisp")))
-    
+
 (defmethod gen-lisp-files ((group class-group) &optional (make-update t))
   (view-group-classes-source
    group
@@ -299,7 +303,7 @@ rankdir=LR;
       (funcall fn class))))
 
 (make-instance 'interface::object-view :object-class 'project
-	       :country-languages '(:en :fr) :name "proj-v" :source-code 
+	       :country-languages '(:en :fr) :name "proj-v" :source-code
   `((:table
      (:tr
       (:td ((:tab :class "tabf")
@@ -334,7 +338,24 @@ rankdir=LR;
 		   ((:td :class "dvch2" :colspan "2")
 		    ((:slot-list sql-lists :height "500px" :class "dvl")
 		     (:table (:tr ((:td :class "dvch2") "SQL lists"))))))))))
-      (:td (:obj-fn-table))))))
+      (:td (:obj-fn-table))))
+    (:on-off
+      ((:a :href "#")
+       ((:img :src "/static/arblue.gif" :width "9" :height "9")) "&nbsp;Hide export ")
+      ((:a :href "#")
+       ((:img :src "/static/arblue.gif" :width "9" :height "9")) "&nbsp;Export this project to an ascii store" :br)
+      "To export this project, restart a fresh lisp and type" :br
+      (:code
+       "(ql:quickload :fw-web)" :br
+       "(in-package fcw)" :br
+       "(start)" :br
+       "(move-store-to-ascii-store [path to store] " :br
+       "&nbsp;&nbsp;&nbsp;&nbsp;"
+       (:fformat "   (meta::load-object ~d  meta-web::*meta-store*))" (meta::id interface::*object*)) :br :br)
+      "Then to start the framework gui on that new store, restart a fresh lisp and type" :br
+      (:code "(ql:quickload :fw-web)" :br
+             "(in-package fcw)" :br
+             "(start [path to store])"))))
 
 (defun gen-asdf-file (project)
   (with-open-file (s (format nil "~a~a.asd1"
@@ -343,7 +364,7 @@ rankdir=LR;
 		     :direction :output :if-exists :supersede)
     (format s ";;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 
-(in-package asdf) 
+(in-package asdf)
 
 (defsystem :~a
     :name ~s

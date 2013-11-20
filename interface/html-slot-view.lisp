@@ -1,10 +1,11 @@
-(in-package interface)
+(in-package #:interface)
 
 ;;; ***** slot-name ************
 
 (defun slot-name-tag (attributes form)
-  (let ((slot (find (symbol-name (first form)) (clos:class-slots *current-class*)
-		    :test #'string= :key #'clos:slot-definition-name)))
+  (declare (ignore attributes))
+  (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
+		    :test #'string= :key #'c2mop:slot-definition-name)))
     (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
     `(write-string ,(get-user-name slot) html:*html-stream*)))
 
@@ -34,14 +35,14 @@
 	(concatenate 'string "x_.f8252s('" (name item) "');"))))
 
 (defun slot-edit-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible)))
-	     (name nil)
-	     (fire nil))
+             )
 	(remf attrs :force-visible)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
@@ -75,9 +76,10 @@
   )
 
 (defun slot-span-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let* ((edit (make-instance 'html-span :tooltip (meta::tooltip slot)
                                              :slot slot :format-fn (getf attrs :format-fn))))
@@ -92,9 +94,10 @@
   ())
 
 (defun slot-medit-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((edit (make-instance 'html-medit :tooltip (meta::tooltip slot) :slot slot
 				 :force-visible (getf attrs :force-visible))))
@@ -135,9 +138,10 @@
 		     "x_.fgt('" (name item) "l').style.visibility='inherit';"))))
 
 (defun slot-date-edit-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((edit (make-instance 'html-date :tooltip (meta::tooltip slot) :slot slot
 				 :show-time (getf attrs :show-time))))
@@ -146,18 +150,25 @@
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
-			   ((:a :id ,(concatenate 'string (name edit) "l")
-				:href ,(format nil "javascript:open1('/asp/calendar.html', '250px', '280px', '~a')"
+			   #+nil ((:a :id ,(concatenate 'string (name edit) "l")
+				:href ,(format nil "javascript:open1('/calendar.html', '250px', '280px', '~a')"
 					       (name edit))) (:translate '(:en "calendar" :fr "calendrier" :sp "calendario")))
-			   )
+                           " "
+                           ((:a :id ,(concatenate 'string (name edit) "l") :href "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit)))
+                            "Change...")
+                           ((:div :id "openModalCalendar" :class "modalDialog")
+                            (:div
+                             ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
+                             (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe"))))))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
 
 (defun first-week-day (month year)
-  (multiple-value-bind (s m h d m y dw)
+  (multiple-value-bind (sec min hr d m y dw)
       (decode-universal-time 
        (encode-universal-time 1 1 1 1 month year 0) 0)
+    (declare (ignore sec min hr d m y))
     dw))
 
 (defun last-day (month year)
@@ -192,8 +203,9 @@
 		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
 		  "');")))
     (html:html
-     (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
+     #+nil (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
+     (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.document.getElementById('close').click();};")
      ((:table :class "calt" :align "center")
       (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
              (html:html ((:th :class "calh") day))))
@@ -222,6 +234,7 @@
 	     (*session* (session link))
 	     (*user* (user *session*))
 	     (*country-language* (country-language *session*)))
+        ; (break)
 	(setf year  (when year (parse-integer year)))
 	(setf month (when month (parse-integer month)))
 	(setf hour (when hour (parse-integer hour :junk-allowed t)))
@@ -246,11 +259,11 @@
 	   (:html
 	    (:head
 	     (:title (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-	     ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	     ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
 	    (:body
 	     :br
 	     (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-	     ((:form :name "go" :method "post" :action "/asp/calendar.html")
+	     ((:form :name "go" :method "post" :action "/calendar.html")
 	      ((:input :name "item" :type "hidden" :value item))
 	      ((:div :align "center")
 	       ((:input :name "link" :type "hidden" :value link-name))
@@ -287,7 +300,7 @@
 	      ))))))
       t)
 
-(interface::add-named-url "/asp/calendar.html" 'calendar-request-handler)
+(interface::add-named-url "/calendar.html" 'calendar-request-handler)
 
 ;;; ***** Combo *************
 (defclass html-combo (html-item)
@@ -299,12 +312,13 @@
     (html:fast-format nil "x_.fgt('~a').selectedIndex='~a';" (name item) position)))
 
 (defun slot-combo-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((combo (make-instance 'html-combo :tooltip (meta::tooltip slot) :slot slot))
-	    (choices (loop for (value string) in (meta::choices slot) collect (meta::translate string))))
+	    (choices (loop for (nil string) in (meta::choices slot) collect (meta::translate string)))) ;value
 	`(html:html
 	  ((:select :id ,(name combo)
 	    :insert-string
@@ -327,9 +341,10 @@
   (html:fast-format nil "x_.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
 (defun slot-check-box-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((check-box (make-instance 'html-check-box :tooltip (meta::tooltip slot) :slot slot)))
 	`(html:html ((:input :type "checkbox" :id ,(name check-box)
@@ -388,85 +403,92 @@
 
 (defmethod slot-list-action-fn (object value click-str)
   (let* ((slot (slot *dispatcher*))
+         (*dispatcher* *dispatcher*)
 	 (list (funcall (get-value-fn *dispatcher*) object))
-	 (list-length (length list)))
+	 (list-length (length list)))    
     (if (item-state *dispatcher*)
         (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
                (list (funcall (get-value-fn *dispatcher*) object)))
           (if (plusp value)
               (funcall (set-value-fn *dispatcher*) (cons choice list) object)
               (funcall (set-value-fn *dispatcher*) (delete choice list) object)))
-(progn
-    (collect-selected-objects-idx (when (find #\= click-str) (subseq click-str (1+ (position #\= click-str)))))
-    (if (<= -4 value -1)
-	(let ((start (start *dispatcher*))
-	      (max-nb (max-nb *dispatcher*)))
-	  (case value
-	    (-1 (setf start 0))
-	    (-2 (setf start (max 0 (- start max-nb))))
-	    (-3 (when (< (+ start max-nb) list-length)(incf start max-nb)))
-	    (-4 (setf start (* max-nb (truncate list-length max-nb)))))
-	  (when (/= start (start *dispatcher*))
-	    (setf (start *dispatcher*) start)
-	    (mark-dirty-value *dispatcher*)))
-        (if (and (= value -8) *user*) ; copy
-            (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
-            (when (modifiable-p *dispatcher*)
-              (cond
-                ((or (not value) (<= 0 value 10000))
-                 (unless (sub-classes *dispatcher*)
-                   (setf (sub-classes *dispatcher*)
-                         (remove-if-not 'visible-p (meta::instanciable-sub-classes (meta::value-type slot)))))
-                 (when (= (length (sub-classes *dispatcher*)) 1)
-                   (setf value 1))
-                 (if (> value 0)
-                     (let ((new-obj
-                            (make-instance (elt (sub-classes *dispatcher*) (1- value))
-                                           :parent (unless (meta::linked-value slot) object)
-                                           :store (meta::object-store object))))
-                       (when (meta::process-new-object-fn slot)
-                         (setf new-obj (funcall (meta::process-new-object-fn slot) new-obj object)))
-                       (funcall (set-value-fn *dispatcher*) (if (meta::new-objects-first slot)
-                                                                (cons new-obj list)
-                                                                (nconc list (list new-obj)))
-                                object)
-                       (send-url-to-interface (encode-object-url new-obj) (interface *dispatcher*)))
-                     (send-to-interface
-                      (html:fast-format nil "x_.open1('/asp/obj-new.html', '250px', '250px', '~a');"
-                                        (name (item *dispatcher*))))))
-                ((= value -5) ; (not (find 0 (selected-objects-idx *dispatcher*))))
-                 (dolist (idx (collect-list-idx))
-                   (unless (<= idx 0)
-                     (rotatef (elt list (1- idx))(elt list idx))))
-                 (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1- x)) (selected-objects-idx *dispatcher*))
-                 (funcall (set-value-fn *dispatcher*) list object))
-                ((= value -6) ; (not (find 0 (selected-objects-idx *dispatcher*))))
-                 (dolist (idx (nreverse (collect-list-idx)))
-                   (unless (>= (1+ idx)  list-length)
-                     (rotatef (elt list (1+ idx))(elt list idx))))
-                 (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1+ x)) (selected-objects-idx *dispatcher*))
-                 (funcall (set-value-fn *dispatcher*) list object))
-                ((= value 30000)
-                 (dolist (object (objects-to-delete *dispatcher*))
-                   (setf list (delete object list :count 1)))
-                 (setf (selected-objects-idx *dispatcher*) nil)
-                 (funcall (set-value-fn *dispatcher*) list object)
-                 (setf (objects-to-delete *dispatcher*) nil))
-                ((= value 30001)
-                 (setf (objects-to-delete *dispatcher*) nil))
-                ((= value -7)
-                 (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
-                 (send-to-interface
-                  (html:fast-format nil "x_.open1('/asp/obj-del.html', '250px', '250px', '~a');"
-                                    (name (item *dispatcher*)))))
-                ((and (= value -9) *user*) ; cut
-                 (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
-                 (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
-                 (send-to-interface
-                  (html:fast-format nil "x_.open1('/asp/obj-del.html', '250px', '250px', '~a');"
-                                    (name (item *dispatcher*)))))
-                ((and (= value -10) *user*) ; paste
-                 (paste-clipboard (clipboard *user*) object slot))))))))))
+        (progn
+          (collect-selected-objects-idx (when (find #\= click-str)
+                                          (subseq click-str (1+ (position #\= click-str)))))
+          (if (<= -4 value -1)
+              (let ((start (start *dispatcher*))
+                    (max-nb (max-nb *dispatcher*)))
+                (case value
+                  (-1 (setf start 0))
+                  (-2 (setf start (max 0 (- start max-nb))))
+                  (-3 (when (< (+ start max-nb) list-length)(incf start max-nb)))
+                  (-4 (setf start (* max-nb (truncate list-length max-nb)))))
+                (when (/= start (start *dispatcher*))
+                  (setf (start *dispatcher*) start)
+                  (mark-dirty-value *dispatcher*)))
+              (if (and (= value -8)
+                       *user*) ; copy
+                  (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
+                  (when (modifiable-p *dispatcher*)
+                    (cond
+                      ((or (not value)
+                           (<= 0 value 10000))
+                       (unless (sub-classes *dispatcher*)
+                         (setf (sub-classes *dispatcher*)
+                               (remove-if-not 'visible-p (meta::instanciable-sub-classes (meta::value-type slot)))))
+                       (when (= (length (sub-classes *dispatcher*)) 1)
+                         (setf value 1))
+                       (if (> value 0)
+                           (let ((new-obj
+                                  (make-instance (elt (sub-classes *dispatcher*) (1- value))
+                                                 :parent (unless (meta::linked-value slot) object)
+                                                 :store (meta::object-store object))))
+                             (when (meta::process-new-object-fn slot)
+                               (setf new-obj (funcall (meta::process-new-object-fn slot) new-obj object)))
+                             (funcall (set-value-fn *dispatcher*) (if (meta::new-objects-first slot)
+                                                                      (cons new-obj list)
+                                                                      (nconc list (list new-obj)))
+                                      object)
+                             (send-url-to-interface (encode-object-url new-obj) (interface *dispatcher*)))
+                           (send-to-interface
+                            (html:fast-format nil "window.open1('/obj-new.html', '250px', '250px', '~a');"
+                                              (name (item *dispatcher*))))))
+                      ((= value -5)     ; (not (find 0 (selected-objects-idx *dispatcher*))))
+                       (dolist (idx (collect-list-idx))
+                         (unless (<= idx 0)
+                           (rotatef (elt list (1- idx))(elt list idx))))
+                       (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1- x)) (selected-objects-idx *dispatcher*))
+                       (funcall (set-value-fn *dispatcher*) list object))
+                      ((= value -6)     ; (not (find 0 (selected-objects-idx *dispatcher*))))
+                       (dolist (idx (nreverse (collect-list-idx)))
+                         (unless (>= (1+ idx)  list-length)
+                           (rotatef (elt list (1+ idx))(elt list idx))))
+                       (map-into (selected-objects-idx *dispatcher*) #'(lambda (x) (1+ x)) (selected-objects-idx *dispatcher*))
+                       (funcall (set-value-fn *dispatcher*) list object))
+                      ((= value 30000)
+                       (let ((to-delete (objects-to-delete *dispatcher*)))
+                         (break)
+                         (dolist (object to-delete)
+                           (setf list (delete object list :count 1))))
+                       (setf (selected-objects-idx *dispatcher*) nil)
+                       (funcall (set-value-fn *dispatcher*) list object)
+                       (setf (objects-to-delete *dispatcher*) nil))
+                      ((= value 30001)
+                       (setf (objects-to-delete *dispatcher*) nil))
+                      ((= value -7)
+                       (break)
+                       (setf (objects-to-delete *dispatcher*) (collect-list-objects list))                       
+                       (send-to-interface
+                        (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"
+                                          (name (item *dispatcher*)))))
+                      ((and (= value -9) *user*) ; cut
+                       (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
+                       (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
+                       (send-to-interface
+                        (html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
+                                          (name (item *dispatcher*)))))
+                      ((and (= value -10) *user*) ; paste
+                       (paste-clipboard (clipboard *user*) object slot))))))))))
   
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
   (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
@@ -482,6 +504,37 @@
 	 (html:html-to-string
 	  (funcall (list-format-fn (list-format *dispatcher*)) start (nthcdr start list) max-nb length)))))))
 
+;; moved from view -start
+(defun std-list-checkbox (index start-index)
+  (when t ;(modifiable-p *dispatcher*)
+    (decf index start-index)
+    (html::html ((:input :type "checkbox"
+			 :fformat (:id "~aC~d" (name (item *dispatcher*)) index)
+			 :optional (:checked (and (find index (selected-objects-idx *dispatcher*)) "true")))))))
+
+(defun std-list-format-fn (start objects max-nb total-length)
+  (declare (ignore total-length))
+  (html:html
+    ((:table :class (table-class (item *dispatcher*)))
+     (loop repeat max-nb
+           for object in objects
+   	   for index from start
+   	   for index1 = (1+ index) do
+	  (html:html
+	    (:tr
+	     ((:td :class "dvcv") index1)
+	     ((:td :class "dvcv") (std-list-checkbox index start))
+	     ((:td :class "dvcv")
+	      ((:a :href (encode-object-url object))
+	       (html:esc (meta:list-description object *object*))))))))))
+
+(make-instance 'slot-list-format :name "default-format"
+	       :header-fn #'(lambda (container-obj)
+                              (declare (ignore container-obj))
+                              )
+	       :list-format-fn 'std-list-format-fn)
+;; end
+
 ;;;css-classes suffixes:
 ;;; "" =  global
 ;;; "h" = header-table, "hr" = header row, "h1"..."hxx" = column xx header
@@ -492,8 +545,9 @@
 
 (defun slot-list-tag (attributes forms)
   (destructuring-bind (slot-name &key (height nil) (width "100%") (class "stdlist") add-fn-only) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (declare (ignore height))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-slot-list :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (meta::get-object-func slot)
@@ -507,7 +561,7 @@
 	      ,@(when t
 		      `((:when t; (modifiable-p ,slot)
 			  ((:span :align "right")
-			   ((:a :href ,(format nil "javascript:open1('/asp/obj-pick2.html', '250px', '500px', '~a');"
+			   ((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a');"
 					 (name item)))
 			    ,sub-obj-name))))))
 	    `(html:html
@@ -521,26 +575,26 @@
 		(:tr
 		 (:td
 		  ((:a :href ,(format nil "javascript:Fck('~a', -1);" (name item)(name item)))
-		   ((:img :border "0" :src "/sl1.jpg" :width "22" :height "18" :title "First Page")))
+		   ((:img :border "0" :src "/static/sl1.jpg" :width "22" :height "18" :title "First Page")))
 		  ((:a :href ,(format nil "javascript:Fck('~a', -2);" (name item)(name item)))
-		   ((:img :border "0" :src "/sl2.jpg" :width "22" :height "18" :title "Previous Page")))
+		   ((:img :border "0" :src "/static/sl2.jpg" :width "22" :height "18" :title "Previous Page")))
 		  ((:a :href ,(format nil "javascript:Fck('~a', -3);" (name item)(name item)))
-		   ((:img :border "0" :src "/sl3.jpg" :width "22" :height "18" :title "Next Page")))
+		   ((:img :border "0" :src "/static/sl3.jpg" :width "22" :height "18" :title "Next Page")))
 		  ((:a :href ,(format nil "javascript:Fck('~a', -4);" (name item)(name item)))
-		   ((:img :border "0" :src "/sl4.jpg" :width "22" :height "18" :title "Last Page")))
+		   ((:img :border "0" :src "/static/sl4.jpg" :width "22" :height "18" :title "Last Page")))
 		  (:when (modifiable-p ,slot)
-                    ((:img :border "0" :src "/v.jpg" :width "22" :height "18" :title ""))
+                    ((:img :border "0" :src "/static/v.jpg" :width "22" :height "18" :title ""))
                     ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-5));" (name item)(name item)))
-                     ((:img :border "0" :src "/up.jpg" :width "22" :height "18" :title "Move Up")))
+                     ((:img :border "0" :src "/static/up.jpg" :width "22" :height "18" :title "Move Up")))
                     ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-6));" (name item)(name item)))
-                     ((:img :border "0" :src "/d.jpg" :width "22" :height "18" :title "Move Down")))
+                     ((:img :border "0" :src "/static/d.jpg" :width "22" :height "18" :title "Move Down")))
                     ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-7));" (name item)(name item)))
-                     ((:img :border "0" :src "/k.jpg" :width "22" :height "18" :title "Remove"))))
+                     ((:img :border "0" :src "/static/k.jpg" :width "22" :height "18" :title "Remove"))))
 		  ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-8));" (name item)(name item)))
-		   ((:img :border "0" :src "/cp.jpg" :width "22" :height "18" :title "Copy")))
+		   ((:img :border "0" :src "/static/cp.jpg" :width "22" :height "18" :title "Copy")))
 		  (:when (modifiable-p ,slot)
 		    ((:a :href ,(format nil "javascript:Fck('~a', f854('~a',-9));" (name item)(name item)))
-		     ((:img :border "0" :src "/cu.jpg" :width "22" :height "18" :title "Cut"))))
+		     ((:img :border "0" :src "/static/cu.jpg" :width "22" :height "18" :title "Cut"))))
 		  (:when (and (modifiable-p ,slot) *user*)
                     (let ((*clipboard-dest-context-item* ,item))
                       (html:html (:object-view :object (clipboard *user*) :name "clipbd")))))
@@ -548,7 +602,7 @@
 		  ,@(when (meta::get-object-func slot)
 			  `((:when (modifiable-p ,slot)
 			      ((:span :align "right")
-			       ((:a :href ,(format nil "javascript:open1('/asp/obj-pick2.html', '250px', '500px', '~a')"
+			       ((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a')"
 					     (name item)))
 				,sub-obj-name)))))
 		  ,@(when (and (meta::can-create-new-object slot) (not (meta::get-object-func slot)))
@@ -579,7 +633,7 @@
                   (html:html
                    (:head
                     (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-                    ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+                    ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
                    (:body
                     :br
                     (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
@@ -594,7 +648,7 @@
                                             (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
-(interface::add-named-url "/asp/obj-pick2.html" 'pick2-request-handler)
+(interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
 
 (defun obj-new-request-handler (request)
       (decode-posted-content request)
@@ -613,7 +667,7 @@
 	     (:html
 	      (:head
 	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet à ajouter")))
-	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
 	      (:body
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
@@ -627,7 +681,7 @@
 	       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
 				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 	t))
-(interface::add-named-url "/asp/obj-new.html" 'obj-new-request-handler)
+(interface::add-named-url "/obj-new.html" 'obj-new-request-handler)
 
 ;(defun ask-yes-no-question (request title question yes-id no-id)
 
@@ -648,7 +702,7 @@
 	     (:html
 	      (:head
 	       (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
-	       ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
 	      (:body
 	       :br
                (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
@@ -672,7 +726,7 @@
 		))))))
 	t))
 
-(interface::add-named-url "/asp/obj-del.html" 'obj-del-request-handler)
+(interface::add-named-url "/obj-del.html" 'obj-del-request-handler)
 
 (html:add-func-tag :slot-list 'slot-list-tag)
 ;;;syntax ((:slot-list :class "css" :width width :height height)
@@ -705,9 +759,10 @@
 	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='inherit';")))))
 
 (defun slot-pick-val-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-val :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (meta::get-object-func slot)
@@ -715,7 +770,7 @@
 	`(html:html ((:input :type "text" :id ,(name item) :disabled "true" ,@attrs))
 	  (:when (modifiable-p ,slot)
 	    ((:a :id ,(action-link item)
-		 :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a');"
+		 :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a');"
 				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
 
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
@@ -740,17 +795,17 @@
 		  (when *dispatcher*
 		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
       t)
-(interface::add-named-url "/asp/pick-val.html" 'pick-request-handler)
+(interface::add-named-url "/pick-val.html" 'pick-request-handler)
 
 (defun std-pick-val-html-fn (dispatcher)
   (let* ((item (interface::item dispatcher))
 	 (item-name (interface::name item))
-	 (object (interface::object dispatcher))
+	 ;(object (interface::object dispatcher))
 	 (slot (interface::slot dispatcher)))
     (html:html
      (:head
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur"  :sp "Elija un valor")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
@@ -795,7 +850,7 @@
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -861,7 +916,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -933,7 +988,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -960,7 +1015,7 @@ function fh(name)
        (:body
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:form :name "go" :method "post" :action "/asp/pick-val.html")
+	((:form :name "go" :method "post" :action "/pick-val.html")
 	 ((:input :id "item" :name "item" :type "hidden" :value item-name))
 	 ((:input :id "link" :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
 	 ((:input :id "index" :name "index" :type "hidden"))
@@ -1003,9 +1058,10 @@ function fh(name)
 		       (meta::translated-void-link-text slot)))))
 
 (defun slot-obj-link-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
@@ -1014,24 +1070,24 @@ function fh(name)
 	  ,@(when (action-link obj-link)
 		  `((:when (modifiable-p ,slot) ;"&nbsp; "
 		      #+nil((:a :id ,(action-link obj-link)
-			   :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a')"
+			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
 					  (name obj-link))) (:translate '(:en "Change" :fr "Changer")))
                       ((:a :id ,(action-link obj-link)
-			   :href ,(format nil "javascript:open1('/asp/pick-val.html', '250px', '500px', '~a')"
+			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
 					  (name obj-link)))
-                       ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "middle" :title "Change")))))))))))
+                       ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))))))))))
 
 (html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
 
 (defun std-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
 	 (item-name (name item))
-	 (object (object dispatcher))
+	 ;(object (object dispatcher))
 	 (slot (slot dispatcher)))
     (html:html
      (:head
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
@@ -1062,9 +1118,10 @@ function fh(name)
 		    (name item) value (name item) value))
 
 (defun slot-pick-color-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name)))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-color :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn t
@@ -1072,9 +1129,9 @@ function fh(name)
 	`(html:html ((:input :type "text" :id ,(name item) :readonly "true" ,@attrs))
 	  (:when (modifiable-p ,slot)
 	    ((:a :id ,(action-link item)
-		 :href ,(format nil "javascript:open1('/asp/pick-val.html', '400px', '500px', '~a')"
+		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
 				(name item))) 
-             ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))))))))
+             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))))))))
 
 (html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
 
@@ -1108,7 +1165,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/pcol.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/pcol.css")))
        (:body
 	:br
 	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
@@ -1130,7 +1187,7 @@ function fh(name)
 		 (color-td   0 bl bl)
 		 (color-td  bl  0 bl)
 		 (color-td  bl bl  0)
-		 (loop for (r g b l) in row
+		 (loop for (r g b nil) in row
 		       do (color-td r g b))))))
 	:br
 	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
@@ -1160,9 +1217,10 @@ function fh(name)
 	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
 
 (defun slot-pick-multi-val-tag (attributes form)
+  (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (clos:class-slots *current-class*)
-		      :test #'string= :key #'clos:slot-definition-name))
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name))
 	  (vertical (getf attrs :vertical)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
@@ -1180,25 +1238,25 @@ function fh(name)
 		 (:tr
 		  ((:td :align "right" :valign "top")
 		   ((:a :id ,(action-link item)
-			:href ,(format nil "javascript:open1('/asp/pick-val.html', '300px', '500px', '~a')"
+			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
 				       (name item))) 
-                    ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))
 	    `(html:html
               ((:span :id ,(name item) ,@attrs))
               (:when (modifiable-p ,slot)
                 ((:a :id ,(action-link item)
-                     :href ,(format nil "javascript:open1('/asp/pick-val.html', '300px', '500px', '~a')"
+                     :href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
                                     (name item)))
-                 ((:img :border "0" :src "/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
 (defun std-get-mval-choices (object)
-  (let* ((choices (meta::choices (interface::slot interface::*dispatcher*)))
-	 )
-    (loop for (value tr-string) in (meta::choices (interface::slot interface::*dispatcher*))
-	  for text = (meta::translate tr-string)
-	  collect (list text value))))
+  (declare (ignore object))
+  (loop
+     for (value tr-string) in (meta::choices (interface::slot interface::*dispatcher*))
+     for text = (meta::translate tr-string)
+     collect (list text value)))
 
 (defun std-pick-multi-val-html-fn (dispatcher)
   (let* ((item (interface::item dispatcher))
@@ -1210,7 +1268,7 @@ function fh(name)
     (html:html
      (:head
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
@@ -1258,7 +1316,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -1328,7 +1386,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
@@ -1405,7 +1463,7 @@ function fh(name)
       (html:html
        (:head
 	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/cal.css")))
+	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
        (:style "
 .d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
 .ic  {height:16px; width:16px; border:0;}
@@ -1414,7 +1472,7 @@ function fh(name)
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
 
-	((:form :name "go" :method "post" :action "/asp/pick-val.html")
+	((:form :name "go" :method "post" :action "/pick-val.html")
 	 ((:input :name "item" :type "hidden" :value item-name))
 	 ((:input :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
 	 ((:input :id "index" :name "index" :type "hidden"))
@@ -1434,6 +1492,7 @@ function fh(name)
 				(:translate '(:en "Close" :fr "Fermer"))))))))))
 
 (defun test-mpick (object)
+  (declare (ignore object))
   '(("LTD_DIRECT" "LTD_DIRECT")
     ("TEL_PABX" "TEL_PABX")
     ("SOGEDIN" "SOGEDIN")
@@ -1505,10 +1564,11 @@ function fh(name)
 	  ((:img :src "folderOpen.gif" :class "ic" :align "top"))
 	  "&nbsp;"
 	  (funcall draw-node-fn node)
-	  (when open-node
+	  (when open-node ;; fixme
 	    (incf level)
 	    (setf previous-lasts (append previous-lasts (list last)))
 	    (map-sub-nodes #'(lambda (node first last index)
+                               (declare (ignore index))
 			       (draw-simple-tree1 node level path first last previous-lasts))
 			   node))))
 	(html:html
@@ -1527,9 +1587,9 @@ function fh(name)
   (loop for pl in previous-lasts
 	for pos from 0 by 16 do
 	(if pl
-	    (html:html ((:img :src "/ey.gif" :class "ic" :align "top"
+	    (html:html ((:img :src "/static/ey.gif" :class "ic" :align "top"
 			      :fformat (:style "position:absolute;left:~dpx;" pos))))
-	    (html:html ((:img :src "/l1.gif" :class "ic" :align "top"
+	    (html:html ((:img :src "/static/l1.gif" :class "ic" :align "top"
 			      :fformat (:style "position:absolute;left:~dpx;" pos)))))))
 
 (defun draw-simple-tree (node level first last previous-lasts &key (draw-node-fn #'draw-node) opened-node)
@@ -1548,19 +1608,19 @@ function fh(name)
 	  ((:span :id span-c :class "sp" :fformat (:style "left:~dpx;" pos))
 	   ((:img :src
 		  (if last
-		      (if first "/p1.gif" "/p2.gif")
-		      (if first "/p4.gif" "/p3.gif"))
+		      (if first "/static/p1.gif" "/static/p2.gif")
+		      (if first "/static/p4.gif" "/static/p3.gif"))
 		  :class "ic" :align "top" :fformat (:onclick "fs('~a');fs('~a');fh('~a');"
 							      div-o span-o span-c)))
-	   ((:img :src "/fc.gif" :class "ic" :align "top")))
+	   ((:img :src "/static/fc.gif" :class "ic" :align "top")))
 	  ((:span :class "sp" :id span-o :fformat (:style "display:none;left:~dpx;" pos))
 	   ((:img :src
 		  (if last
-		      (if first "/m1.gif" "/m2.gif")
-		      (if first "/m4.gif" "/m3.gif"))
+		      (if first "/static/m1.gif" "/static/m2.gif")
+		      (if first "/static/m4.gif" "/static/m3.gif"))
 		  :class "ic" :align "top" :fformat (:onclick "fh('~a');fh('~a');fs('~a');"
 							      div-o span-o span-c)))
-	   ((:img :src "/fo.gif" :class "ic" :align "top")))
+	   ((:img :src "/static/fo.gif" :class "ic" :align "top")))
 	  ((:span  :class "sp" :fformat (:style "left:~dpx;" pos))
             "&nbsp;"
             (funcall draw-node-fn node))))
@@ -1568,6 +1628,7 @@ function fh(name)
 	   (incf level)
 	   (setf previous-lasts (append previous-lasts (list last)))
 	   (map-sub-nodes #'(lambda (node first last index)
+                              (declare (ignore index))
 			      (draw-simple-tree node level first last previous-lasts :draw-node-fn draw-node-fn))
 			  node)))
 	(html:html
@@ -1577,18 +1638,18 @@ function fh(name)
            (:nobr
             ((:img :src
                    (if last
-                       (if first "/l1.gif" "/l2.gif")
-                       "/l3.gif")
+                       (if first "/static/l1.gif" "/static/l2.gif")
+                       "/static/l3.gif")
                    :class "ic" :align "top"))
-            ((:img :src "/lf.gif" :class "ic" :align "top"))
+            ((:img :src "/static/lf.gif" :class "ic" :align "top"))
             "&nbsp;"
             (funcall draw-node-fn node))))))))
 
 (defun draw-prev-lines (previous-lasts)
   (loop for pl in previous-lasts do
 	(if pl
-	    (html:html ((:img :src "/ey.gif" :class "ic" :align "top")))
-	    (html:html ((:img :src "/l1.gif" :class "ic" :align "top"))))))
+	    (html:html ((:img :src "/static/ey.gif" :class "ic" :align "top")))
+	    (html:html ((:img :src "/static/l1.gif" :class "ic" :align "top"))))))
 
 (defun draw-huge-tree (node level index first last previous-lasts path &optional (draw-node-fn #'draw-node))
   (let* ((non-leaf-node (non-leaf-node-p node))
@@ -1601,17 +1662,17 @@ function fh(name)
 	     (if non-leaf-node
 		 (if opened
 		     (if last
-			 (if first "/m1.gif" "/m2.gif")
-			 (if first "/m4.gif" "/m3.gif"))
+			 (if first "/static/m1.gif" "/static/m2.gif")
+			 (if first "/static/m4.gif" "/static/m3.gif"))
 		     (if last
-			 (if first "/p1.gif" "/p2.gif")
-			 (if first "/p4.gif" "/p3.gif")))
+			 (if first "/static/p1.gif" "/static/p2.gif")
+			 (if first "/static/p4.gif" "/static/p3.gif")))
 		 (if last
-		     (if first "/l1.gif" "/l2.gif")
-		     "/l3.gif"))
+		     (if first "/static/l1.gif" "/static/l2.gif")
+		     "/static/l3.gif"))
 	     :class "ic" :align "top" :fformat (:onclick "f43(~d,~d,'~a');"
 							 level index (if opened "c" "o"))))
-       ((:img :src (if non-leaf-node (if opened "/fo.gif" "/fc.gif") "/lf.gif")
+       ((:img :src (if non-leaf-node (if opened "/static/fo.gif" "/static/fc.gif") "/static/lf.gif")
 	      :class "ic" :align "top"))
       "&nbsp;&nbsp;" (funcall draw-node-fn node))
      (incf level)

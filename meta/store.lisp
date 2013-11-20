@@ -1,7 +1,7 @@
 (in-package meta)
 
 (defmacro with-store-lock ((store) &body body)
-  `(mp:with-lock ((store-lock ,store))
+  `(bt:with-lock-held ((store-lock ,store))
      ,@body))
 
 (defun silent-mark-object-as-modified (object)
@@ -81,18 +81,21 @@
 	 (list    (write-tag #.+list-tag+)
 		  (dolist (v value) (write-value-as-ascii v integer-as-id))
 		  (write-tag #.+end-of-list-tag+))
-	 (root-object (if (eq (id value) :anonymous) (write-anonymous-fc-object-as-ascii value)
-			 (write-tag-value #.+linked-object-tag+ (id value)))))
+	 (root-object (when (eq (id value) :anonymous)
+                        (break))
+                      (if (eq (id value) :anonymous)
+                          (write-anonymous-fc-object-as-ascii value)
+                          (write-tag-value #.+linked-object-tag+ (id value)))))
       (write-tag #.+void-tag+)))
 
 (defun write-fc-object-slots-as-ascii (object)
   (let ((class (class-of object))
 	(data-object (data-object object)))
-    (dolist (slot (class-slots class))
+    (dolist (slot (c2mop:class-slots class))
       (when (stored slot)
-	(prin1 (slot-definition-name slot) *ascii-stream*)
+	(prin1 (c2mop:slot-definition-name slot) *ascii-stream*)
 	(write-char #\Space *ascii-stream*)
-	(write-value-as-ascii (slot-value data-object (slot-definition-name slot)))))
+	(write-value-as-ascii (slot-value data-object (c2mop:slot-definition-name slot)))))
     (write-tag #.+end-of-object-tag+)))
 
 (defun write-fc-object-disabled-slots-as-ascii (object)
@@ -168,7 +171,7 @@
     (loop for slot-name = (read *ascii-stream*)
 	  until (eql slot-name +end-of-object-tag+)
 	  for slot-value = (read-value-as-ascii)
-	  when (find slot-name (class-slots class) :key 'slot-definition-name)
+	  when (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)
 	  do (setf (slot-value data-object slot-name) slot-value)))
   object)
 
@@ -184,9 +187,9 @@
 
 (defun initialize-unbound-slots (object)
   (let ((data-object (data-object object)))
-    (dolist (slot (class-slots (class-of object)))
-      (when (and (not (in-proxy slot))(not (slot-boundp data-object (slot-definition-name slot)))(slot-definition-initfunction slot))
-	(setf (slot-value data-object (slot-definition-name slot)) (funcall (slot-definition-initfunction slot)))))))
+    (dolist (slot (c2mop:class-slots (class-of object)))
+      (when (and (not (in-proxy slot))(not (slot-boundp data-object (c2mop:slot-definition-name slot)))(slot-definition-initfunction slot))
+	(setf (slot-value data-object (c2mop:slot-definition-name slot)) (funcall (slot-definition-initfunction slot)))))))
 (defun read-fc-object-as-ascii (object)
   (setf (modified object) nil)
   (let* ((*parent-object* object) ;parent for anonymous object, see semantic notes
@@ -242,25 +245,26 @@
 (defun load-object-data (object)
   (let ((data-object (data-object object)))
     (if data-object
-      data-object
-      (progn (read-object-data-from-store (object-store object) object)
-	     (initialize-unbound-slots object)
-	     (initialize-disable-predicates object)
-	     (data-object object)))))
+        data-object
+        (progn (read-object-data-from-store (object-store object) object)
+               (initialize-unbound-slots object)
+               (initialize-disable-predicates object)
+               (data-object object)))))
 
 (export 'reload-object)
 (defun reload-object (id &optional (store *default-store*))
   (let ((found-object (gethash id (loaded-objects store))))
     (when found-object
-	  (setf (data-object found-object) nil
-		(disabled-slots found-object) nil)
-	  (read-object-data-from-store store found-object)))
+      (setf (data-object found-object) nil
+            (disabled-slots found-object) nil)
+      (read-object-data-from-store store found-object)))
   (load-object id store))
 
 (export 'save-object)
 (defun save-object (object)
   (unless (anonymous-object-p object)
-    (when (and (modified object)(data-object object))
+    (when (and (modified object)
+               (data-object object))
       (save-object-to-store (object-store object) object)
       (setf (modified object) nil))))
 
@@ -273,12 +277,20 @@
 
 (defun find-store (store-id)
   (gethash store-id *stores*))
-  
+
+(defun make-weak-hashtable ()
+  #+sbcl
+  (make-hash-table :test #'eql :weakness :value)
+  #+lispworks
+  (make-hash-table :test #'eql :weak-kind :value)
+  #-(or sbcl lispworks)
+  (error "implement weak-hashtable"))
+
 (defclass store ()
-  ((loaded-objects :initform (make-hash-table :test #'eql) :accessor loaded-objects)
+  ((loaded-objects :initform (make-weak-hashtable) :accessor loaded-objects)
    (modified-objects :initform () :accessor modified-objects)
    (store-id :initform 0 :accessor store-id)
-   (store-lock :initform (mp:make-lock :name (format nil "store-lock~d" (random 1000000))) :accessor store-lock)))
+   (store-lock :accessor store-lock)))
 
 (defmethod save-modified-objects (store)
   (with-store-lock (store)
@@ -288,9 +300,12 @@
 
 
 (defmethod initialize-instance :after ((store store) &rest init-options &key &allow-other-keys)
+  (declare (ignore init-options))
   (setf (store-id store) (incf *store-id*))
   (setf (gethash (store-id store) *stores*) store)
-  (hcl:set-hash-table-weak (loaded-objects store) :value))
+  (setf (store-lock store) (bt:make-lock (format nil "store-~d-lock" (store-id store))))
+  ;(hcl:set-hash-table-weak (loaded-objects store) :value) ;;CONFIRM - moved to defclass.
+  )
 
 ;;;********************************************************************************
 ;;; Ascii Store
@@ -302,13 +317,15 @@
    (next-id :initform 10000 :accessor next-id :initarg :next-id)))
 
 (defmethod initialize-instance :after ((store ascii-store) &rest init-options &key &allow-other-keys)
-  (hcl:set-hash-table-weak (loaded-objects store) :value)
+  (declare (ignore init-options))
+  ;(hcl:set-hash-table-weak (loaded-objects store) :value)
   (setf (next-id-file-path store) (merge-pathnames (file-directory store) "next-id.store"))
   (open-store store))
 
 (defmethod open-store ((store ascii-store))
   (ensure-directories-exist (file-directory store))
-  (setf (next-id store) (ignore-errors (with-open-file (s (next-id-file-path store) :direction :input)(read s nil nil))))
+  (setf (next-id store) (ignore-errors (with-open-file (s (next-id-file-path store) :direction :input)
+                                         (read s nil nil))))
   (unless (next-id store)
     (setf (next-id store) 10000)
     (with-open-file (s (next-id-file-path store) :direction :output :if-exists :supersede)
@@ -331,27 +348,31 @@
   (mapcar 'convert-slot-value-to-sexpr value))
 
 (defmethod convert-slot-value-to-sexpr ((obj root-object))
-  (list :obj-id (id obj)(guid (class-of obj))))
+  (list :obj-id (id obj) (guid (class-of obj))))
 
 (defun convert-object-to-sexpr (object)
   (let* ((class (class-of object))
 	 (data-object (load-object-data object)))
     (list :guid (guid class) :version (version class)
-	  :parent (convert-slot-value-to-sexpr (parent object)) :slots
-	  (loop for slot in (class-slots class)
-		when (stored slot)
-		collect (list (slot-definition-name slot)
-			      (convert-slot-value-to-sexpr
-			       (slot-value data-object (slot-definition-name slot))))))))
+          :parent (convert-slot-value-to-sexpr (parent object)) :slots
+          (loop for slot in (c2mop:class-slots class)
+             when (stored slot)
+             collect (list (c2mop:slot-definition-name slot)
+                           (convert-slot-value-to-sexpr
+                            (slot-value data-object (c2mop:slot-definition-name slot))))))))
 
 (defmethod save-object-to-store ((store ascii-store) object)
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
-	 (*package* (find-package "COMMON-LISP-USER")))
+        (*package* (find-package "COMMON-LISP-USER"))
+        (sexpr-string (format nil "~s~%" (convert-object-to-sexpr object))))
+    (loop for i from 0
+       for close-paren = nil then (char= c #\))
+       for c across sexpr-string
+       do (when (and close-paren (char= c #\space))
+            (setf (aref sexpr-string i) #\linefeed)))
     (with-open-file (s filename :direction :output :if-exists :supersede)
-      (let ((*print-level* nil)
-	    (*print-length* nil))
-	(format s "~s~%"  (convert-object-to-sexpr object)))
-      (setf (modified object) nil))))
+      (write-string sexpr-string s))
+    (setf (modified object) nil)))
 
 (defmethod convert-sexpr-to-slot-value (value)
   value)
@@ -373,7 +394,7 @@
       (setf (parent object) (convert-sexpr-to-slot-value (getf sexpr :parent))))
     (loop for (slot-name value) in (getf sexpr :slots)
 	  for slot-value = (convert-sexpr-to-slot-value value)
-	  when (find slot-name (class-slots class) :key 'slot-definition-name)
+	  when (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)
 	  do (setf (slot-value data-object slot-name) slot-value)))
   (initialize-unbound-slots object)
   (initialize-disable-predicates object)
@@ -445,7 +466,8 @@
    (next-id :initform 10000 :accessor next-id :initarg :next-id)))
 
 (defmethod initialize-instance :after ((store void-store) &rest init-options &key &allow-other-keys)
-  (hcl:set-hash-table-weak (loaded-objects store) :value)
+  (declare (ignore init-options))
+  ;(hcl:set-hash-table-weak (loaded-objects store) :value)
   (open-store store))
 
 (defmethod open-store ((store void-store))
@@ -464,7 +486,7 @@
 
 (defmethod read-object-proxy-from-store ((store void-store) id)
   )
-    
+
 (defmethod read-object-data-from-store ((store void-store) object)
   )
 
@@ -492,3 +514,24 @@
 
 (defmethod close-store ((store void-store))
   )
+
+;;;*****************************************************
+;;; moving one store content to another storere
+;;; this is a destructive operation
+
+(defun move-objects-to-store (src-store dst-store)
+  (with-store-lock (src-store)
+    (with-store-lock (dst-store)
+       (maphash
+        #'(lambda (key obj)
+            (declare (ignore key))
+            (let ((id (create-new-object-id dst-store (guid (class-of obj)))))
+              (load-object-data obj)
+              (setf (id obj) id
+                    (modified obj) t
+                    (object-store obj) dst-store
+                    (gethash id (loaded-objects dst-store)) obj)
+              (push obj (modified-objects dst-store))))
+        (loaded-objects src-store))
+      (setf (loaded-objects src-store) nil
+            (modified-objects src-store) nil))))

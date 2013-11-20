@@ -1,4 +1,4 @@
-(in-package interface)
+(in-package #:interface)
 
 (defun gen-localize-html (obj &key home-url)
   (let ((descriptions (localize obj)))

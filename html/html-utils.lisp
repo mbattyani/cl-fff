@@ -1,7 +1,7 @@
-(in-package html)
+(in-package #:html)
 
 (defvar *html-stream*)
-(require "comm")
+
 
 (defmacro with-fast-array-references (bindings &body body)
   "Declares the arrays in bindings (var value &optional type)
@@ -16,39 +16,41 @@ as type and sets speed to 3 with safety 0 within its scope."
                              ,@body)))))
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
-(defconstant *special-character-translation-alist*
+  (defconstant *special-character-translation-alist*
     '((#\> . "&gt;")
       (#\< . "&lt;")
       (#\& . "&amp;")
       (#\ÿ . "<br>")
       (#\" . "&quot;")
       #+nil(#\space . "&nbsp;"))
-    "&; delimited tokens are used to print special tokens."))
+    "&; delimited tokens are used to print special tokens.")
+  )
 
 (defun write-string-quoting-specials (string &optional (stream *html-stream*) (start 0) end)
   "Writes STRING to STREAM being careful to translated any special characters for HTML."
   (when string
     (flet ((%token-spec-for-special-char (char)
 	     #.`(case char
-		 ,.(loop for (char . string) in *special-character-translation-alist*
-			 collect `(,char '(,string . ,(length string))))
-		 (t nil)))
+                  ,.(loop for (char . string) in *special-character-translation-alist*
+                       collect `(,char '(,string . ,(length string))))
+                  (t nil)))
 	   (write-part (string stream start end)
 	     (unless (= start end)
 	       (write-string string stream :start start :end  end))))
       (declare (inline %token-spec-for-special-char write-part))
       (with-fast-array-references ((vector string string))
-	(loop with scan-idx
-	  for idx upfrom start below (or end (length vector))
-	  for char = (aref vector idx)
-	  for token-spec = (%token-spec-for-special-char char)
-	  do (when token-spec
-	       (write-part vector stream (or scan-idx start) idx)
-	       (write-string (car token-spec) stream :start 0 :end (cdr token-spec))
-	       (setq scan-idx (1+ (the fixnum idx))))
-	  finally (if scan-idx
-		      (write-part vector stream scan-idx idx)
-		      (write-string vector stream :start start :end idx)))))))
+	(loop
+           with scan-idx
+           for idx upfrom start below (or end (length vector))
+           for char = (aref vector idx)
+           for token-spec = (%token-spec-for-special-char char)
+           do (when token-spec
+                (write-part vector stream (or scan-idx start) idx)
+                (write-string (car token-spec) stream :start 0 :end (cdr token-spec))
+                (setq scan-idx (1+ (the fixnum idx))))
+           finally (if scan-idx
+                       (write-part vector stream scan-idx idx)
+                       (write-string vector stream :start start :end idx)))))))
 
 (defun quote-string (string)
   (with-output-to-string (str)
@@ -56,16 +58,17 @@ as type and sets speed to 3 with safety 0 within its scope."
 			 str))
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
-(defconstant *javascript-character-translation-alist*
+  (defconstant *javascript-character-translation-alist*
     '((#\' . "\\'")
       (#\" . "\\\"")
       (#\Newline . "\\n")
-      (#\Return . "\\r"))))
+      (#\Return . "\\r")))
+  )
 
 (defun quote-javascript-string (string)
   (with-output-to-string (str)
-			 (write-javascript-string string str)
-			 str))
+    (write-javascript-string string str)
+    str))
 
 (defun write-javascript-string (string &optional (stream *html-stream*) (start 0) end)
   (flet ((%token-spec-for-special-char (char)
@@ -236,10 +239,10 @@ Arguments to directives are supported only as indicated."
       (loop for style in current-styles
 	    unless (member (first style) styles-to-remove :test #'eq)
 	       collect style into l
-	    finally return (nconc styles-to-add l))
+	    finally (return (nconc styles-to-add l)))
       (nconc styles-to-add new-styles))))
 
-(defvar +crlf+ (make-array 2 :element-type 'base-char :initial-contents '(#\Return #\Newline)))
+(defconstant +crlf+ (string #\newline) #+nil(make-array 2 :element-type 'base-char :initial-contents '(#\Return #\Newline)))
 
 (defun write-http-newline (stream)
   (write-string +crlf+ stream))
@@ -266,10 +269,9 @@ Arguments to directives are supported only as indicated."
 (defun universal-time-to-date (time lang &optional (time-zone 0))
   (if time
       (let ((*print-pretty* nil))
-        (multiple-value-bind
-              (sec min hour date month year day-of-week dsp tz)
+        (multiple-value-bind (sec min hour date month year day-of-week dsp tz)
             (decode-universal-time time time-zone)
-          (declare (ignore tz dsp))
+          (declare (ignore hour min sec tz dsp))
           (case lang
             (:fr 
              (format nil "~a ~2,'0d ~a ~d"
