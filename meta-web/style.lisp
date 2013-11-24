@@ -55,7 +55,7 @@
 (defun insert-page-tile ()
   (let* ((object-id (getf (interface::session-params *request*) :object))
          (object (interface::decode-object-id object-id)))
-    (html:html "Web App Framework" (:when object " - "(:esc (meta::short-description object))))))
+    (html:html "Web App Framework" (:when object " - " (:esc (meta::short-description object))))))
 
 (defun write-page (content-func title)
  (let ((authentification-result (check-authentification)))
@@ -81,15 +81,36 @@
       ((:script :src "/static/fgt.js"))
       )
      ((:body)
-      (:when-frontends '(:bootstrap) "Using Bootstrap")
-      (:when-frontends '(:html) "Using plain HTML")
-      :br
-      ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
-      ((:div :style "padding:5px;")
-       (home-block)
-       (authentification-block authentification-result)
+      (:when-frontends '(:bootstrap)
+        ((:div :class "navbar")
+         ((:div :class "navbar-inner")
+          ((:div :class "container" )   ;:style "width: auto;")
+           ((:a :class "btn btn-navbar" :data-toggle "collapse" :data-target ".nav-collapse")
+            ((:span :class "icon-bar"))
+            ((:span :class "icon-bar"))
+            ((:span :class "icon-bar"))
+            )
+           ((:a :class "brand" ) "Using Bootstrap")
+           ((:ul :class "nav nav-tabs")
+            ((:li :class="active") ((:a :href "/") "Home"))
+            (:li  ((:a :href "#") "Link 2")))
+           )))
+         ((:div :class "container")
+          #+nil((:header :class "jumbotron subhead" :id "overview")
+           (:h1 "Body!")
+           (:p "Something to test jumbotron subhead"))
+          
+          (funcall content-func))
+      )
+      (:when-frontends '(:html)
+        "Using plain HTML"
+        :br
+        ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
+        ((:div :style "padding:5px;")
+         (home-block)
+         (authentification-block authentification-result)
        :use-ui-ws
-       (funcall content-func))
+         (funcall content-func)))
       ((:script :src "/static/fractal-ws.js")))))))
 
 (defclass page-desc ()
@@ -163,9 +184,11 @@
 
 (defun gen-localize-html (obj)
   nil)
+
 (defun check-authentification ()
   (ensure-user)
   t)
+
 #+nil
 (defun check-authentification ()
   (ensure-user)

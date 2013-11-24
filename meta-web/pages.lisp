@@ -22,9 +22,14 @@
    :abrev "Accueil"
    :abrev-en "Home"
    :sub-pages '("object" "404" "hot" "top" "new")
-   :content-en '((:h1 "The framework web interface")
-                 (:p "nothing much to do except clicking on this link: "
-                  ((:a :href #e"projects") "List of the projects in the database"))))
+   :content-en '(:progn
+                  (:when-frontends '(:bootstrap)
+                   ((:section)
+                    ((:div :class "page-header")
+                     (:h1 "The framework web interface"))
+                    (:p "nothing much to do except clicking on this link: "
+                   ((:a :href #e"projects") "List of the projects in the database"))))
+                 ))
 
 (defun logout-page-fn()
   (setf *user* nil)
@@ -190,9 +195,13 @@
                           (:h2 "Liste des projects en cours:")
                           (meta-web::html-project-list)
                           :br :br                          )
-               :content-en '((:h1 "Meta-Tool: The web application generator")
-                             (:h2 "Project List:")
-                             (meta-web::html-project-list)
+               :content-en '(:progn
+                             (:when-frontends '(:bootstrap)
+                              ((:section)
+                               ((:div :class "page-header")
+                                (:h1 "Meta-Tool: The web application generator"))
+                               (:h2 "Project List:")
+                               (meta-web::html-project-list)))
                              :br :br))
 
 (make-instance 'page-desc
