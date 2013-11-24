@@ -2,21 +2,30 @@
 
 (defun gen-localize-html (obj &key home-url)
   (let ((descriptions (localize obj)))
-    (if (> (reduce #'+ descriptions :key #'(lambda (x) (length (first x)))) 20)
-        (html:html
-         ((:table :border "0")
-          (:tr ((:td :colspan "20") 
-                ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))) " &gt"))
-          (loop for (description url) in descriptions 
-                for i from 1 do
-                (html:html
-                 (:tr (loop repeat i do (html:html ((:td :width "15px") " ")))
-                      ((:td :colspan (format nil "~d" (- 10 i)))
-                       ((:a :href url) (:esc description)) " &gt "))))) :br)
-        (html:html
-         ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))) " &gt "
+    (case *frontend*
+      (:bootstrap
+       (html:html
+        ((:ul :class "breadcrumb")
+         (:li ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home")))
+              (:when descriptions ((:span :class "divider") "/")))
          (loop for ((description url) . next) on descriptions do
-               (html:html ((:a :href url) (:esc description)) (:when next " &gt "))) :br))))
+              (html:html (:li ((:a :href url) (:esc description)) (:when next ((:span :class "divider") "/"))))))))
+      (:html
+       (if (> (reduce #'+ descriptions :key #'(lambda (x) (length (first x)))) 20)
+           (html:html
+            ((:table :border "0")
+             (:tr ((:td :colspan "20") 
+                   ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))) " &gt"))
+             (loop for (description url) in descriptions 
+                for i from 1 do
+                  (html:html
+                   (:tr (loop repeat i do (html:html ((:td :width "15px") " ")))
+                        ((:td :colspan (format nil "~d" (- 10 i)))
+                         ((:a :href url) (:esc description)) " &gt "))))) :br)
+           (html:html
+            ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))) " &gt "
+            (loop for ((description url) . next) on descriptions do
+                 (html:html ((:a :href url) (:esc description)) (:when next " &gt "))) :br))))))
 
 (in-package #:meta-web)
 
@@ -99,7 +108,8 @@
           #+nil((:header :class "jumbotron subhead" :id "overview")
            (:h1 "Body!")
            (:p "Something to test jumbotron subhead"))
-          
+          (home-block)
+
           (funcall content-func))
       )
       (:when-frontends '(:html)
