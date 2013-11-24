@@ -1,0 +1,23 @@
+
+* meta
+ - optimize mongodb
+ - think about large lists
+* html
+* interface
+ - de-obfuscate the javascript functions and variable names
+** http-link
+ - use standard XMLHttpRequest library
+ - better security
+** ws-link
+ - optimizations
+ - better security
+** object views
+ - add frontends
+** slot-views
+ - add frontends
+* web-app
+ - extracting it from meta-web
+ - adding a web-app object (sys-admin?)
+* meta-web
+ - new look and feel (bootstrap)
+ - remove deprecated features
