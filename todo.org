@@ -1,3 +1,5 @@
+#+STARTUP: indent
+#+STARTUP: hidestars
 
 * meta
  - optimize mongodb
