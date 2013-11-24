@@ -10,8 +10,7 @@
 
 (defun disabled-p (item)
   (declare (ignore item))
-  (error "does nothing")
-  #+nil(funcall ()))
+  (error "does nothing"))
 
 (defmethod visible-p ((item html-item))
   (or (force-visible item)
@@ -21,8 +20,6 @@
   (if (slot obj)
       (modifiable-p (slot obj))
       t))
-
-;'" (name item)(name item)),@attributes))))
 
 ;(defun with-class-tag (attributes form)
 ;  (destructuring-bind ((class country-lang name) . forms) form
@@ -271,11 +268,28 @@
 (html::add-func-tag :when-groups 'when-group-tag)
 
 ;;; **** unless-groups *****
-(defun unless-group-tag (attributes forms)
+(defun unless-groups-tag (attributes forms)
   (declare (ignore attributes))
   `(html:html
-    (:when (not (intersection *user-groups* ,(car forms)))
+    (:unless (intersection *user-groups* ,(car forms))
       ,@(cdr forms))))
 
-(html::add-func-tag :unless-groups 'unless-group-tag)
+(html::add-func-tag :unless-groups 'unless-groups-tag)
 
+;;; **** when-frontends *****
+(defun when-frontends-tag (attributes forms)
+  (declare (ignore attributes))
+  `(html:html
+    (:when (find *frontend* ,(car forms))
+      ,@(cdr forms))))
+
+(html::add-func-tag :when-frontends 'when-frontends-tag)
+
+;;; **** unless-frontends *****
+(defun unless-frontends-tag (attributes forms)
+  (declare (ignore attributes))
+  `(html:html
+    (:when (find *frontend* ,(car forms))
+      ,@(cdr forms))))
+
+(html::add-func-tag :unless-frontends 'unless-frontends-tag)

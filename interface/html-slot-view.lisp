@@ -378,7 +378,7 @@
   (let ((dispatcher (make-instance 'html-slot-list-dispatcher :interface interface :object object :item item)))
     (setf (list-format dispatcher)
 	  (or (list-format item)
-	      (find-best-list-format (meta::value-type (slot dispatcher)) *country-language* *user-groups*)))
+	      (find-best-list-format (meta::value-type (slot dispatcher)) *country-language* *user-groups* *frontend*)))
     dispatcher))
 
 (defmethod make-set-status-javascript ((item html-slot-list) status slot)

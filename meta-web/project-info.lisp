@@ -386,3 +386,6 @@ rankdir=LR;
     (format s ")~%")
     (write-string (asdf-directives project) s)
     (format s "    :depends-on (~a))~%" (used-lisp-modules project))))
+
+(defun reload-application (obj)
+  )

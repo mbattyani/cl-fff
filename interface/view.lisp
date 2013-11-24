@@ -45,6 +45,7 @@
    (special-view   :initform nil  :accessor special-view :initarg :special-view)
    (country-languages  :initform nil :accessor country-languages :initarg :country-languages)
    (user-groups  :initform nil :accessor user-groups :initarg :user-groups)
+   (frontends :initform nil :accessor frontends :initarg :frontends)
    (all-items :initform (make-hash-table :test #'equal) :accessor all-items)
    (html-func :initform nil :accessor html-func)
    (source-code :initform nil :accessor source-code :initarg :source-code)
@@ -61,6 +62,7 @@
 	    (object-class view)(object-class root-view)
 	    (country-languages view)(country-languages root-view)
 	    (user-groups view)(user-groups root-view)
+	    (frontends view)(frontends root-view)
 	    (source-code view)(source-code root-view)
 	    (root-view view) root-view)
       (vector-push-extend view (other-instances root-view)))
@@ -211,16 +213,17 @@
 	collect `(:when (visible-p ,function)
 		  :br ((:fn-link ,function) (:translate ,(meta::user-name function))))))
 
-(defun make-std-object-view (class country-language user-group)
+(defun make-std-object-view (class country-language frontend)
   (setf class (ensure-class class))
   (let* ((full-class-name (util:full-symbol-name (class-name class)))
-	 (view-name (format nil "~a-std-~a-~a" full-class-name country-language user-group))
+	 (view-name (format nil "~a-std-~a-~a" full-class-name country-language frontend))
 	 (view (find view-name (meta::direct-views class) :key 'name :test 'string=)))
     (if view
       view
       (make-instance 'object-view :object-class class :generated t
 		     :name view-name :country-languages (list country-language)
-		     :user-group (list user-group)
+		     :user-group ()
+		     :frontend (list frontend)
 		     :source-code (nconc (make-std-object-slots-view class nil nil)
 					 (make-std-object-functions-view class))))))
 
@@ -238,19 +241,26 @@
 
 (meta::add-finalization-class-hook 'clean-direct-views)
 
-(defun find-best-view (class country-language user-groups)
+(defun find-best-view (class country-language user-groups frontend)
   (loop for v in (meta::direct-views class)
 	  do (when (and (not (special-view v))
 			(find country-language (country-languages v))
+                        (find frontend (frontends v))
 			(intersection user-groups (user-groups v)))
 	       (return-from find-best-view v)))
   (loop for v in (meta::direct-views class)
      do (when (and (not (special-view v))
                    (find country-language (country-languages v))
-                   (or (not (user-groups v))
-                       (intersection user-groups (user-groups v))))
+                   (find frontend (frontends v))
+                   (not (user-groups v)))
           (return-from find-best-view v)))
-  (make-std-object-view class country-language user-groups))
+  (loop for v in (meta::direct-views class)
+     do (when (and (not (special-view v))
+                   (find country-language (country-languages v)) ;needs some serious rework! 
+                   (not (frontends v))
+                   (not (user-groups v)))
+          (return-from find-best-view v)))
+  (make-std-object-view class country-language frontend))
 
 (defun %process-view (name object)
   (setf name (or name (getf (session-params *request*) :view)))
@@ -262,7 +272,7 @@
     (when (and view (not (eq (class-of object) (object-class view))))
       (setf view nil))
     (unless view
-      (setf view (find-best-view (class-of object) *country-language* *user-groups*)))
+      (setf view (find-best-view (class-of object) *country-language* *user-groups* *frontend*)))
     (when view
       (setf view (get-view-instance view))
       (push (cons view object) *request-views*)
@@ -295,6 +305,7 @@
    (special-format :initform nil  :accessor special-format :initarg :special-format)
    (country-languages  :initform nil :accessor country-languages :initarg :country-languages)
    (user-groups  :initform nil :accessor user-groups :initarg :user-groups)
+   (frontends :initform nil :accessor frontends :initarg :frontends)
    (list-format-fn :initform nil :accessor list-format-fn :initarg :list-format-fn)))
 
 (defmethod initialize-instance :after ((format slot-list-format) &rest init-options
@@ -305,19 +316,20 @@
 (defun find-list-format (name)
   (gethash name *all-list-formats*))
 
-(defun find-best-list-format (class country-language user-groups)
+(defun find-best-list-format (class country-language user-groups frontend)
   (when class (setf class (ensure-class class)))
   (let ((formats (iterate (for (nil format) in-hashtable *all-list-formats*) ;name
 			  (when (eq class (object-class format)) (collect format)))))
     (loop for f in formats
 	  do (when (and (not (special-format f))
 			(find country-language (country-languages f))
+                        (find frontend (frontends f))
 			(intersection user-groups (user-groups f)))
 	       (return-from find-best-list-format f)))
     (loop for f in formats
 	  do (when (and (not (special-format f))
 			(find country-language (country-languages f))
-			(or (not (user-groups f))
-			    (intersection user-groups (user-groups f))))
+                        (find frontend (frontends f))
+			(not (user-groups f)))
 	       (return-from find-best-list-format f)))
     (find-list-format "default-format")))

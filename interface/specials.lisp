@@ -21,6 +21,7 @@
 (defvar *page-root* nil)
 (defvar *user* nil)
 (defvar *user-groups* nil)
+(defvar *frontend* :html) ;other values :bootstrap
 (defvar *request-views* nil) ; the list of (view . object) in the page
 (defvar *tab-id* 1)
 (defvar *dispatcher* nil)

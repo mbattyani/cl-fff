@@ -54,6 +54,7 @@
    (application-data :initform nil :accessor application-data)
    (country-language-id :initform nil :accessor country-language-id)
    (country-language :initform nil :accessor country-language)
+   (frontend :initform :bootstrap #+nil :html :accessor frontend) ;temporary force frontend to bootstrap
    (url-history :initform nil :accessor url-history)
    ))
 

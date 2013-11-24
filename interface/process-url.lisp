@@ -63,6 +63,9 @@
 (defmethod groups (user)
   nil)
 
+(defun find-frontend (command frontend session)
+  (setf frontend (or #+nil frontend (frontend session)))) ;to be changed
+
 (defmethod process-page-fn (user page-fn request)
   (if page-fn
       (funcall page-fn request)
@@ -90,11 +93,13 @@
                          (*password* (password request))
                          ;; (first (rassoc *country-language* *country-language-ids*))
                          (*country-language* (find-country-lang command (getf session-params :lang) *session*))
+                         (*frontend* (find-frontend command (getf session-params :frontend) *session*))
                          (*country-language-id* (first (rassoc *country-language* *country-language-ids*))))
                     (unless (equal (cookie *session*) (cookie *request*))
                       (setf (cookie *session*) (cookie *request*)))
                     (setf (country-language *session*) *country-language*
-                          (country-language-id *session*) *country-language-id*)
+                          (country-language-id *session*) *country-language-id*
+                          (frontend *session*) *frontend*)
                     ;; (setf (search-params request) search-params)
                     (let ((page-fn (or (gethash (getf session-params :func) *named-funcs*)
                                        (gethash (getf session-params :page) *named-pages*)
