@@ -1,25 +1,82 @@
 #+STARTUP: indent
 #+STARTUP: hidestars
-
+* various things to be done in the webapp framework
 * meta
- - optimize mongodb
- - think about large lists
+** optimize mongodb
+** think about large lists
+** DONE change ascii-store to use utf-8 encoding
+CLOSED: [2013-12-02 Mon 10:45]
+:LOGBOOK:
+- State "DONE"       from ""           [2013-12-02 Mon 10:45]
+:END:
+** (re)implement anonymous objects in ascii-store and mongodb
 * html
+** bootstrap components
+*** DONE tabs/pills
+CLOSED: [2013-12-02 Mon 10:46]
+:LOGBOOK:
+- State "DONE"       from ""           [2013-12-02 Mon 10:46]
+:END:
 * interface
- - de-obfuscate the javascript functions and variable names
+** de-obfuscate the javascript functions and variable names
 ** http-link
- - use standard XMLHttpRequest library
- - better security
+*** use standard XMLHttpRequest library
+*** better security
 ** ws-link
- - optimizations
- - better security
-** object views
- - add frontends
-** slot-views
- - add frontends
-* web-app
- - extracting it from meta-web
- - adding a web-app object (sys-admin?)
+*** optimizations
+*** better security
+** DONE add support for multiple frontends
+CLOSED: [2013-12-02 Mon 10:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2013-12-02 Mon 10:43]
+:END:
+** new widgets
+*** password with confirmation
+*** image
+*** upload-file
+** bootstrap
+*** linked-html
+*** html-push-button
+*** html-fn-link
+*** html-edit
+*** html-span
+*** html-medit
+*** html-date
+- date only
+- date + time
+- time only
+*** html-combo
+*** html-check-box
+*** html-slot-list
+*** html-pick-val
+*** html-pick-multi-val
+*** html-obj-link
+*** html-pick-color
+*** slot-table
+*** obj-fn-table
+*** obj-fn
+*** object-dialog
+*** date picker
+*** time picker
+*** date/time picker
+
+** lists
+*** using slick-grid?
+* web-app demo
+** choosing an application
+- task clocking
+- multi-user task management
+- event organizer
+** adding standard objects
+*** app-admin
+*** user
 * meta-web
- - new look and feel (bootstrap)
- - remove deprecated features
+** new look and feel (bootstrap)
+** remove deprecated features
+** DONE adding an app-admin object
+CLOSED: [2013-12-02 Mon 10:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2013-12-02 Mon 10:44]
+:END:
+* utilities/misc
+** debug email
