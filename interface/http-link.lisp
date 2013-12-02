@@ -98,7 +98,6 @@
 
 (defun send-to-interface (string &optional (http-link *http-link*))
   (when string
-    ;(break)
     (push string (output-queue http-link))))
 
 (defun send-message-to-interface (message &optional (http-link *http-link*))
@@ -184,7 +183,6 @@
 ;(add-named-func "lpull" #'(lambda (r) (process-http-link-pull r t)))
 
 (defun process-http-link-push (request)
-  (break)
   (with-posted-strings (request (action "v654")(name "v645")(value "v465")(*xml-http* "v564"))
     (log:debug "process-http-link-push" (posted-content request) request)
     (let ((action-func (gethash action *action-funcs*)))
@@ -302,14 +300,12 @@
 (html::add-func-tag :connect 'connect-tag)
 
 (defun encode-views (views func)
-  (break)
   (encode-session-url nil
      (list* :session (id *session*) :func func
 	    (loop for (view . object) in views
 		  nconc (list :view (name view) :object (encode-object-id object))))))
 
 (defun process-http-popup (request &optional no-refresh)
-  (break)
   (let* ((interface-id (getf (session-params request) :link ))
 	 (interface (when interface-id (gethash interface-id *http-links*))))
     (log:debug  "process-http-link-pull ~s~%" (posted-content request))

@@ -163,12 +163,10 @@
   (let ((document (cl-mongo:make-document)))
     (cl-mongo:add-element "name" (sxhash name) document)
     (cl-mongo:add-element "object-id" (id object) document)
-    (break)
     (cl-mongo:db.insert "named-objects" document)))
 
 (defmethod load-or-create-named-object ((store mongo-store) name class-id) ;; who calls this function?
   (let ((object (load-named-object store name)))
-    (break)
     (unless object
       (setf object (make-instance (find-meta-class class-id) :store store))
       (register-named-object store object name))

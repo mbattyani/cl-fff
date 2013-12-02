@@ -234,7 +234,6 @@
 	     (*session* (session link))
 	     (*user* (user *session*))
 	     (*country-language* (country-language *session*)))
-        ; (break)
 	(setf year  (when year (parse-integer year)))
 	(setf month (when month (parse-integer month)))
 	(setf hour (when hour (parse-integer hour :junk-allowed t)))
@@ -467,7 +466,6 @@
                        (funcall (set-value-fn *dispatcher*) list object))
                       ((= value 30000)
                        (let ((to-delete (objects-to-delete *dispatcher*)))
-                         (break)
                          (dolist (object to-delete)
                            (setf list (delete object list :count 1))))
                        (setf (selected-objects-idx *dispatcher*) nil)
@@ -476,7 +474,6 @@
                       ((= value 30001)
                        (setf (objects-to-delete *dispatcher*) nil))
                       ((= value -7)
-                       (break)
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))                       
                        (send-to-interface
                         (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"

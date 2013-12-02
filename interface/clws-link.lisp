@@ -41,18 +41,6 @@
                    (= (string= (gethash value *clients*)
                                value))))
        (setf (gethash client *clients*) value))
-      #+nil((string= type "link") ;; Its useless probably…
-       (break)
-       (let ((x (with-output-to-string (s)
-                  (unless (registered *http-link*)
-                    (register-http-link *http-link*))
-                  (html:html-to-stream s
-                                       "{var x_=parent;"
-                                       (send-packets *http-link*)
-                                       "parent.F6541();"
-                                       (html:ffmt "parent.F5641(~s, ~s);parent.F5614(~s);}"
-                                                  (url-pull *http-link*) interface-id (url-push *http-link*))))))
-         (clws:write-to-client-text client x)))
       ((string= type "4")
        (let* ((action-func (gethash type *action-funcs*)))
          (destructuring-bind (item-name item-value) value
