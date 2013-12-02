@@ -370,7 +370,7 @@
        for c across sexpr-string
        do (when (and close-paren (char= c #\space))
             (setf (aref sexpr-string i) #\linefeed)))
-    (with-open-file (s filename :direction :output :if-exists :supersede)
+    (with-open-file (s filename :direction :output :if-exists :supersede :external-format :utf-8)
       (write-string sexpr-string s))
     (setf (modified object) nil)))
 
@@ -408,7 +408,7 @@
 	(*read-eval* nil)
         (*default-store* store)
 	(*package* (find-package "COMMON-LISP-USER")))
-    (with-open-file (s filename :direction :input)
+    (with-open-file (s filename :direction :input :external-format :utf-8)
       (init-object-from-sexpr object (read s nil nil)))))
 
 (defmethod read-object-from-store ((store ascii-store) id)
@@ -421,7 +421,7 @@
 	    (*package* (find-package "COMMON-LISP-USER"))
 	    (sexpr nil)
 	    (object nil))
-	(with-open-file (s filename :direction :input)
+	(with-open-file (s filename :direction :input :external-format :utf-8)
 	  (setf sexpr (read s nil nil))
 	  (setf object (create-proxy-object id (getf sexpr :guid)))
 	  (init-object-from-sexpr object sexpr))))))
