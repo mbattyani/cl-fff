@@ -1,15 +1,14 @@
 (in-package interface)
 
-(defun gen-localize-html (obj &key home-url)
+(defun gen-breadcrumbs (obj &key home-url)
   (let ((descriptions (localize obj)))
     (case *frontend*
       (:bootstrap
        (html:html
         ((:ul :class "breadcrumb")
-         (:li ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home")))
-              (:when descriptions ((:span :class "divider") "/")))
+         (:li ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))))
          (loop for ((description url) . next) on descriptions do
-              (html:html (:li ((:a :href url) (:esc description)) (:when next ((:span :class "divider") "/"))))))))
+              (html:html (:li ((:a :href url) (:esc description))))))))
       (:html
        (if (> (reduce #'+ descriptions :key #'(lambda (x) (length (first x)))) 20)
            (html:html
@@ -61,18 +60,18 @@
 (defmethod interface::clipboard ((user identified-user))
   (clipboard user))
 
-(defun insert-page-tile ()
+(defun insert-page-title ()
   (let* ((object-id (getf (interface::session-params *request*) :object))
          (object (interface::decode-object-id object-id)))
     (html:html "Web App Framework" (:when object " - " (:esc (meta::short-description object))))))
 
-(defun write-page (content-func title)
+(defun write-page (content-func)
  (let ((authentification-result (check-authentification)))
    (html:html
     (:doctype)
     (:html
      (:head
-      (:title (insert-page-tile))
+      (:title (insert-page-title))
       ((:meta :name "description" :content "The F3 Web Interface"))
       ((:meta :name "keywords" :content ""))
       ((:meta :http "http" :equiv "content-type" :content "text/html; charset=UTF-8"))
@@ -99,7 +98,7 @@
             ((:span :class "icon-bar"))
             ((:span :class "icon-bar"))
             )
-           ((:a :class "brand" ) "Using Bootstrap")
+        ;   ((:a :class "brand" ) "Using Bootstrap")
            ((:ul :class "nav nav-tabs")
             ((:li :class="active") ((:a :href "/") "Home"))
             (:li  ((:a :href "#") "Link 2")))
@@ -157,7 +156,7 @@
     (when *page*
       (let ((html-func (content-func *page*)))
 	(interface::with-output-to-request (request html:*html-stream*)
-	  (write-page html-func (concatenate 'string "Ivan : " (translated-title *page*))))))))
+	  (write-page html-func))))))
 
 (defmethod content-func :around ((page page-desc))
   (let ((func (call-next-method)))
@@ -177,9 +176,12 @@
 					 ((eq interface::*country-language* :fr) ,@(mapcar 'html::html-gen french))
 					 (t ,@(mapcar 'html::html-gen (content-en page))))))))))))))
 
-(defvar %unique-user% (make-instance 'identified-user))
+(defvar %unique-user% nil)
+
 (defun ensure-user ()
   (unless *user*
+    (unless %unique-user%
+      (setf %unique-user% (make-instance 'identified-user)))
 ;    (setf (interface::authentified *session*) nil)
 ;    (switch-user (make-instance 'anonymous-user :store meta::*memory-store*))
     (setf (interface::authentified *session*) t)

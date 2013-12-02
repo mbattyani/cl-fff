@@ -11,6 +11,7 @@
 (defvar *save-database* t)
 (defvar *in-store-timer* nil)
 (defvar *projects-list* nil)
+(defvar *meta-store-timer* nil)
 
 (defparameter *page* nil)
 (defparameter *pages* (make-hash-table :test #'equal))
@@ -24,6 +25,7 @@
 (defparameter *database-name* "MetaFractal")
 (defparameter *database-user* "lisp")
 (defparameter *database-pwd* "")
+(defparameter *database-save-period* 30)
 (defparameter *mod-lisp-port* 3100)
 (defparameter *local-port* 25142)
 
@@ -66,78 +68,61 @@
             (cl-mongo:db.delete +mongo-collection-name+ x))
           (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
 
-#+nil
-(defun project-list () ;;mongo only
-  (or *projects-list*
-      (sort (remove nil (mapcar #'(lambda (x)
-                                    (let ((object (meta::load-object (cl-mongo:get-element "object-id" x) *meta-store*)))
-                                      (when (typep object 'project)
-                                        (push object *projects-list*)
-                                        object)))
-                                (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
-            #'string< :key #'name)))
+(defun meta-store-timer-fn ()
+  (unless *in-store-timer*
+    (setf *in-store-timer* t)
+    (unwind-protect
+	 (when (and *meta-store* *save-database*)
+	   (setf *save-database* nil)
+	   (util:with-logged-errors (:ignore-errors nil) ; t
+	     (meta::save-modified-objects *meta-store*))
+	   (setf *save-database* t))
+      (setf *in-store-timer* nil))))
 
-#+nil
-(defun project-list () ;; postgres
-  (or *projects-list*
-      (sort (mapcar #'(lambda (x)
-                        (meta::load-object (first x) *meta-store*))
-                    (meta::sql-query "select id from project"))
-            #'string< :key #'name)))
+(defun start-meta-store-timer ()
+  (let ((timer (mp:make-timer 'meta-store-timer-fn)))
+    (mp:schedule-timer-relative timer *database-save-period* *database-save-period*)))
 
-
-(defun create-store ()
+(defun create-store (database-type)
   (meta::initialize-store *meta-store*)
-  (when (or (not (typep *meta-store* 'meta:ascii-store))
-            (not (typep *meta-store* 'meta:mongo-store)))
+  (when (eq database-type :postgres)
     (create-meta-classes *meta-store*)))
 
 (defun start-apache () ;; apache
   (interface:sa *mod-lisp-port*))
 
-(defun start (&key (webserver :hunchentoot) (database :postgres) (first-start nil) (mongo-db-name "mydb") (mongo-db-collection-name +mongo-collection-name+) debug
-                (init-file nil)
-                ascii-store-path)
+(defun start (&key (webserver :hunchentoot) (database :text-files) (first-start nil) (mongo-db-name "mydb")
+                (mongo-db-collection-name +mongo-collection-name+) debug (init-file nil)
+                ascii-store-path )
   (assert (and (member webserver '(:hunchentoot :apache))
-               (member database '(:postgres :mongo-db))))
+             (member database '(:postgres :mongo-db :text-files :memory))))
   (setf interface:*web-server* webserver)
   (when debug
     (log:config debug))
   (when init-file
     (load init-file))
-  (cond
-    ((eq database :postgres)
+
+  ;; data stores
+  (case database
+    (:postgres
      (meta::init-psql)
      (setf *database-pool* (meta:psql-create-db-pool *database-ip* *database-name* *database-user* *database-pwd*))
-     (setf *meta-store* (make-instance 'meta:psql-store :db-pool *database-pool*))
-     (setf (symbol-function 'project-list)
-           (lambda () ;; postgres
-             (or *projects-list*
-                 (sort (mapcar #'(lambda (x)
-                                   (meta::load-object (first x) *meta-store*))
-                               (meta::sql-query "select id from project"))
-                       #'string< :key #'name)))))
-    ((eq database :mongo-db)
-     (setf *meta-store* (make-instance 'meta:mongo-store :database-name mongo-db-name :collection-name mongo-db-collection-name))
-     (setf *projects-list* nil)
-     (setf (symbol-function 'project-list)
-           (lambda () ;;mongo only
-             (or *projects-list*
-                 (sort (remove nil (mapcar #'(lambda (x)
-                                               (let ((object (meta::load-object (cl-mongo:get-element "object-id" x) *meta-store*)))
-                                                 (when (typep object 'project)
-                                                   (push object *projects-list*)
-                                                   object)))
-                                           (cadr (cl-mongo:db.find +mongo-collection-name+ :all))))
-                       #'string< :key #'name)))))
-    (ascii-store-path
-     (setf *meta-store*
-           (make-instance 'meta::ascii-store :file-directory ascii-store-path))
-     (setf *projects-list* nil #+nil(list (meta::load-named-object *meta-store* "project"))))
-    )
+     (setf *meta-store* (make-instance 'meta:psql-store :db-pool *database-pool*)))
+    (:mongo-db
+     (setf *meta-store* (make-instance 'meta:mongo-store :database-name mongo-db-name :collection-name mongo-db-collection-name)))
+    (:text-files
+     (setf *meta-store* (make-instance 'meta::ascii-store
+            :file-directory (or ascii-store-path (asdf:system-relative-pathname :meta-web "./db-store/")))))
+    (:memory
+     (setf *meta-store* (make-instance 'meta::void-store))))
   (when first-start
-    (create-store))
-  ;; (setf *clipboard* (make-instance 'interface::clipboard :store meta::*memory-store*))
+    (create-store database))
+  (unless meta::*memory-store*
+    (setf meta::*memory-store* (make-instance 'meta::void-store)))
+  (setf *app-admin*  (meta::load-or-create-named-object *meta-store* "app-admin" 'app-admin))
+  (setf *meta-store-timer* (start-meta-store-timer))
+
+  ;; web server
   (interface:ws-start)
   (case webserver
     (:hunchentoot
@@ -153,47 +138,11 @@
   (when hunchentoot?
     (stop-hunchentoot)))
 
-(unless meta::*memory-store*
-  (setf meta::*memory-store* (make-instance 'meta::void-store)))
-
-(defun meta-store-timer-fn ()
-  (unless *in-store-timer*
-    (setf *in-store-timer* t)
-    (unwind-protect
-	 (when (and *meta-store* *save-database*)
-	   (setf *save-database* nil)
-	   (util:with-logged-errors (:ignore-errors nil) ; t
-	     (meta::save-modified-objects *meta-store*))
-	   (setf *save-database* t))
-      (setf *in-store-timer* nil))))
-
-(defun start-meta-store-timer ()
-  (let ((timer (mp:make-timer 'meta-store-timer-fn)))
-    (mp:schedule-timer-relative timer 10 10))) ; 30 30
-
-(defvar *meta-store-timer* (start-meta-store-timer))
-
 (defun prev-page-link ()
   (let ((previous (interface::get-previous-page interface::*request*)))
     (html:html
      (:when previous
        ((:a :href previous) (:translate '(:fr "Page précédente" :en "Previous Page")))))))
-
-(defparameter *default-object-page-fr*
-  '((prev-page-link) :br
-    (:h2 "Objet : " (html:esc (meta::short-description interface::*object*))
-     ((:span :style "font-size:12px;font-weight:400")
-      " ("(:esc (meta::translated-class-name interface::*object*))")"))
-    (:p (interface::gen-localize-html interface::*object* :home-url #e"projects"))
-    (:object-view)))
-
-(defparameter *default-object-page-en*
-  '((prev-page-link) :br
-    (:h2 "Object : " (html:esc (meta::short-description interface::*object*))
-     ((:span :style "font-size:12px;font-weight:400")
-      " ("(:esc (meta::translated-class-name interface::*object*))")"))
-    (:p (interface::gen-localize-html interface::*object* :home-url #e"projects"))
-    (:object-view)))
 
 (defparameter *inspect-object-page-fr*
   '(((:form :method "post" :action #e"inspect")

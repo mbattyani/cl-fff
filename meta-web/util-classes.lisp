@@ -1,9 +1,15 @@
 (in-package "META-WEB")
 
 (defun create-util-classes (store)
-  (dolist (class '(source-file other-document))
+  (dolist (class '(webapp-admin source-file other-document))
      (meta::create-class-table store (find-class class))))
 
+(prog1 (meta-level:defclass app-admin
+                            nil
+                            (
+                             #+nil(user-list :value-type appli-user :user-name (make-instance 'meta-level:translated-string :en "List of users" :fr "Liste des utilisateurs" :de "" :sp "" :it "") :description "" :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :choices (list) :visible t :visible-groups 'nil :modifiable nil :modifiable-groups '(:maintainer :admin) :stored t :in-proxy nil :indexed nil :unique nil :null-allowed t :list-of-values t :new-objects-first t :linked-value nil :modifiable nil :duplicate-value t :make-copy-string nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :sql-length 0 :value-to-string-fn 'nil :nb-decimals 0 :void-link-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :can-create-new-object t :create-new-object nil :process-new-object-fn 'nil :get-value-sql "" :html-tag-attributes 'nil :dont-display-null-value nil :view-type :default :slot-view-name 'nil)
+                             (project-list :value-type project :user-name (make-instance 'meta-level:translated-string :en "Projects" :fr "Projets" :de "" :sp "" :it "") :description "" :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :choices (list) :visible t :visible-groups 'nil :modifiable t :modifiable-groups nil :stored t :in-proxy nil :indexed nil :unique nil :null-allowed t :list-of-values t :new-objects-first t :linked-value nil :duplicate-value t :make-copy-string nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :sql-length 0 :value-to-string-fn 'nil :nb-decimals 0 :void-link-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :can-create-new-object t :create-new-object nil :process-new-object-fn 'nil :get-value-sql "" :html-tag-attributes 'nil :dont-display-null-value nil :view-type :default :slot-view-name 'nil))
+                            (:user-name (make-instance 'meta-level:translated-string :en "App administration" :fr "Administration App" :de "" :sp "" :it "") :guid 18331143680597469526778413244 :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "") :functions (list) :visible t :visible-groups 'nil :instanciable t)))
 
 (prog1 (defclass source-file
                  nil

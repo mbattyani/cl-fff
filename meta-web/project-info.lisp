@@ -24,10 +24,11 @@
 (interface::add-named-url "/new-project.html"
   #'(lambda (request)
       (let* ((project (make-instance 'project :store *meta-store*)))
-        (push project *projects-list*)
+        (push project (project-list *app-admin*))
 	(interface::redirect-to (interface::encode-object-url project) request))
       t))
 
+#+obsolete
 (defun project-list ()
   (or *projects-list*
       (sort (mapcar #'(lambda (x)
@@ -37,14 +38,23 @@
 
 (defun html-project-list ()
   (html:html
+   (:when (null (project-list *app-admin*))
+     (:p "No projects yet."))
     (loop
-       for project in (project-list)
+       for project in (project-list *app-admin*)
        when project
        do
          (html:html ((:a :href (interface::encode-object-url project))
                      (:esc (meta::short-description project))) ": "
                      (:i (:insert-string (description project))) :br))
-    :br ((:a :href "/new-project.html") "New projet")))
+    :br ((:a :href "/new-project.html") "Add new project")
+    :br ((:a :href (interface::encode-object-url *app-admin* :args '(:view "projects")))
+         "Manage projects")))
+
+(make-instance 'interface::object-view :object-class 'app-admin :special-view t
+	       :country-languages '(:fr :en :sp) :name "projects" :source-code
+   `((:h1 "Managing the projects")
+     (:slot-table project-list)))
 
 (defparameter *meta-web-classes*
   '(slot-info class-info project choice-value user-group translated-string sql-list

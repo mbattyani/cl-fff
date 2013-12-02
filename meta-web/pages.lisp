@@ -27,8 +27,8 @@
                    ((:section)
                     ((:div :class "page-header")
                      (:h1 "The framework web interface"))
-                    (:p "nothing much to do except clicking on this link: "
-                   ((:a :href #e"projects") "List of the projects in the database"))))
+                    (:p "Nothing much to do here except clicking on the "
+                   ((:a :href #e"projects") "list of the projects in the database"))))
                  ))
 
 (defun logout-page-fn()
@@ -176,12 +176,19 @@
                :sub-pages 'nil
                :restricted t
                :hidden t
-               :content `(:use-ui
-                          ,@meta-web::*default-object-page-fr*
-                          :connect-views                          )
-               :content-en `(:use-ui
-                             ,@meta-web::*default-object-page-en*
-                             :connect-views                    ))
+               :content `((prev-page-link) :br
+                          (:h2 "Objet : " (html:esc (meta::short-description interface::*object*))
+                               ((:span :style "font-size:12px;font-weight:400")
+                                " ("(:esc (meta::translated-class-name interface::*object*))")"))
+                          (:p (interface::gen-breadcrumbs interface::*object* :home-url #e"projects"))
+                          (:object-view)
+                          :connect-views)
+               :content-en `((prev-page-link) :br
+                             (:h2 "Object : " (html:esc (meta::short-description interface::*object*))
+                                  ((:span :style "font-size:12px;font-weight:400")
+                                   " ("(:esc (meta::translated-class-name interface::*object*))")"))
+                             (:p (interface::gen-breadcrumbs interface::*object* :home-url #e"projects"))
+                             (:object-view):connect-views))
 
 (make-instance 'page-desc
                :name "projects"
@@ -194,13 +201,12 @@
                :content '((:h1 "Meta-Tool: Le générateur d'application web")
                           (:h2 "Liste des projects en cours:")
                           (meta-web::html-project-list)
-                          :br :br                          )
+                          :br :br)
                :content-en '(:progn
                              (:when-frontends '(:bootstrap)
                               ((:section)
-                               ((:div :class "page-header")
-                                (:h1 "Meta-Tool: The web application generator"))
-                               (:h2 "Project List:")
+                               ((:div :class "page-header"))
+                               (:h1 "Project List:")
                                (meta-web::html-project-list)))
                              :br :br))
 
