@@ -72,6 +72,7 @@
     (:html
      (:head
       (:title (insert-page-title))
+      ((:meta :name "viewport" :content "width=device-width, initial-scale=1.0"))
       ((:meta :name "description" :content "The F3 Web Interface"))
       ((:meta :name "keywords" :content ""))
       ((:meta :http "http" :equiv "content-type" :content "text/html; charset=UTF-8"))
@@ -84,10 +85,11 @@
       ((:link :rel "stylesheet" :href "/static/css/modal.css"))
       (:when-frontends '(:bootstrap)
          ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"))
+         ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"))
          ((:link :rel "stylesheet" :href "/static/css/modal.css"))
+         ((:script :src "https://code.jquery.com/jquery.js"))
          ((:script :src "//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js")))
-      ((:script :src "/static/fgt.js"))
-      )
+      ((:script :src "/static/fgt.js")))
      ((:body)
       (:when-frontends '(:bootstrap)
         ((:div :class "navbar")

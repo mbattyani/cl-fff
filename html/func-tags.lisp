@@ -166,46 +166,69 @@
 (defvar *tab-items* nil)
 
 (defun tab-tag (attributes tab-forms)
-  (destructuring-bind (&key (name (string (gensym))) (class "tab0") (remove-sibling-borders t)) attributes
-    (let ((unsel-class-name (concatenate 'string class "UnSel"))
-	  (sel-class-name (concatenate 'string class "Sel"))
-	  (void-class-name (concatenate 'string class "Void"))
-	  (pane-class-name (concatenate 'string class "Pane"))
-	  (tab-array-name (concatenate 'string name "Tabs"))
-	  (pane-array-name (concatenate 'string name "Panes"))
-	  (table-name (concatenate 'string name "Table")))
-      `(optimize-progn
-         ,(html-gen
-           `((:table :id ,table-name :class ,class :cellspacing "0")
-             ((:tr :valign "middle")
-              ,@(loop for (tab-text . nil) in tab-forms
-                   as tab-class = sel-class-name then unsel-class-name
-                   as i from 0
-                   as item-name = (format nil "~a~d" tab-array-name i)
-                   collect (html-gen `((:td :id ,item-name :class ,tab-class
-                                            ;; :onmouseover ,(format nil "this.className='~aOver';" tab-class)
-                                            ;; :onmouseout ,(format nil "this.className='~a';" tab-class)
-                                            :onclick ,(format nil "f85425(~a, ~a, ~d, '~a', '~a', ~d);"
-                                                              tab-array-name pane-array-name i unsel-class-name
-                                                              sel-class-name (if remove-sibling-borders 1 0)))
-                                       "&nbsp;" ,tab-text "&nbsp;")))
-              ((:td "align" "center" "width" "100%" :class ,void-class-name) "&nbsp;"))))
-         ;; (write-string ,(format nil "<SCRIPT>~a.style.display=\"\";</SCRIPT>" table-name) *html-stream*)
-         ,@(loop for (nil . tab-form) in tab-forms
-              as visibility = "" then "none"
-              as i from 0
-              as pane-name = (format nil "~a~d" pane-array-name i)
-              collect (html-gen `((:div :id ,pane-name :class ,pane-class-name 
-                                        :style ,(format nil "display:~a;" visibility))
-                                  ,@tab-form)))
-         ,(html-gen `(:jscript
-                      ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
-                               pane-array-name pane-array-name
-                               tab-array-name tab-array-name)
-                      ,@(loop for i from 0 below (length tab-forms)
-                           collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
-                                           pane-array-name i pane-array-name i
-                                           tab-array-name i tab-array-name i))))))))
+  (if (eq *frontend* :bootstrap)
+      (bootstrap-tab-tag attributes tab-forms)
+      (destructuring-bind (&key (name (string (gensym))) (class "tab0")
+                                (remove-sibling-borders t) &allow-other-keys) attributes
+        (let ((unsel-class-name (concatenate 'string class "UnSel"))
+              (sel-class-name (concatenate 'string class "Sel"))
+              (void-class-name (concatenate 'string class "Void"))
+              (pane-class-name (concatenate 'string class "Pane"))
+              (tab-array-name (concatenate 'string name "Tabs"))
+              (pane-array-name (concatenate 'string name "Panes"))
+              (table-name (concatenate 'string name "Table")))
+          `(optimize-progn
+            ,(html-gen
+              `((:table :id ,table-name :class ,class :cellspacing "0")
+                ((:tr :valign "middle")
+                 ,@(loop for (tab-text . nil) in tab-forms
+                      as tab-class = sel-class-name then unsel-class-name
+                      as i from 0
+                      as item-name = (format nil "~a~d" tab-array-name i)
+                      collect (html-gen `((:td :id ,item-name :class ,tab-class
+                                               ;; :onmouseover ,(format nil "this.className='~aOver';" tab-class)
+                                               ;; :onmouseout ,(format nil "this.className='~a';" tab-class)
+                                               :onclick ,(format nil "f85425(~a, ~a, ~d, '~a', '~a', ~d);"
+                                                                 tab-array-name pane-array-name i unsel-class-name
+                                                                 sel-class-name (if remove-sibling-borders 1 0)))
+                                          "&nbsp;" ,tab-text "&nbsp;")))
+                 ((:td "align" "center" "width" "100%" :class ,void-class-name) "&nbsp;"))))
+            ;; (write-string ,(format nil "<SCRIPT>~a.style.display=\"\";</SCRIPT>" table-name) *html-stream*)
+            ,@(loop for (nil . tab-form) in tab-forms
+                 as visibility = "" then "none"
+                 as i from 0
+                 as pane-name = (format nil "~a~d" pane-array-name i)
+                 collect (html-gen `((:div :id ,pane-name :class ,pane-class-name
+                                           :style ,(format nil "display:~a;" visibility))
+                                     ,@tab-form)))
+            ,(html-gen `(:jscript
+                         ,(format nil "var ~a;~a=new Array();var ~a;~a=new Array();"
+                                  pane-array-name pane-array-name
+                                  tab-array-name tab-array-name)
+                         ,@(loop for i from 0 below (length tab-forms)
+                              collect (format nil "~a[~d]=fgt('~a~d');~a[~d]=fgt('~a~d');"
+                                              pane-array-name i pane-array-name i
+                                              tab-array-name i tab-array-name i)))))))))
+
+(defun bootstrap-tab-tag (attributes tab-forms)
+  (destructuring-bind (&key (name (string (gensym))) (bs-class "nav-tabs") &allow-other-keys) attributes
+    `(optimize-progn
+      ,(html-gen
+        `((:div)
+          ((:ul :id ,name :class ,(format nil "nav ~a" bs-class) :cellspacing "0")
+           ,@(loop for (tab-text . nil) in tab-forms
+                for i from 0
+                for pane-name = (format nil "#~a~d" name i)
+                collect (html-gen `(,(if (zerop i) '(:li :class "active") :li)
+                                     ((:a :href ,pane-name :data-toggle "tab") ,tab-text)))))))
+      ,(html-gen
+        `((:div :class "tab-content")
+          ,@(loop for (nil . tab-form) in tab-forms
+               for i from 0
+               for pane-name = (format nil "~a~d" name i)
+               collect (html-gen `((:div :id ,pane-name :class
+                                         ,(if (zerop i) "tab-pane active" "tab-pane"))
+                                   ,@tab-form))))))))
 
 ;; :name :class :remove-sibling-borders are optional attributes
 ;; syntax

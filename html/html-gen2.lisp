@@ -1,5 +1,7 @@
 (in-package #:html)
 
+(defvar *frontend* :bootstrap) ;other values :html
+
 (defun dc-string (obj)
   (string-downcase (string obj)))
 
