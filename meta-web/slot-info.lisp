@@ -53,6 +53,20 @@
 	((:tr :class "dvr")
 	 ((:td :class "dvcv") ((:slot-edit italian :class "dvcve")))))))))
 
+(make-instance 'interface::object-view :object-class 'translated-string
+	       :country-languages '(:en) :name "ts-en" :frontend '(:bootstrap) :source-code 
+   `((:tab
+      ("English"
+       ((:slot-edit english)))
+      ("French"
+       ((:slot-edit french )))
+      ("German"
+       ((:slot-edit german )))
+      ("Spanish"
+       ((:slot-edit spanish)))
+      ("Italian"
+       ((:slot-edit italian))))))
+
 (defun make-object-help (oh)
   (list 'make-instance ''meta::object-help
 	:en (english-tooltip oh) :fr (french-tooltip oh) :de (german-tooltip oh)
