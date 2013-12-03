@@ -348,7 +348,9 @@
   (mapcar 'convert-slot-value-to-sexpr value))
 
 (defmethod convert-slot-value-to-sexpr ((obj root-object))
-  (list :obj-id (id obj) (guid (class-of obj))))
+  (if (zerop (id obj))
+      (cons :obj (convert-object-to-sexpr obj))
+      (list :obj-id (id obj) (guid (class-of obj)))))
 
 (defun convert-object-to-sexpr (object)
   (let* ((class (class-of object))
@@ -378,13 +380,16 @@
   value)
 
 (defmethod convert-sexpr-to-slot-value ((value list))
-  (if (eq (first value) :obj-id)
-      (let* ((id (second value))
-	     (found (gethash id (loaded-objects *default-store*))))
-	(if found
-	    found
-	    (create-proxy-object id (third value))))
-      (mapcar 'convert-sexpr-to-slot-value value)))
+  (case (first value)
+    (:obj-id (let* ((id (second value))
+                    (found (gethash id (loaded-objects *default-store*))))
+               (if found
+                   found
+                   (create-proxy-object id (third value)))))
+    (:obj (let ((object (create-proxy-object 0 (getf (second sexpr) :guid))))
+            (init-object-from-sexpr object sexpr)
+            object))
+    ((mapcar 'convert-sexpr-to-slot-value value))))
 
 (defun init-object-from-sexpr (object sexpr)
   (let* ((data-object (create-data-object object))
