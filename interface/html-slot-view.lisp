@@ -41,17 +41,23 @@
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot
-                                  :force-visible (getf attrs :force-visible)))
-             )
+                                  :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
-	`(html:html (:if (modifiable-p ,slot)
-			 (:progn
-			   ((:input :type "text" :id ,(name edit) :style "display:none;" :insert-string
-				    ,(format nil "onchange='Fch(~s,~a.value);'"
-					     (name edit) (name edit))
-				    ,@attrs))
-			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-			 ((:span :id ,(concatenate 'string (name edit) "d") ,@attrs))))))))
+	(case *frontend*
+          (:bootstrap
+           (if (modifiable-p slot)
+               `(html:html
+                 ((:input :type "text" :id ,(name edit) :class "form-control col-lg-6" :style "display:none;" :insert-string
+                          ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
+                 ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+               `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs)))))
+          (t
+           `(html:html (:if (modifiable-p ,slot)
+                            (:progn
+                              ((:input :type "text" :id ,(name edit) :style "display:none;" :insert-string
+                                       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
+                              ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+                            ((:span :id ,(concatenate 'string (name edit) "d") ,@attrs))))))))))
 
 (html:add-func-tag :slot-edit 'slot-edit-tag)
 
@@ -103,14 +109,21 @@
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	`(html:html (:if (modifiable-p ,slot)
-			 (:progn
-			   ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:none;"
-				       :cols ,(getf attrs :cols "50") :insert-string
-				       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit))
-				       ,@attrs))
-			   ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
+	(case *frontend*
+            (:bootstrap
+             (if (modifiable-p slot)
+                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control col-lg-6" :style "display:none;"
+                                            :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
+                             ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+                 `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))))
+            (t
+             `(html:html (:if (modifiable-p ,slot)
+                              (:progn
+                                ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:none;"
+                                         :cols ,(getf attrs :cols "50") :insert-string
+                                         ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
+                                ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+                              ((:span :id ,(concatenate 'string (name edit) "d")))))))))))
 
 (html:add-func-tag :slot-medit 'slot-medit-tag)
 

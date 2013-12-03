@@ -28,6 +28,7 @@
 	((:tr :class "dvr")
 	 ((:td :class "dvcv") ((:slot-edit italian :class "dvcve")))))))))
 
+
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:en) :name "ts-en" :source-code 
    `(((:tab :class "tabdv")

@@ -113,91 +113,142 @@
 (defun make-std-object-slots-view (class slots no-table)
   (setf class (ensure-class class))
   (unless slots (setf slots (c2mop:class-slots class)))
-    (list
-     (cons (if no-table :progn '(:table :class "dvt"))
-	   (loop for slot-name in slots
-		 for slot = (ensure-slot slot-name class)
-		 for user-name = (list :translate (meta::user-name slot))
-		 for unit = (when (meta::unit slot) (concatenate 'string " (" (meta::unit slot) ")"))
-		 when (or (meta::visible slot)(meta::visible-groups slot))
-		 collect
-		 (append (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
-			 (list
-		 (cond
-		   ((meta::list-of-values slot)
-		    (case (meta::view-type slot)
-		      (:list-val
-		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
-			 ((:td :class "dvcv")
-			  ((:slot-list ,(c2mop:slot-definition-name slot)
-				       ,@(html:merge-attributes
-					  (meta::html-tag-attributes slot)
-					  '(:class "dvl" :height "60px")))))))
-		      (:pick-mval
-		       `((:tr :class "dvr")((:td :class "dvch") ,user-name ,unit)
-			 ((:td :class "dvcv")
-			  ((:slot-pick-mval ,(c2mop:slot-definition-name slot)
-					    ,@(html:merge-attributes
-					       (meta::html-tag-attributes slot)
-					       '(:class "dvcv")))))))
-		      (t
-		       `((:tr :class "dvr")
-			 ((:td :class "dvch2" :colspan "2")
-			  ((:slot-list ,(c2mop:slot-definition-name slot)
-				       ,@(html:merge-attributes
-					  (meta::html-tag-attributes slot)
-					  '(:class "dvl")))
-			   (:table (:tr ((:td :class "dvch2") ,user-name ,unit)))))))))
-		   ((meta::fc-class-p (meta::value-type slot))
-		    (case (meta::view-type slot)
-		      ((:embed t)
-		       `((:tr :class "dvr") ((:td :class "dvch2" :colspan "2")
-					     ((:table :class "dvt2") (:tr ((:td :class "dvch2") ,user-name))
-					      (:tr (:td (:object-view :object (,(meta::accessor slot) interface::*object*))))))))
-		      (:embed-val
-		       `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-			 ((:td :class "dvcv") (:object-view :object (,(meta::accessor slot) interface::*object*)))))
-		      (t
-		       `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-			 ((:td :class "dvcv")((:slot-obj-link ,(c2mop:slot-definition-name slot) :class "dvcv")))))))
-		   ((eq (meta::view-type slot) :named-slot-view)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((,(meta::slot-view-name slot)
-					      ,(c2mop:slot-definition-name slot)
-					      ,@(meta::html-tag-attributes slot))))))
-		   ((eq (meta::value-type slot) :color)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
-					      ,(c2mop:slot-definition-name slot) :class "dvcve"
-					      ,@(meta::html-tag-attributes slot))))))
-		   ((meta::get-object-func slot)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-		      ((:td :class "dvcv")((:slot-pick-val ,(c2mop:slot-definition-name slot) :class "dvcved"
-							   ,@(meta::html-tag-attributes slot))))))
-		   ((meta::choices slot)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-		      ((:td :class "dvcv") ((:slot-combo ,(c2mop:slot-definition-name slot)
-							 ,@(meta::html-tag-attributes slot))))))
-		   ((eq (meta::value-type slot) 'string)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-		      ((:td :class "dvcv") ((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
-					      ,(c2mop:slot-definition-name slot) :class "dvcve"
-					      ,@(meta::html-tag-attributes slot))))))
-		   ((eq (meta::value-type slot) :date)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-date-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
-							     ,@(meta::html-tag-attributes slot))))))
-		   ((eq (meta::value-type slot) :universal-time)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-date-edit ,(c2mop:slot-definition-name slot)
-							     :show-time t :class "dvcve"
-							     ,@(meta::html-tag-attributes slot))))))
-		   ((eq (meta::value-type slot) 'boolean)
-		    `((:tr :class "dvr") ((:td :class "dvch") ,user-name)
-		      ((:td :class "dvcv") ((:slot-check-box ,(c2mop:slot-definition-name slot))))))
-		   (t `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit)
-			((:td :class "dvcv") ((:slot-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
-							  ,@(meta::html-tag-attributes slot)))))))))))))
+  (if (eq *frontend* :bootstrap)
+      (make-std-object-slots-view-bootstrap class slots no-table)
+      (list
+       (cons (if no-table :progn '(:table :class "dvt"))
+             (loop for slot-name in slots
+                for slot = (ensure-slot slot-name class)
+                for user-name = (list :translate (meta::user-name slot))
+                for unit = (when (meta::unit slot) (concatenate 'string " (" (meta::unit slot) ")"))
+                when (or (meta::visible slot)(meta::visible-groups slot))
+                collect
+                  (flet ((std-row (&rest body)
+                           `((:tr :class "dvr") ((:td :class "dvch") ,user-name ,unit) ((:td :class "dvcv") ,@body))))
+                    (append
+                     (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
+                     (list
+                      (cond
+                        ((meta::list-of-values slot)
+                         (case (meta::view-type slot)
+                           (:list-val
+                            (std-row `((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
+                                             (meta::html-tag-attributes slot) '(:class "dvl" :height "60px"))))))
+                           (:pick-mval
+                            (std-row `((:slot-pick-mval ,(c2mop:slot-definition-name slot)
+                                             ,@(html:merge-attributes (meta::html-tag-attributes slot) '(:class "dvcv"))))))
+                           (t
+                            `((:tr :class "dvr")
+                              ((:td :class "dvch2" :colspan "2")
+                               ((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
+                                               (meta::html-tag-attributes slot) '(:class "dvl")))
+                                (:table (:tr ((:td :class "dvch2") ,user-name ,unit)))))))))
+                        ((meta::fc-class-p (meta::value-type slot))
+                         (case (meta::view-type slot)
+                           ((:embed t)
+                            `((:tr :class "dvr") ((:td :class "dvch2" :colspan "2")
+                                                  ((:table :class "dvt2") (:tr ((:td :class "dvch2") ,user-name))
+                                                   (:tr (:td (:object-view :object (,(meta::accessor slot) interface::*object*))))))))
+                           (:embed-val
+                            (std-row `(:object-view :object (,(meta::accessor slot) interface::*object*))))
+                           (t
+                            (std-row `((:slot-obj-link ,(c2mop:slot-definition-name slot) :class "dvcv"))))))
+                        ((eq (meta::view-type slot) :named-slot-view)
+                         (std-row `((,(meta::slot-view-name slot) ,(c2mop:slot-definition-name slot)
+                                      ,@(meta::html-tag-attributes slot)))))
+                        ((eq (meta::value-type slot) :color)
+                         (std-row `((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
+                                      ,(c2mop:slot-definition-name slot) :class "dvcve"
+                                      ,@(meta::html-tag-attributes slot)))))
+                        ((meta::get-object-func slot)
+                         (std-row `((:slot-pick-val ,(c2mop:slot-definition-name slot) :class "dvcved"
+                                                    ,@(meta::html-tag-attributes slot)))))
+                        ((meta::choices slot)
+                         (std-row `((:slot-combo ,(c2mop:slot-definition-name slot)
+                                                 ,@(meta::html-tag-attributes slot)))))
+                        ((eq (meta::value-type slot) 'string)
+                         (std-row `((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
+                                      ,(c2mop:slot-definition-name slot) :class "dvcve"
+                                      ,@(meta::html-tag-attributes slot)))))
+                        ((eq (meta::value-type slot) :date)
+                         (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
+                                                     ,@(meta::html-tag-attributes slot)))))
+                        ((eq (meta::value-type slot) :universal-time)
+                         (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
+                                                     :show-time t :class "dvcve"
+                                                     ,@(meta::html-tag-attributes slot)))))
+                        ((eq (meta::value-type slot) 'boolean)
+                         (std-row `((:slot-check-box ,(c2mop:slot-definition-name slot)))))
+                        (t (std-row `((:slot-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
+                                                  ,@(meta::html-tag-attributes slot))))))))))))))
+
+(defun make-std-object-slots-view-bootstrap (class slots no-table)
+  (list
+   (cons (if no-table :progn '(:form :class "form-horizontal"))
+         (loop for slot-name in slots
+            for slot = (ensure-slot slot-name class)
+            for user-name = (list :translate (meta::user-name slot))
+            for unit = (when (meta::unit slot) (concatenate 'string " (" (meta::unit slot) ")"))
+            when (or (meta::visible slot)(meta::visible-groups slot))
+            collect
+              (flet ((std-row (&rest body)
+                       `((:div :class "form-group")
+                         ((:label :class "control-label col-lg-2") ,user-name ,unit)
+                         ((:div :class "col-lg-6") ,@body))))
+                (append
+                 (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
+                 (list
+                  (cond
+                    ((meta::list-of-values slot)
+                     (case (meta::view-type slot)
+                       (:list-val
+                        (std-row `((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
+                                                                                     (meta::html-tag-attributes slot) '(:class "dvl" :height "60px"))))))
+                       (:pick-mval
+                        (std-row `((:slot-pick-mval ,(c2mop:slot-definition-name slot)
+                                                    ,@(html:merge-attributes (meta::html-tag-attributes slot) '(:class "dvcv"))))))
+                       (t
+                        `((:div :class "form-group")
+                          ((:td :class "dvch2" :colspan "2")
+                           ((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
+                                                                              (meta::html-tag-attributes slot) '(:class "dvl")))))))))
+                    ((meta::fc-class-p (meta::value-type slot))
+                     (case (meta::view-type slot)
+                       ((:embed t)
+                        `((:div :class "form-group") ((:label :class "col-lg-2 control-label") ,user-name)
+                          (:object-view :object (,(meta::accessor slot) interface::*object*))))
+                       (:embed-val
+                        (std-row `(:object-view :object (,(meta::accessor slot) interface::*object*))))
+                       (t
+                        (std-row `((:slot-obj-link ,(c2mop:slot-definition-name slot) :class "dvcv"))))))
+                    ((eq (meta::view-type slot) :named-slot-view)
+                     (std-row `((,(meta::slot-view-name slot) ,(c2mop:slot-definition-name slot)
+                                  ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) :color)
+                     (std-row `((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
+                                  ,(c2mop:slot-definition-name slot)
+                                  ,@(meta::html-tag-attributes slot)))))
+                    ((meta::get-object-func slot)
+                     (std-row `((:slot-pick-val ,(c2mop:slot-definition-name slot)
+                                                ,@(meta::html-tag-attributes slot)))))
+                    ((meta::choices slot)
+                     (std-row `((:slot-combo ,(c2mop:slot-definition-name slot)
+                                             ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) 'string)
+                     (std-row `((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
+                                  ,(c2mop:slot-definition-name slot)
+                                  ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) :date)
+                     (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
+                                                 ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) :universal-time)
+                     (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
+                                                 :show-time t
+                                                 ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) 'boolean)
+                     (std-row `((:slot-check-box ,(c2mop:slot-definition-name slot)))))
+                    (t (std-row `((:slot-edit ,(c2mop:slot-definition-name slot)
+                                              ,@(meta::html-tag-attributes slot)))))))))))))
 
 (defun ensure-function (function class)
   (if (symbolp function)
