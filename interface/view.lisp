@@ -209,7 +209,8 @@
                                                     ,@(html:merge-attributes (meta::html-tag-attributes slot) '(:class "dvcv"))))))
                        (t
                         `((:div :class "form-group")
-                          ((:td :class "dvch2" :colspan "2")
+                          ((:label :class "control-label col-lg-2") ,user-name ,unit)
+                          ((:div :class "col-lg-6")
                            ((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
                                                                               (meta::html-tag-attributes slot) '(:class "dvl")))))))))
                     ((meta::fc-class-p (meta::value-type slot))

@@ -367,6 +367,55 @@ rankdir=LR;
              "(in-package fcw)" :br
              "(start [path to store])"))))
 
+(make-instance 'interface::object-view :object-class 'project :frontend '(:bootstrap)
+	       :country-languages '(:en :fr) :name "proj-v" :source-code
+  `((:tab
+     ("Description"
+      (:slot-table name project-package description version project-version version-date
+                   sources-directory application-ip application-port class-groups))
+     ("User&nbsp;Groups"
+      (:slot-table user-groups))
+     #+nil("Files"
+           (:slot-table print-source-files used-lisp-modules)
+           ((:table :class "dvt")
+            ((:tr :class "dvr")
+             ((:td :class "dvch2" :colspan "2") "ASDF directives"))
+            ((:tr :class "dvr")
+             ((:td :class "dvcv" :colspan "2")
+              ((:slot-medit asdf-directives :class "dvcve" :rows "4" :cols "100" :style "width:440px"))))
+            ((:tr :class "dvr")
+             ((:td :class "dvch2" :colspan "2")
+              ((:slot-list files :height "400px" :class "dvl")
+               (:table (:tr ((:td :class "dvch2") "Source files"))))))
+            ((:tr :class "dvr")
+             ((:td :class "dvch2" :colspan "2")
+              ((:slot-list other-documents :height "200px" :class "dvl")
+               (:table (:tr ((:td :class "dvch2") "Other Documents"))))))))
+     #+nil("SQL&nbsp;Lists"
+           ((:table :class "dvt")
+            ((:tr :class "dvr")
+             ((:td :class "dvch2" :colspan "2")
+              ((:slot-list sql-lists :height "500px" :class "dvl")
+               (:table (:tr ((:td :class "dvch2") "SQL lists")))))))))
+    (:td (:obj-fn-table))
+    (:on-off
+     ((:a :href "#")
+      ((:img :src "/static/arblue.gif" :width "9" :height "9")) "&nbsp;Hide export ")
+     ((:a :href "#")
+      ((:img :src "/static/arblue.gif" :width "9" :height "9")) "&nbsp;Export this project to an ascii store" :br)
+     "To export this project, restart a fresh lisp and type" :br
+     (:code
+      "(ql:quickload :fw-web)" :br
+      "(in-package fcw)" :br
+      "(start)" :br
+      "(move-store-to-ascii-store [path to store] " :br
+      "&nbsp;&nbsp;&nbsp;&nbsp;"
+      (:fformat "   (meta::load-object ~d  meta-web::*meta-store*))" (meta::id interface::*object*)) :br :br)
+     "Then to start the framework gui on that new store, restart a fresh lisp and type" :br
+     (:code "(ql:quickload :fw-web)" :br
+            "(in-package fcw)" :br
+            "(start [path to store])"))))
+
 (defun gen-asdf-file (project)
   (with-open-file (s (format nil "~a~a.asd1"
 			     (sources-directory project)
