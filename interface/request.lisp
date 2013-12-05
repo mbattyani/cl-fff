@@ -41,6 +41,7 @@
    (cookie :initform nil :accessor cookie)
    (new-cookie :initform nil :accessor new-cookie)
    (session :initform nil :accessor session)
+   (hunchentoot-request :initform nil :accessor hunchentoot-request :initarg :hunchentoot-request)
    ))
 
 (defmethod initialize-instance :after ((request http-request) &rest init-options &key &allow-other-keys)
@@ -152,13 +153,13 @@
 	(setf (user-name request) (subseq decoded-authorization 0 colon)
 	      (password request) (subseq decoded-authorization (1+ colon)))))))
 
-(defun decode-posted-content  (request)
+(defun decode-posted-content (request)
   (unless (posted-content request)
     (let ((posted-content (%command-param "posted-content" (command request)))
-	  (url-params (%command-param "url-params" (command request)))
-	  (content-type (%command-param "content-type" (command request))))
+          (url-params (%command-param "url-params" (command request)))
+          (content-type (%command-param "content-type" (command request))))
       (when content-type
-	(setf content-type (html::parse-header-values content-type)))
+        (setf content-type (html::parse-header-values content-type)))
       (setf (posted-content request)
             (ignore-errors
               (nconc

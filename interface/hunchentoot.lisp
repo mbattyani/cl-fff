@@ -6,12 +6,12 @@
   (let ((path (and (acceptor-document-root acceptor)
                    (request-pathname request))))
     (let* ((headers-in (headers-in*))
-           (post-parameters (raw-post-data :force-text t)) ; #'post-parameters* returns alist, not string
+           ;; (post-parameters (raw-post-data :force-text t)) ; #'post-parameters* returns alist, not string
            (list (list* (cons "url" (request-uri*))
                         (cons "Referer" (referer request))
                         (cons "User-Agent" (cdr (assoc :user-agent headers-in)))
                         (cons "Accept-Language" (cdr (assoc :accept-language headers-in)))
-                        (cons "posted-content" post-parameters) 
+                        (cons "posted-content" (hunchentoot:get-parameters request)) ; post-parameters)
                         (cons "content-type" (cdr (assoc :content-type headers-in)))
                         (loop
                            for (cookie . value) in (cookies-in*)
@@ -31,7 +31,7 @@
                    (= (mismatch string-path "js/") 3))
                (handle-static-file
                 (merge-pathnames path (acceptor-document-root acceptor)))
-               (interface::%process-hunchentoot-command% list))))
+               (interface::%process-hunchentoot-command% list request))))
            (t
             (setf (return-code *reply*) +http-not-found+)
             (abort-request-handler))))))
@@ -78,14 +78,13 @@
       (when (not (content-sent request))
         (hunchentoot::start-output (parse-integer (subseq (status request) 0 3))))))
 
-(defun %process-hunchentoot-command% (command)
+(defun %process-hunchentoot-command% (command original-request)
   (incf *request-counter*)
-  (let* ((request (make-instance 'http-request :command command))
+  (let* ((request (make-instance 'http-request :command command :hunchentoot-request original-request :posted-content (cdr (assoc "posted-content" command :test #'string=)))) ;; instead (decode-posted-content request)
 	 (*request-id* (encode-integer *request-counter*)))
     (if (banned-ip-p (%command-param "remote-ip-addr" command))
         (http-message "Blocked IP Address<br>Contact the web site administrator" request)
         (unless (process-http-request request)
           (http-debug-request request)))
     (write-request request hunchentoot::*hunchentoot-stream*)
-    (force-output hunchentoot::*hunchentoot-stream*)
-    ))
+    (force-output hunchentoot::*hunchentoot-stream*)))

@@ -1691,3 +1691,72 @@ function fh(name)
        (map-sub-nodes #'(lambda (node first last index)
 			  (draw-huge-tree node level index first last previous-lasts path draw-node-fn))
 		      node)))))
+
+;;;; File upload
+
+(defvar *tmp-test-directory*
+    #+(or :win32 :mswindows) #p"c:\\hunchentoot-temp\\test\\"
+    #-(or :win32 :mswindows) #p"/tmp/hunchentoot/test/")
+
+(defvar *tmp-test-files* nil)
+
+(let ((counter 0))
+  (defun handle-file (post-parameter hunchentoot-request)
+    "Taken from hunchentoot-test"
+    (when (and post-parameter
+               (listp post-parameter))
+      (destructuring-bind (path file-name content-type) post-parameter
+        (let ((new-path (make-pathname :name (format nil "hunchentoot-test-~A"
+                                                     (incf counter))
+                                       :type nil
+                                       :defaults *tmp-test-directory*)))
+          ;; strip directory info sent by Windows browsers
+          (when (search "Windows" (hunchentoot:user-agent hunchentoot-request) :test 'char-equal)
+            (setq file-name (cl-ppcre:regex-replace ".*\\\\" file-name "")))
+          (rename-file path (ensure-directories-exist new-path))
+          (push (list new-path file-name content-type) *tmp-test-files*))))))
+
+(defun file-upload-page ()
+  (html:html
+    (:html
+      (:head (:title "Hunchentoot file upload test"))
+      (:body
+       (:h2 "File upload test")
+       ((:form :method "post" :enctype "multipart/form-data")
+        (:p "Chose file: " ((:input :type "file"
+                                    :name "file")))
+        (:p ((:input :type "submit"))))
+       (when *tmp-test-files*
+         (html:html
+           (:p
+            ((:table :border 1 :cellpadding 2 :cellspacing 0)
+             (:tr ((:td :colspan 3) (:b "Uploaded files")))
+             (loop
+                for (path file-name nil) in *tmp-test-files* ;; third value is MIME-type
+                for i from 1
+                collect
+                  (html:html (:tr ((:td :align "right") i)
+                                  (:td ((:a :href (format nil "files/~A?path=~A"
+                                                          (hunchentoot:url-encode file-name)
+                                                          (hunchentoot:url-encode (namestring path))))
+                                        file-name)))))))))))))
+    
+(defun file-upload-test-request-handler (request)
+  (let ((hunchentoot-request (hunchentoot-request request)))
+    ;; (print (hunchentoot:post-parameters (hunchentoot-request request)))
+    (when (hunchentoot::post-parameter "file" hunchentoot-request)
+      (handle-file (hunchentoot:post-parameter "file") hunchentoot-request))
+    (interface::with-output-to-request (request html:*html-stream*)
+      (file-upload-page))))
+
+(interface::add-named-url "/upload.html" 'file-upload-test-request-handler)
+
+#+nil
+("posted-content" . "-----------------------------198810850710137454481039072866
+Content-Disposition: form-data; name=\"file\"; filename=\".X0-lock\"
+Content-Type: application/octet-stream
+
+      6026
+
+-----------------------------198810850710137454481039072866--
+")
