@@ -33,7 +33,7 @@
    (host :initform nil :accessor host)
    (user-agent :initform nil :accessor user-agent)
    (session-params :initform nil :accessor session-params)
-   (posted-content :initform nil :accessor posted-content)
+   (posted-content :initform nil :accessor posted-content :initarg :posted-content)
    (search-params :initform nil :accessor search-params)
    (user-name :initform nil :accessor user-name)
    (password :initform nil :accessor password)
