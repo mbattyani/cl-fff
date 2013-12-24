@@ -14,7 +14,7 @@
   (hcl:set-hash-table-weak (loaded-objects store) :value)
   (open-store store))
 
-(defun get-next-id ()
+(defun get-next-mongo-id ()
   (cl-mongo:db.update "counters" (cl-mongo:kv "id" "users") (cl-mongo:$inc "seq" 1))
   (cl-mongo:get-element "seq" (caadr (cl-mongo:db.find "counters" (cl-mongo:kv "id" "users")))))
 
@@ -23,27 +23,26 @@
   (let ((doc (cl-mongo:make-document)))
     (cl-mongo:add-element "id" "users" doc) ;; cant be _id, bug in CL-mongo
     (cl-mongo:add-element "seq" (next-id store) doc)
-    (cl-mongo:db.insert "counters" doc))
-  #+nil(setf (next-id store) (get-next-id)))
+    (cl-mongo:db.insert "counters" doc)))
 
 (defmethod initialize-store ((store mongo-store))
   (open-store store))
 
 (defmethod create-new-object-id ((store mongo-store) class-id)
-  (setf (next-id store) (get-next-id)))
+  (setf (next-id store) (get-next-mongo-id)))
 
 ;; save
 
-(defmethod convert-slot-value-to-sexpr (value)
+(defmethod convert-slot-value-to-mexpr (value)
   value)
 
-(defmethod convert-slot-value-to-sexpr ((value list))
-  (mapcar #'convert-slot-value-to-sexpr value))
+(defmethod convert-slot-value-to-mexpr ((value list))
+  (mapcar #'convert-slot-value-to-mexpr value))
 
-(defmethod convert-slot-value-to-sexpr ((object root-object))
+(defmethod convert-slot-value-to-mexpr ((object root-object))
   (list "OBJ-ID" (id object) (guid (class-of object))))
 
-(defmethod convert-parent-slot-value-to-sexpr ((object null))
+(defmethod convert-parent-slot-value-to-mexpr ((object null))
   nil)
 
 (defgeneric find-mongo-document (store object-or-id)
@@ -55,7 +54,6 @@
 (defmethod find-mongo-document ((store mongo-store) (id integer))
   (caadr (cl-mongo:db.find (collection-name store) (cl-mongo:kv "object-id" id))))
 
-
 (defun create-or-modify-mongo-document (store object)
   (let ((class (class-of object))
         (data-object (load-object-data object))
@@ -65,14 +63,14 @@
     (cl-mongo:add-element "guid" (guid class) document)
     (cl-mongo:add-element "version" (version class) document)
     (let (#+nil(parent (when (parent object) (id (parent object)))))
-      (cl-mongo:add-element "parent" (convert-slot-value-to-sexpr (parent object)) document))
+      (cl-mongo:add-element "parent" (convert-slot-value-to-mexpr (parent object)) document))
     (loop
        for slot in (class-slots class)
        when (stored slot)
        do
          (slot-definition-name slot)
          (cl-mongo:add-element (princ-to-string (slot-definition-name slot))
-                               (convert-slot-value-to-sexpr
+                               (convert-slot-value-to-mexpr
                                 (slot-value data-object (slot-definition-name slot))) document))
     document))
 
@@ -85,16 +83,16 @@
 
 ;; load
 
-(defmethod convert-sexpr-to-slot-value (value)
+(defmethod convert-mexpr-to-slot-value (value)
   value)
 
 #+nil(defmethod convert-document-to-object ((document cl-mongo:document))
   (let ((object (create-proxy-object (cl-mongo:get-element "object-id" document) (cl-mongo:get-element "guid" document) t))) ;; t anonymous
     (init-object-from-document object document)))
-#+nil(defmethod convert-sexpr-to-slot-value ((documents list))
+#+nil(defmethod convert-mexpr-to-slot-value ((documents list))
   (mapcar #'convert-document-to-object documents))
 
-(defmethod convert-sexpr-to-slot-value ((value list))
+(defmethod convert-mexpr-to-slot-value ((value list))
   (if (and (stringp (first value))
            (string= (first value) "OBJ-ID")) ;; it means we have parent
       (let* ((id (second value))
@@ -102,7 +100,7 @@
 	(if found
 	    found
 	    (create-proxy-object id (third value))))
-      (mapcar 'convert-sexpr-to-slot-value value)))
+      (mapcar 'convert-mexpr-to-slot-value value)))
 
 (defun init-object-from-document (object document)
   (let* ((data-object (create-data-object object))
@@ -110,12 +108,12 @@
     (setf (modified object) nil)
     (let ((parent (cl-mongo:get-element "parent" document)))
       (when parent
-        (setf (parent object) (convert-sexpr-to-slot-value parent))))
+        (setf (parent object) (convert-mexpr-to-slot-value parent))))
     (loop
        with guid = (cl-mongo:get-element "guid" document)
        for slot-name in (cl-mongo:get-keys document)
        for value = (cl-mongo:get-element slot-name document)
-       for slot-value = (convert-sexpr-to-slot-value value)
+       for slot-value = (convert-mexpr-to-slot-value value)
        when (string= slot-name "object-id")
        do (or (gethash slot-value (loaded-objects *default-store*))
               (create-proxy-object value guid))            
