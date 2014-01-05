@@ -9,7 +9,11 @@ CLOSED: [2013-12-02 Mon 10:45]
 :LOGBOOK:
 - State "DONE"       from ""           [2013-12-02 Mon 10:45]
 :END:
-** (re)implement anonymous objects in ascii-store and mongodb
+** TODO (re)implement anonymous objects in ascii-store and mongodb
+:LOGBOOK:
+- State "TODO"       from "CANCELLED"  [2014-01-05 Sun 16:00]
+:END:
+Not so simple in the current version of the FW
 * html
 ** bootstrap components
 *** DONE tabs/pills
@@ -38,7 +42,11 @@ CLOSED: [2013-12-02 Mon 10:43]
 *** linked-html
 *** html-push-button
 *** html-fn-link
-*** html-edit
+*** DONE html-edit
+CLOSED: [2013-12-20 Fri 23:09]
+:LOGBOOK:
+- State "DONE"       from ""           [2013-12-20 Fri 23:09]
+:END:
 *** html-span
 *** html-medit
 *** html-date
@@ -62,6 +70,9 @@ CLOSED: [2013-12-02 Mon 10:43]
 
 ** lists
 *** using slick-grid?
+** External widgets
+*** Upload files/photos
+*** Photo galery
 * web-app demo
 ** choosing an application
 - task clocking
