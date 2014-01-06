@@ -91,6 +91,24 @@
 (defun start-apache () ;; apache
   (interface:sa *mod-lisp-port*))
 
+(defun sql-project-list () ;; postgres
+  (sort (mapcar #'(lambda (x)
+                    (meta::load-object (first x) meta-web::*meta-store*))
+                (meta::sql-query "select id from project"))
+        #'string< :key #'name))
+
+(defun move-store-to-ascii-store (ascii-store-path project)
+  (meta::load-all-sub-objects project)
+  (format t "preloaded ~d objects~%" meta::*nb-of-object-loaded*)
+  (meta::clear-preloaded-objects)
+  (let ((new-store (make-instance 'meta::ascii-store :file-directory ascii-store-path)))
+    (meta::initialize-store new-store)
+    (meta::move-objects-to-store meta-web::*meta-store* new-store)
+    (meta::register-named-object new-store project "project")
+    (meta::save-modified-objects new-store)
+    new-store))
+
+
 (defun start (&key (webserver :hunchentoot) (database :text-files) (first-start nil) (mongo-db-name "mydb")
                 (mongo-db-collection-name +mongo-collection-name+) debug (init-file nil)
                 ascii-store-path )
@@ -120,6 +138,7 @@
   (unless meta::*memory-store*
     (setf meta::*memory-store* (make-instance 'meta::void-store)))
   (setf *app-admin*  (meta::load-or-create-named-object *meta-store* "app-admin" 'app-admin))
+;  (setf *app-admin*  (meta::load-or-create-named-object meta::*memory-store* "app-admin" 'app-admin))
   (setf *meta-store-timer* (start-meta-store-timer))
 
   ;; web server

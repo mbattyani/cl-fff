@@ -21,4 +21,4 @@
 	       (:file "upgrade" :depends-on ("project-info"))
 	       (:file "gen-doc" :depends-on ("meta-classes"))
 	       (:file "pages" :depends-on ("style")))
-  :depends-on (:interface :cl-typegraph :s-dot))
+  :depends-on (:interface :cl-typegraph :s-dot :postmodern-store))
