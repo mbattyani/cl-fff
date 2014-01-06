@@ -1,5 +1,19 @@
 (in-package meta-web)
 
+(defmethod meta::convert-slot-value-to-sexpr ((tr translated-string))
+  (list :reader :trans-str :en (english tr) :fr (french tr) :sp (spanish tr)))
+
+(defun read-translated-string (list)
+  (apply 'make-instance 'translated-string :parent meta::*parent-object* :store meta::*memory-store* (cddr list)))
+
+(meta::add-ascii-store-slot-reader :trans-str 'read-translated-string)
+
+(defmethod meta::mark-object-as-modified ((object translated-string))
+  (meta::mark-object-as-modified (meta::parent object)))
+
+(defmethod meta::save-object-to-store ((store meta::ascii-store) (object translated-string))
+  )
+
 (defun make-fc-function (f)
   `(make-instance 'meta::fc-function
     :name ',(read-from-string (name f))
