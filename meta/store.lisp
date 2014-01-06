@@ -47,7 +47,6 @@
 (defconstant +end-of-object-tag+ 13)
 
 (defvar *ascii-stream* nil)
-(defvar *parent-object* nil)
 
 (defmacro write-tag-value (tag value)
   `(progn
@@ -235,6 +234,13 @@
 
 ;;;********************************************************************************
 
+(defvar *parent-object* nil)
+
+(defvar *ascii-store-slot-readers* (make-hash-table :test #'equal))
+
+(defun add-ascii-store-slot-reader (name reader-fn)
+  (setf (gethash name *ascii-store-slot-readers*) reader-fn))
+
 (export 'load-object)
 (defun load-object (id &optional (store *default-store*))
   (read-object-from-store store id))
@@ -389,18 +395,24 @@
     (:obj (let ((object (create-proxy-object 0 (getf (second sexpr) :guid))))
             (init-object-from-sexpr object sexpr)
             object))
-    ((mapcar 'convert-sexpr-to-slot-value value))))
+    (:reader (let ((reader-fn (gethash (second value) *ascii-store-slot-readers*)))
+               (if reader-fn (funcall reader-fn value)
+                   (error "ascii-store-slot-reader not found for ~s" value))))
+    (t (mapcar 'convert-sexpr-to-slot-value value))))
 
 (defun init-object-from-sexpr (object sexpr)
   (let* ((data-object (create-data-object object))
 	 (class (class-of data-object)))
     (setf (modified object) nil)
+    (setf %class% class)
     (when (getf sexpr :parent)
       (setf (parent object) (convert-sexpr-to-slot-value (getf sexpr :parent))))
-    (loop for (slot-name value) in (getf sexpr :slots)
+    (loop with *parent-object* = object
+          for (slot-name value) in (getf sexpr :slots)
 	  for slot-value = (convert-sexpr-to-slot-value value)
+         do (print (list slot-name (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name) value))
 	  when (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)
-	  do (setf (slot-value data-object slot-name) slot-value)))
+       do (setf (slot-value data-object slot-name) slot-value)))
   (initialize-unbound-slots object)
   (initialize-disable-predicates object)
   object)
@@ -412,7 +424,7 @@
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
 	(*read-eval* nil)
         (*default-store* store)
-	(*package* (find-package "COMMON-LISP-USER")))
+#+nil	(*package* (find-package "COMMON-LISP-USER")))
     (with-open-file (s filename :direction :input :external-format :utf-8)
       (init-object-from-sexpr object (read s nil nil)))))
 
@@ -423,7 +435,7 @@
       (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" id)))
 	    (*read-eval* nil)
 	    (*default-store* store)
-	    (*package* (find-package "COMMON-LISP-USER"))
+	;    (*package* (find-package "COMMON-LISP-USER"))
 	    (sexpr nil)
 	    (object nil))
 	(with-open-file (s filename :direction :input :external-format :utf-8)
