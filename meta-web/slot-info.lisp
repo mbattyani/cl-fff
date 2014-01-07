@@ -70,9 +70,7 @@
 (defun make-object-help (oh)
   (list 'make-instance ''meta::object-help
 	:en (english-tooltip oh) :fr (french-tooltip oh) :de (german-tooltip oh)
-	:sp (spanish-tooltip oh) :it (italian-tooltip oh)
-	:en-h (english-tooltip oh) :fr-h (french-tooltip oh) :de-h (german-tooltip oh)
-	:sp-h (spanish-tooltip oh) :it-h (italian-tooltip oh)))
+	:sp (spanish-tooltip oh) :it (italian-tooltip oh)))
 
 (make-instance 'interface::object-view :object-class 'object-help
 	       :country-languages '(:fr :en) :name "oh" :source-code 

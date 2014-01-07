@@ -1,5 +1,7 @@
 (in-package meta-web)
 
+;;; Let's put the translation objects into the parent object file
+
 (defmethod meta::convert-slot-value-to-sexpr ((tr translated-string))
   (list :reader :trans-str :en (english tr) :fr (french tr) :sp (spanish tr)))
 
@@ -12,6 +14,20 @@
   (meta::mark-object-as-modified (meta::parent object)))
 
 (defmethod meta::save-object-to-store ((store meta::ascii-store) (object translated-string))
+  )
+
+(defmethod meta::convert-slot-value-to-sexpr ((obj object-help))
+  (list :reader :obj-help :en (english-tooltip obj) :fr (french-tooltip obj) :sp (spanish obj)))
+
+(defun read-object-help (list)
+  (apply 'make-instance 'object-help :parent meta::*parent-object* :store meta::*memory-store* (cddr list)))
+
+(meta::add-ascii-store-slot-reader :obj-help 'read-object-help)
+
+(defmethod meta::mark-object-as-modified ((object object-help))
+  (meta::mark-object-as-modified (meta::parent object)))
+
+(defmethod meta::save-object-to-store ((store meta::ascii-store) (object object-help))
   )
 
 (defun make-fc-function (f)
