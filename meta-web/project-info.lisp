@@ -38,10 +38,10 @@
 
 (defun html-project-list ()
   (html:html
-   (:when (null (project-list *app-admin*))
+   (:when (null (projects *app-admin*))
      (:p "No projects yet."))
     (loop
-       for project in (project-list *app-admin*)
+       for project in (projects *app-admin*)
        when project
        do
          (html:html ((:a :href (interface::encode-object-url project))

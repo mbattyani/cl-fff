@@ -108,12 +108,13 @@
     (meta::save-modified-objects new-store)
     new-store))
 
+(defvar *app-admin*)
 
 (defun start (&key (webserver :hunchentoot) (database :text-files) (first-start nil) (mongo-db-name "mydb")
                 (mongo-db-collection-name +mongo-collection-name+) debug (init-file nil)
                 ascii-store-path )
   (assert (and (member webserver '(:hunchentoot :apache))
-             (member database '(:postgres :mongo-db :text-files :memory))))
+               (member database '(:postgres :mongo-db :text-files :memory))))
   (setf interface:*web-server* webserver)
   (when debug
     (log:config debug))
@@ -130,15 +131,15 @@
      (setf *meta-store* (make-instance 'meta:mongo-store :database-name mongo-db-name :collection-name mongo-db-collection-name)))
     (:text-files
      (setf *meta-store* (make-instance 'meta::ascii-store
-            :file-directory (or ascii-store-path (asdf:system-relative-pathname :meta-web "./db-store/")))))
+                                       :file-directory (or ascii-store-path (asdf:system-relative-pathname :meta-web "./db-store/")))))
     (:memory
      (setf *meta-store* (make-instance 'meta::void-store))))
   (when first-start
     (create-store database))
   (unless meta::*memory-store*
     (setf meta::*memory-store* (make-instance 'meta::void-store)))
-  (setf *app-admin*  (meta::load-or-create-named-object *meta-store* "app-admin" 'app-admin))
-;  (setf *app-admin*  (meta::load-or-create-named-object meta::*memory-store* "app-admin" 'app-admin))
+  (setf *app-admin* (meta::load-or-create-named-object *meta-store* "app-admin" 'app-admin))
+  ;;  (setf *app-admin*  (meta::load-or-create-named-object meta::*memory-store* "app-admin" 'app-admin))
   (setf *meta-store-timer* (start-meta-store-timer))
 
   ;; web server
