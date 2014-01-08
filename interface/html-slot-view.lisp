@@ -167,12 +167,16 @@
 				:href ,(format nil "javascript:open1('/calendar.html', '250px', '280px', '~a')"
 					       (name edit))) (:translate '(:en "calendar" :fr "calendrier" :sp "calendario")))
                            " "
-                           ((:a :id ,(concatenate 'string (name edit) "l") :href "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit)))
+                           #+nil((:a :id ,(concatenate 'string (name edit) "l") :href "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit)))
                             "Change...")
-                           ((:div :id "openModalCalendar" :class "modalDialog")
+                           #+nil((:div :id "openModalCalendar" :class "modalDialog")
                             (:div
                              ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
-                             (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe"))))))
+                             (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe")))))
+                           
+                           ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
+                           ((:modal-window :id "openModalCalendar")
+                            (:body (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe"))))))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
@@ -186,8 +190,8 @@
 
 (defun last-day (month year)
   (if (= month 2)
-    (if (or (and (= (mod year 4) 0)(/= (mod year 100) 0))(= (mod year 400) 0)) 29 28)
-    (aref #(31 28 31 30 31 30 31 31 30 31 30 31) (1- month))))
+      (if (or (and (= (mod year 4) 0) (/= (mod year 100) 0) ) (= (mod year 400) 0)) 29 28)
+      (aref #(31 28 31 30 31 30 31 31 30 31 30 31) (1- month))))
 
 (defvar *month-fr* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
 		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
@@ -696,45 +700,45 @@
 ;(defun ask-yes-no-question (request title question yes-id no-id)
 
 (defun obj-del-request-handler (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (dispatcher nil))
-	(when link (setf link (gethash link *http-links*)))
-	(when (and link item) (setf dispatcher (gethash item (dispatchers link))))
-	(let* ((*session* (session link))
-	       (*user* (user *session*))
-	       (*country-language* (country-language *session*)))
-	  (with-output-to-request (request)
-	    (html::html-to-stream
-	     *request-stream*
-	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-	     (:html
-	      (:head
-	       (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
-	       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-	      (:body
-	       :br
-               (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
-                              "window.setTimeout('window.close();', 600); shot = true;}};")
-	       (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
-			 (:translate '(:en "Do you want to remove these objects:"
-                                       :sp "Está seguro de querer eliminar estos objetos:"
-				       :fr "Voulez vous vraiment supprimer ces objets:"))
-			 (:translate '(:en "Do you want to remove this object:"
-                                       :sp "Está seguro de querer eliminar este objeto:"
-				       :fr "Voulez vous vraiment supprimer cet objet:"))))
-	       (:p
-		(dolist (object (objects-to-delete dispatcher))
-		  (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
-	       ((:div :align "center")
-		((:a :class "call" :href "javascript:f42('30000');" )
-		 (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
-		"&nbsp;&nbsp;&nbsp;&nbsp;"
-		((:a :class "call" :href "javascript:f42('30001');" )
-		 (:translate '(:en "No" :fr "Non" :sp "No")))
-		))))))
-	t))
+  (decode-posted-content request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (dispatcher nil))
+    (when link (setf link (gethash link *http-links*)))
+    (when (and link item) (setf dispatcher (gethash item (dispatchers link))))
+    (let* ((*session* (session link))
+           (*user* (user *session*))
+           (*country-language* (country-language *session*)))
+      (with-output-to-request (request)
+        (html::html-to-stream
+         *request-stream*
+         "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+         (:html
+           (:head
+            (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
+            ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
+           (:body
+            :br
+            (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
+                      "window.setTimeout('window.close();', 600); shot = true;}};")
+            (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
+                      (:translate '(:en "Do you want to remove these objects:"
+                                    :sp "Está seguro de querer eliminar estos objetos:"
+                                    :fr "Voulez vous vraiment supprimer ces objets:"))
+                      (:translate '(:en "Do you want to remove this object:"
+                                    :sp "Está seguro de querer eliminar este objeto:"
+                                    :fr "Voulez vous vraiment supprimer cet objet:"))))
+            (:p
+             (dolist (object (objects-to-delete dispatcher))
+               (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
+            ((:div :align "center")
+             ((:a :class "call" :href "javascript:f42('30000');" )
+              (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
+             "&nbsp;&nbsp;&nbsp;&nbsp;"
+             ((:a :class "call" :href "javascript:f42('30001');" )
+              (:translate '(:en "No" :fr "Non" :sp "No")))
+             ))))))
+    t))
 
 (interface::add-named-url "/obj-del.html" 'obj-del-request-handler)
 
@@ -1760,3 +1764,64 @@ Content-Type: application/octet-stream
 
 -----------------------------198810850710137454481039072866--
 ")
+
+;;;; Modal window
+
+(defun modal-button-tag (attributes form)
+  (destructuring-bind (&key target (role "button") (class "btn") (data-toggle "modal") (onclick "") (id "")) attributes
+    `(html:html
+       ((:a :data-target ,target :role ,role :class ,class :data-toggle ,data-toggle :onclick ,onclick :id ,id) ,@form))))
+
+(html:add-func-tag :modal-button 'modal-button-tag)
+
+(defun modal-window-tag (attributes form)
+  (destructuring-bind (&key id (role "button") (class "modal fade in") (tabindex "-1") aria-labelledby) attributes
+    (let ((header (cdr (assoc :header form)))
+          (body (cdr (assoc :body form)))
+          (footer (cdr (assoc :footer form))))
+      `(html:html
+         ((:div :id ,id :class ,class :tabindex ,tabindex :role ,role :aria-labelledby ,aria-labelledby :aria-hidden "true")
+          ((:div :class "modal-dialog")
+           ((:div :class "modal-content")
+            ((:div :class "modal-header")
+             ((:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true") "×")
+             ,@header)
+            ((:div :class "modal-body")
+             ,@body)
+            ((:div :class "modal-footer")
+             ,@footer))))))))
+
+(html:add-func-tag :modal-window 'modal-window-tag)
+
+;; usage:
+;; ((:modal-button :target "#myModal") "Launch demo modal")
+;;
+;; ((:modal-window :id "myModal")
+;;  (:header ((:h3 :id "myModalLabel") "Modal header"))
+;;  (:body (:p "body1") (:p "body2"))
+;;  (:footer ((:button :class "btn" :data-dismiss "modal" :aria-hidden "true") "Close")
+;;            ((:button :class "btn btn-primary") "Save changes")))
+
+;; Modal Example
+
+(defun modal-test-request-handler (request)
+  (interface::with-output-to-request (request html:*html-stream*)
+    (html:html
+      (:html
+        (:head
+         (:title "Modal upload test")
+         ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"))
+         ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css")))
+        (:body
+         (:h2 "Modal test")
+         ((:modal-button :target "#myModal") "Launch demo modal")
+         ((:a :onclick "javascript:$('#myModal').modal('show');" :href "javascript:void(0);") "JS test")
+         ((:modal-window :id "myModal")
+          (:header ((:h3 :id "myModalLabel") "Modal header"))
+          (:body (:p "body1") (:p "body2"))
+          (:footer ((:button :class "btn" :data-dismiss "modal" :aria-hidden "true") "Close")
+                   ((:button :class "btn btn-primary") "Save changes")))
+         ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+         ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js")))))))
+
+(interface::add-named-url "/modal.html" 'modal-test-request-handler)
