@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10568 109)
+:slots ((meta-web::choice-value ":string")
+(meta-web::name (:reader :trans-str :en "string" :fr "chaîne de caratères" :sp ""))
+(meta-web::description nil)))

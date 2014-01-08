@@ -1,0 +1,8 @@
+(:guid 120 :version 0 :parent (:obj-id 10945 116)
+:slots ((meta-web::name "meta-web.asd")
+(meta-web::in-asdf t)
+(meta-web::generated nil)
+(meta-web::print-in-doc t)
+(meta-web::description "Fichier contenant la description des fichiers et modules à charger avec leur dépendances. (Analogue à un makefile mais pour Common Lisp)")
+(meta-web::file-pathname "")
+(meta-web::dependances nil)))

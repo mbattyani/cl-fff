@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":pick-color")
+(meta-web::name (:reader :trans-str :en "color choice popup" :fr "popup choix couleur" :sp ""))
+(meta-web::description "")))

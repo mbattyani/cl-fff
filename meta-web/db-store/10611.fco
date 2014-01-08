@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":named-slot-view")
+(meta-web::name (:reader :trans-str :en "Specify slot view" :fr "Spécifier vue slot" :sp ""))
+(meta-web::description "")))

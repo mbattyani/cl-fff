@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":embed-val")
+(meta-web::name (:reader :trans-str :en "insérer vue (valeur)" :fr "insérer vue (valeur)" :sp ""))
+(meta-web::description nil)))

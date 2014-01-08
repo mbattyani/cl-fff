@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10568 109)
+:slots ((meta-web::choice-value ":boolean")
+(meta-web::name (:reader :trans-str :en "boolean" :fr "booléen" :sp ""))
+(meta-web::description nil)))

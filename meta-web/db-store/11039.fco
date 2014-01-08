@@ -1,0 +1,32 @@
+(:guid 115 :version 0 :parent (:obj-id 10945 116)
+:slots ((meta-web::name "meta")
+(meta-web::user-name (:reader :trans-str :en "list of meta classes" :fr "liste des meta classes" :sp ""))
+(meta-web::description "liste des classes du projet Meta-WEB
+
+
+
+
+")
+(meta-web::comment nil)
+(meta-web::sources-directory "")
+(meta-web::print-in-doc t)
+(meta-web::classes ((:obj-id 10828 112)
+(:obj-id 10370 112)
+(:obj-id 10400 112)
+(:obj-id 10327 112)
+(:obj-id 10003 112)
+(:obj-id 11142 112)
+(:obj-id 10817 112)
+(:obj-id 10825 112)
+(:obj-id 10830 112)
+(:obj-id 10834 112)
+(:obj-id 11014 112)
+(:obj-id 11002 112)
+(:obj-id 10956 112)
+(:obj-id 10951 112)
+(:obj-id 10948 112)
+(:obj-id 10944 112)
+(:obj-id 10933 112)
+(:obj-id 10826 112)
+(:obj-id 10837 112)
+(:obj-id 11163 112)))))

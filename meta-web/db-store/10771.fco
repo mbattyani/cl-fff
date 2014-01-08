@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10568 109)
+:slots ((meta-web::choice-value ":ip-address")
+(meta-web::name (:reader :trans-str :en "IP address" :fr "adresse IP" :sp ""))
+(meta-web::description "")))

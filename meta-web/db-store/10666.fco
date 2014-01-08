@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10798 109)
+:slots ((meta-web::choice-value ":it")
+(meta-web::name (:reader :trans-str :en "Italian" :fr "Italien" :sp ""))
+(meta-web::description "")))

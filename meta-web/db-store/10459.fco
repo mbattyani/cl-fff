@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10568 109)
+:slots ((meta-web::choice-value ":float")
+(meta-web::name (:reader :trans-str :en "float" :fr "nombre à virgule" :sp ""))
+(meta-web::description nil)))

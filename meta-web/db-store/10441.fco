@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":medit")
+(meta-web::name (:reader :trans-str :en "multiline edit" :fr "multiline edit" :sp ""))
+(meta-web::description nil)))

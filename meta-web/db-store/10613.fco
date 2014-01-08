@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":pick-mval")
+(meta-web::name (:reader :trans-str :en "multiple choice popup" :fr "popup choix multiple" :sp ""))
+(meta-web::description "")))

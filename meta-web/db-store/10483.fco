@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10568 109)
+:slots ((meta-web::choice-value ":time-of-day")
+(meta-web::name (:reader :trans-str :en "time of day" :fr "heure" :sp ""))
+(meta-web::description nil)))

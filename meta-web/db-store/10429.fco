@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10361 109)
+:slots ((meta-web::choice-value ":list2-val")
+(meta-web::name (:reader :trans-str :en "liste 2 col (valeur)" :fr "liste 2 col (valeur)" :sp ""))
+(meta-web::description nil)))

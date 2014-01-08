@@ -1,0 +1,4 @@
+(:guid 108 :version 0 :parent (:obj-id 10823 109)
+:slots ((meta-web::choice-value ":verified")
+(meta-web::name (:reader :trans-str :en "verified" :fr "vérifié" :sp ""))
+(meta-web::description nil)))
