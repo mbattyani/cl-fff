@@ -58,7 +58,7 @@
 
 (defparameter *meta-web-classes*
   '(slot-info class-info project choice-value user-group translated-string sql-list
-    view-info rule-info function-info object-help class-group
+    view-info function-info object-help class-group
     ))
 
 (defun create-table (class &optional (store *meta-store*))
@@ -116,7 +116,7 @@
     (when result classes)))
 
 (defun gen-graph (project filename &key (class-list nil class-list-supplied))
-  (with-open-file (s filename :direction :output :if-exists :supersede)
+  (with-open-file (s filename :direction :output :if-exists :supersede :external-format :utf-8)
     (format s "digraph G {
 size=\"8,11\";
 node [shape=box,fontname=Helvetica,fontsize=12];
@@ -232,7 +232,7 @@ rankdir=LR;
 	 (*print-right-margin* 2000)
 	 (file-id (interface::make-session-id))
 	 (src-file (concatenate 'string *graph-file-prefix* file-id ".lisp")))
-    (with-open-file (s src-file :direction :output :if-exists :supersede)
+    (with-open-file (s src-file :direction :output :if-exists :supersede :external-format :utf-8)
       (format s "(in-package ~s)~%" (package-name *package*))
       (dolist (group (class-groups proj))
 	(dolist (class (classes group))
@@ -246,7 +246,7 @@ rankdir=LR;
          (*print-readably* t)
 	 (file-id (interface::make-session-id))
 	 (src-file (or pathname (concatenate 'string *graph-file-prefix* file-id ".lisp"))))
-    (with-open-file (s src-file :direction :output :if-exists :supersede)
+    (with-open-file (s src-file :direction :output :if-exists :supersede :external-format :utf-8)
       (format s "(in-package ~s)~%" (package-name *package*))
       (format s
               "~%(defvar *~a-classes-list* '~a)~%
@@ -319,7 +319,7 @@ rankdir=LR;
       (:td ((:tab :class "tabf")
 	    ("Description"
 	     (:slot-table name project-package description version project-version version-date
-			  sources-directory application-ip application-port class-groups))
+			  sources-directory application-ip application-port last-class-guid class-groups))
 	    ("User&nbsp;Groups"
 	     ((:table :class "dvt")
 	      ((:tr :class "dvr")
@@ -372,7 +372,7 @@ rankdir=LR;
   `((:tab
      ("Description"
       (:slot-table name project-package description version project-version version-date
-                   sources-directory application-ip application-port class-groups))
+                   sources-directory application-ip application-port last-class-guid class-groups))
      ("User&nbsp;Groups"
       (:slot-table user-groups))
      #+nil("Files"
@@ -420,7 +420,7 @@ rankdir=LR;
   (with-open-file (s (format nil "~a~a.asd1"
 			     (sources-directory project)
 			     (string-downcase (name project)))
-		     :direction :output :if-exists :supersede)
+		     :direction :output :if-exists :supersede :external-format :utf-8)
     (format s ";;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 
 (in-package asdf)

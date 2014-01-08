@@ -17,7 +17,7 @@
   )
 
 (defmethod meta::convert-slot-value-to-sexpr ((obj object-help))
-  (list :reader :obj-help :en (english-tooltip obj) :fr (french-tooltip obj) :sp (spanish obj)))
+  (list :reader :obj-help :en (english-tooltip obj) :fr (french-tooltip obj) :sp (spanish-tooltip obj)))
 
 (defun read-object-help (list)
   (apply 'make-instance 'object-help :parent meta::*parent-object* :store meta::*memory-store* (cddr list)))
@@ -101,12 +101,6 @@
 	((:td :class "dvch2" :colspan "2")
 	 ((:slot-list direct-functions :height "500px" :class "dvl")
 	  (:table (:tr ((:td :class "dvch2") "Fonctions"))))))))
-     ("Règles"
-      ((:table :class "dvt")
-       ((:tr :class "dvr")
-	((:td :class "dvch2" :colspan "2")
-	 ((:slot-list direct-rules :height "500px" :class "dvl")
-	  (:table (:tr ((:td :class "dvch2") "Règles"))))))))
      ("Versions"
       (:slot-table current-version)
       ((:table :class "dvt")
@@ -146,12 +140,6 @@
 	((:td :class "dvch2" :colspan "2")
 	 ((:slot-list direct-functions :height "500px" :class "dvl")
 	  (:table (:tr ((:td :class "dvch2") "Functions"))))))))
-     ("Rules"
-      ((:table :class "dvt")
-       ((:tr :class "dvr")
-	((:td :class "dvch2" :colspan "2")
-	 ((:slot-list direct-rules :height "500px" :class "dvl")
-	  (:table (:tr ((:td :class "dvch2") "Rules"))))))))
     ("Versions"
       (:slot-table current-version)
       ((:table :class "dvt")
@@ -180,7 +168,7 @@
 		 (mapcar #'(lambda (c) (read-from-string (name c))) (direct-superclasses class-info))
 		 (mapcar 'make-slot-def (direct-slots class-info))
 		 `(:user-name ,(make-translation (user-name class-info))
-		   :guid ,(read-from-string (guid class-info))
+                   :guid ,(guid class-info)
 		   :object-help ,(make-object-help (object-help class-info))
 		   :functions ,(cons 'list (mapcar 'make-fc-function (direct-functions class-info)))
 		   ,@(%add-slot% visible class-info)
@@ -250,7 +238,7 @@
 	 (*print-right-margin* 2000)
 	 (file-id (interface::make-session-id))
 	 (src-file (concatenate 'string *graph-file-prefix* file-id ".lisp")))
-    (with-open-file (s src-file :direction :output :if-exists :supersede)
+    (with-open-file (s src-file :direction :output :if-exists :supersede :external-format :utf-8)
       (format s "(in-package ~s)~%" (package-name *package*))
       (print-class-source s class-info)
       (format s "~%~%" (package-name *package*)))

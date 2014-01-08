@@ -170,7 +170,7 @@
 	 (classes ())
 	 (file-id (interface::make-session-id))
 	 (src-file (or pathname (concatenate 'string *graph-file-prefix* file-id ".lisp"))))
-    (with-open-file (s src-file :direction :output :if-exists :supersede)
+    (with-open-file (s src-file :direction :output :if-exists :supersede :external-format :utf-8)
       (format s "(in-package ~s)~%" (package-name *package*))
       (map-all-classes proj #'(lambda (class)
 				(if (and (find-class-version class *from-project-version*)

@@ -410,7 +410,6 @@
     (loop with *parent-object* = object
           for (slot-name value) in (getf sexpr :slots)
 	  for slot-value = (convert-sexpr-to-slot-value value)
-         do (print (list slot-name (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name) value))
 	  when (find slot-name (c2mop:class-slots class) :key 'c2mop:slot-definition-name)
        do (setf (slot-value data-object slot-name) slot-value)))
   (initialize-unbound-slots object)
