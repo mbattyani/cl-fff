@@ -173,10 +173,15 @@
                             (:div
                              ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
                              (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe")))))
-                           
-                           ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
-                           ((:modal-window :id "openModalCalendar")
-                            (:body (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe"))))))
+                           (:when-frontends '(:bootstrap)
+                             ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
+                                             :onclick
+                                             #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))
+                                             ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
+                             ((:modal-window :id "openModalCalendar")
+                              (:body
+                               #+nil((:div :id "selectedTarget"))
+                               ((:iframe :width "250px" :height "280px" :id "calendar_iframe" :name "calendar_iframe"))))))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
@@ -222,7 +227,8 @@
     (html:html
      #+nil (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
-     (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.document.getElementById('close').click();};")
+     ""
+     (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.$('#openModalCalendar').modal('hide');};");parent.document.getElementById('close').click();
      ((:table :class "calt" :align "center")
       (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
              (html:html ((:th :class "calh") day))))
@@ -1784,7 +1790,7 @@ Content-Type: application/octet-stream
           ((:div :class "modal-dialog")
            ((:div :class "modal-content")
             ((:div :class "modal-header")
-             ((:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true") "×")
+             ((:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" ) "×")
              ,@header)
             ((:div :class "modal-body")
              ,@body)

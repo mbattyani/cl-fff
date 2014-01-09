@@ -125,6 +125,10 @@ function set_src(name, url, item) {
     document.getElementById(name).setAttribute("src", url+'?link='+v689+'&item='+item);
 }
 
+function make_src(url, item) {
+    return url+'?link='+v689+'&item='+item;
+}
+
 function close()
 {
  if (v690)
