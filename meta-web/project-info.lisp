@@ -24,7 +24,7 @@
 (interface::add-named-url "/new-project.html"
   #'(lambda (request)
       (let* ((project (make-instance 'project :store *meta-store*)))
-        (push project (project-list *app-admin*))
+        (push project (projects *app-admin*))
 	(interface::redirect-to (interface::encode-object-url project) request))
       t))
 

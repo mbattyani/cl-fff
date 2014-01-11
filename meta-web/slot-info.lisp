@@ -165,20 +165,20 @@
      ("Description"
       (:slot-table name user-name sql-name description comment in-proxy stored accessor initarg initform
 		   choices-table choices ))
-     ("Value"
+     ("Type of value"
       (:slot-table value-type object-type other-type list-of-values new-objects-first linked-value
 		   list-format nb-decimals unit can-create-new-object create-new-object get-object-fn
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
+     ("Access rights"
+      (:slot-table modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("View"
       (:slot-table view-type slot-view-name html-tag-attributes list-format 
 		   pathname-filter value-to-string-func string-to-value-func
-		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
-		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
+		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text))
      ("Rules"
-      (:slot-table indexed unique-p null-allowed enable-copy-paste
-		   duplicate-value make-copy-string duplicate-value-fn
-		   value-constraint disable-predicate))
+      (:slot-table null-allowed value-constraint disable-predicate 
+		   enable-copy-paste make-copy-string duplicate-value duplicate-value-fn indexed unique-p))
      ("Help"
       (:object-view :object (object-help interface::*object*)))
      )))

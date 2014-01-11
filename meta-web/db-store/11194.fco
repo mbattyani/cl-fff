@@ -1,0 +1,5 @@
+(:guid 113 :version 0 :parent (:obj-id 11178 116)
+:slots ((meta-web::name "owner")
+(meta-web::user-name (:reader :trans-str :en "Owner" :fr "" :sp ""))
+(meta-web::description "The owner of an object. For instance a user is the owner of his own user profile")
+(meta-web::comment "")))
