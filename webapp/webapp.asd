@@ -8,7 +8,7 @@
   :maintainer "Marc Battyani <marc.battyani@fractalconcept.com>"
   :description "A webapp base layer to start using the webapp framework"
   :components ((:file "package")
-               (:file "global" :depends-on ("package"))
-	       (:file "style" :depends-on ("global"))
-	       (:file "pages" :depends-on ("style")))
+               (:file "specials" :depends-on ("package"))
+               (:file "pages" :depends-on ("specials"))
+	       (:file "style" :depends-on ("pages")))
   :depends-on (:interface))

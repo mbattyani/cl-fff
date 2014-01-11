@@ -1,4 +1,43 @@
-(in-package meta-web)
+(in-package webapp)
+
+(defclass page-desc ()
+  ((name :accessor name :initform "" :initarg :name)
+   (restricted :accessor restricted :initform nil :initarg :restricted)
+   (allowed-groups :accessor allowed-groups :initform t :initarg :allowed-groups)
+   (hidden :accessor hidden :initform nil :initarg :hidden)
+   (title :accessor title :initform "" :initarg :title)
+   (content :accessor content :initform nil :initarg :content)
+   (content-func :accessor content-func :initform nil :initarg :content-func)))
+
+(defmethod initialize-instance :after ((page page-desc) &rest init-options &key &allow-other-keys)
+  (declare (ignore init-options))
+  (setf (gethash (name page) *pages*) page)
+  (interface::add-url-alias (concatenate 'string "/" (name page))(list :page (name page)))
+  (interface::add-named-page (name page) #'(lambda (request)
+                                             (process-page-request *app* page request))))
+
+(defun get-page (page-name)
+  (gethash page-name *pages*))
+
+(defmethod process-page-request (app *page* request)
+  (interface::with-output-to-request (request html:*html-stream*)
+    (write-page app page)))
+
+(defmethod content-func :around ((page page-desc))
+  (let ((func (call-next-method)))
+    (if func
+	func
+	(setf (content-func page)
+              (let ((html:*html-insert-file-defaults* *source-pages-default*)
+                    (*package* (find-package *app*)))
+                (compile nil `(lambda ()
+                                (when (or (not (restricted ,page))
+                                          (interface::authentified interface::*session*)
+                                          (check-authentification ))
+                                  ,@(mapcar 'html::html-gen (content page))))))))))
+
+(defun clear-pages ()
+  (maphash #'(lambda (n p)(setf (content-func p) nil)) *pages*))
 
 (interface::add-named-url "/index.html"
   #'(lambda (request)
@@ -8,28 +47,22 @@
 			      request)
       t))
 
-(setf (gethash "/" interface::*url-params-aliases*) (list :page "home"))
-(setf (gethash "/index.html" interface::*url-params-aliases*)
-      (list :page "home"))
+(interface::add-url-alias "/" '(:page "home"))
+(interface::add-url-alias "/index.html" '(:page "home"))
 
 (interface::add-named-url "/debug" #'(lambda (request) nil))
 
 (make-instance 'page-desc
    :name "home"
    :restricted nil
-   :title "Accueil"
-   :title-en "Home"
-   :abrev "Accueil"
-   :abrev-en "Home"
-   :sub-pages '("object" "404" "hot" "top" "new")
-   :content-en '(:progn
-                  (:when-frontends '(:bootstrap)
-                   ((:section)
-                    ((:div :class "page-header")
-                     (:h1 "The framework web interface"))
-                    (:p "Nothing much to do here except clicking on the "
-                   ((:a :href #e"projects") "list of the projects in the database"))))
-                 ))
+   :title "Home"
+   :content '(:progn
+              (:when-frontends '(:bootstrap)
+               ((:section)
+                ((:div :class "page-header")
+                 (:h1 "The framework web interface"))
+                (:p "Nothing much to do here except clicking on the "
+                    ((:a :href #e"projects") "list of the projects in the database"))))))
 
 (defun logout-page-fn()
   (setf *user* nil)
@@ -44,46 +77,24 @@
 (make-instance 'page-desc
    :name "logout"
    :restricted nil
-   :title "Accueil"
-   :title-en "Home"
-   :abrev "Accueil"
-   :abrev-en "Home"
-   :sub-pages '("object" "404" "hot" "top" "new")
-   :content '((logout-page-fn))
-   :content-en '((logout-page-fn)))
+   :title "logout"
+   :content '((logout-page-fn)))
 
 (make-instance 'page-desc
-               :name "404"
-               :hidden t
-               :title "Accueil des pages non trouvées"
-               :title-en "Unknown Pages Home"
-               :abrev "Page inconnue"
-               :abrev-en "Unknown Page"
-               :sub-pages '()
-               :content '((:h1 "Page inconnue")
-                          (:p "La page que vous demandez est inconnue.")
-                          (:p "Vous pouvez essayer de trouver l'information que vous cherchez à partir de la "
-                           ((:a :href (encode-page "home")) "page d'accueil")))
-               :content-en '((:h1 "Page not found")
-                             (:p "The page you requested does not exists.")
-                             (:p "You can try to find what you are looking for from the "
-                              ((:a :href (encode-page "home")) "home page"))))
+   :name "unknown"
+   :hidden t
+   :title "Unknown Page"
+   :content '((:h1 "Page not found")
+              (:p "The page you requested does not exists.")
+              (:p "You can try to find what you are looking for from the "
+               ((:a :href (encode-page "home")) "home page"))))
 
 (make-instance 'page-desc
   :name "object"
   :restricted nil
-  :title "Objet"
-  :title-en "Object"
-  :abrev "Objet"
-  :abrev-en "Object"
-  :sub-pages 'nil
-  :content `(;:use-ui
-             (:object-view)
-             :connect-views :br)
-  :content-en `(;:use-ui
-                (:object-view)
-                :connect-views
-                :br))
+  :title "Object"
+  :content `((:object-view)
+             :connect-views))
 
 (defun profile-page-fn ()
   (html:html
@@ -91,155 +102,33 @@
    :connect-views))
 
 (make-instance 'page-desc
-   :name "profile"
+   :name "my-profile"
    :restricted nil
    :title "My Profile"
-   :title-en "My Profile"
-   :abrev "My Profile"
-   :abrev-en "My Profile"
-   :sub-pages '("object" "404")
-   :content '((profile-page-fn))
-   :content-en '((profile-page-fn)))
+   :content '((profile-page-fn)))
 
 (defun admin-page-fn ()
   (html:html
-   (:object-view :object *sys-params* :name "sys-a")
+   (:object-view :object *app* :name "sys-a")
    :connect-views))
 
 (make-instance 'page-desc
    :name "admin"
-   :restricted nil
+   :restricted t
+   :allowed-groups '(:admin :dev)
    :title "Administration"
-   :title-en "Administration"
-   :abrev "Administration"
-   :abrev-en "Administration"
-   :sub-pages '("object" "404")
-   :content '((admin-page-fn))
-   :content-en '((admin-page-fn)))
-
-(defun config-page-fn ()
-  (html:html
-   (:object-view :object *sys-params* :name "sys-conf")
-   :connect-views))
-
-(make-instance 'page-desc
-   :name "config"
-   :restricted nil
-   :title "Configuration"
-   :title-en "Configuration"
-   :abrev "Configuration"
-   :abrev-en "Configuration"
-   :sub-pages '("object" "404")
-   :content '((config-page-fn))
-   :content-en '((config-page-fn)))
-
+   :content '((admin-page-fn)))
 
 (defun status-page-fn ()
   (html:html
-    (:object-view :object *sys-params* :name "sys-status")
+    (:object-view :object *app* :name "sys-status")
    :connect-views))
 
 (make-instance 'page-desc
    :name "status"
-   :restricted nil
+   :restricted t
+   :allowed-groups '(:admin :dev)
    :title "Status"
-   :title-en "Status"
-   :abrev "Status"
-   :abrev-en "Status"
-   :sub-pages '("object" "404")
-   :content '((status-page-fn))
-   :content-en '((status-page-fn)))
+   :content '((status-page-fn)))
 
-(defun map-page-fn ()
-  (html:html
-   (:h1 "Ivan Site Map")
-    ))
 
-(make-instance 'page-desc
-   :name "map"
-   :restricted nil
-   :title "Directory Tag Map"
-   :title-en "Directory Tag Map"
-   :abrev "Directory Tag Map"
-   :abrev-en "Directory Tag Map"
-   :sub-pages '()
-   :content '((map-page-fn))
-   :content-en '((map-page-fn)))
-
-(make-instance 'page-desc
-               :name "object"
-               :restricted t
-               :title "Objet"
-               :title-en "Object"
-               :abrev "Objet"
-               :abrev-en "Object"
-               :sub-pages 'nil
-               :restricted t
-               :hidden t
-               :content `((prev-page-link) :br
-                          (:h2 "Objet : " (html:esc (meta::short-description interface::*object*))
-                               ((:span :style "font-size:12px;font-weight:400")
-                                " ("(:esc (meta::translated-class-name interface::*object*))")"))
-                          (:p (interface::gen-breadcrumbs interface::*object* :home-url #e"projects"))
-                          (:object-view)
-                          :connect-views)
-               :content-en `((prev-page-link) :br
-                             (:h2 "Object : " (html:esc (meta::short-description interface::*object*))
-                                  ((:span :style "font-size:12px;font-weight:400")
-                                   " ("(:esc (meta::translated-class-name interface::*object*))")"))
-                             (:p (interface::gen-breadcrumbs interface::*object* :home-url #e"projects"))
-                             (:object-view):connect-views))
-
-(make-instance 'page-desc
-               :name "projects"
-               :title "Projets"
-               :title-en "Projects"
-               :abrev "Projets"
-               :abrev-en "Projects"
-               :sub-pages '("object")
-               :restricted t
-               :content '((:h1 "Meta-Tool: Le générateur d'application web")
-                          (:h2 "Liste des projects en cours:")
-                          (meta-web::html-project-list)
-                          :br :br)
-               :content-en '(:progn
-                             (:when-frontends '(:bootstrap)
-                              ((:section)
-                               ((:div :class "page-header"))
-                               (:h1 "Project List:")
-                               (meta-web::html-project-list)))
-                             :br :br))
-
-(make-instance 'page-desc
-               :name "user"
-               :title "Utilisateur"
-               :title-en "User"
-               :abrev "Utilisateur"
-               :abrev-en "User"
-               :sub-pages '()
-               :restricted nil
-               :hidden t
-               :content '((:h1 "Meta-Tool: Utilisateur")
-                          (meta-web::html-user-page)
-                          :br :br
-                          )
-               :content-en '((:h1 "Meta-Tool: User")
-                             (meta-web::html-user-page)
-                             :br :br))
-
-(make-instance 'page-desc
-               :name "inspect"
-               :restricted t
-               :title "Inspecteur d'objet"
-               :title-en "Object Inspector"
-               :abrev "Inspecteur d'objet"
-               :abrev-en "Object Inspector"
-               :sub-pages 'nil
-               :content `(:use-ui
-                          ,@meta-web::*inspect-object-page-fr*
-                          :connect-views
-                          )
-               :content-en `(:use-ui
-                             ,@meta-web::*inspect-object-page-en*
-                             :connect-views
-                             ))

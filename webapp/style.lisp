@@ -1,6 +1,6 @@
 (in-package #:interface)
 
-(defun gen-breadcrumbs (obj &key (home-url "/"))
+(defmethod webapp::gen-breadcrumbs (app page obj &key (home-url "/"))
   (let ((descriptions (localize obj)))
     (case *frontend*
       (:bootstrap
@@ -26,284 +26,55 @@
             (loop for ((description url) . next) on descriptions do
                  (html:html ((:a :href url) (:esc description)) (:when next " &gt "))) :br))))))
 
-(in-package #:meta-web)
+(in-package #:webapp)
 
-(setf (gethash "/" interface::*url-params-aliases*) (list :page "home"))
+(defmethod insert-page-title (app page)
+  (html:html (:insert-string (name page))))
 
-(defmacro encode-page (page-name)
-  (assert (stringp page-name))
-  `(if (interface::new-cookie *request*)
-       ,(interface::encode-page page-name)
-       ,(concatenate 'string "/" page-name)))
+(defmethod insert-html-meta (app page)
+  (html:html
+   ((:meta :name "viewport" :content "width=device-width, initial-scale=1.0"))
+   ((:meta :name "description" :content "The F3 Web Interface"))
+   ((:meta :name "keywords" :content ""))
+   ((:meta :http "http" :equiv "content-type" :content "text/html; charset=UTF-8"))
+   ((:meta :http "http" :equiv "Content-Style-Type" :content "text/css"))
+   ((:meta :http "http" :equiv "imagetoolbar" :content "no"))
+   ((:meta :http "http" :equiv "content-language" :content "EN"))
+   ((:meta :name "robots" :content "index, follow"))))
 
-(defun write-translation-block ()
-  (unless (eq interface::*country-language* :fr)
-    (html:html ((:a :class "countryi" :href
-                    (interface::encode-session-values
-                     nil
-                     (list :page (name *page*) :lang "fr" :func "slang")))
-		((:img :border "0" :src "/static/sfr3.gif")) #+nil "&nbsp;Français")))
-  (unless (eq interface::*country-language* :en)
-    (html:html ((:a :class "countryi" :href
-		    (interface::encode-session-values
-		     nil
-		     (list :page (name *page*) :lang "en" :func "slang")))
-		((:img :src "/static/suk3.gif" :border "0"))))))
+(defmethod insert-html-head-links (app page)
+  (html:html
+     ((:link :rel "shortcut icon" :href "/static/favicon.ico" :type "image/x-icon"))
+     ((:link :rel "stylesheet" :href "/static/css/fcweb.css"))
+     ((:link :rel "stylesheet" :href "/static/css/modal.css"))
+     (:when-frontends '(:bootstrap)
+                      ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"))
+                      ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"))
+                      ((:link :rel "stylesheet" :href "/static/css/modal.css"))
+                      ((:script :src "https://code.jquery.com/jquery.js"))
+                      ((:script :src "//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js")))
+     ((:script :src "/static/fgt.js"))))
 
-(defclass identified-user ()
-  ((clipboard :accessor clipboard :initform (make-instance 'interface::clipboard :store meta::*memory-store*))))
-
-(defmethod interface::clipboard ((user identified-user))
-  (clipboard user))
-
-(defun insert-page-title ()
-  (let* ((object-id (getf (interface::session-params *request*) :object))
-         (object (interface::decode-object-id object-id)))
-    (html:html "Web App Framework" (:when object " - " (:esc (meta::short-description object))))))
-
-(defun write-page (content-func)
- (let ((authentification-result (check-authentification)))
-   (html:html
-    (:doctype)
-    (:html
-     (:head
-      (:title (insert-page-title))
-      ((:meta :name "viewport" :content "width=device-width, initial-scale=1.0"))
-      ((:meta :name "description" :content "The F3 Web Interface"))
-      ((:meta :name "keywords" :content ""))
-      ((:meta :http "http" :equiv "content-type" :content "text/html; charset=UTF-8"))
-      ((:meta :http "http" :equiv "Content-Style-Type" :content "text/css"))
-      ((:meta :http "http" :equiv "imagetoolbar" :content "no"))
-      ((:meta :http "http" :equiv "content-language" :content "EN"))
-      ((:meta :name "robots" :content "index, follow"))
-      ((:link :rel "shortcut icon" :href "/static/favicon.ico" :type "image/x-icon"))
-      ((:link :rel "stylesheet" :href "/static/css/fcweb.css"))
-      ((:link :rel "stylesheet" :href "/static/css/modal.css"))
-      (:when-frontends '(:bootstrap)
-         ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"))
-         ((:link :rel "stylesheet" :href "//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"))
-         ((:link :rel "stylesheet" :href "/static/css/modal.css"))
-         ((:script :src "https://code.jquery.com/jquery.js"))
-         ((:script :src "//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js")))
-      ((:script :src "/static/fgt.js")))
-     ((:body)
-      (:when-frontends '(:bootstrap)
-         ((:div :class "container")
-          (gen-breadcrumbs *object*)
-          (funcall content-func)))
-      (:when-frontends '(:html)
-        ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
-        ((:div :style "padding:5px;")
-         (gen-breadcrumbs *object*)
-         (authentification-block authentification-result)
-       :use-ui-ws
-         (funcall content-func)))
-      ((:script :src "/static/fractal-ws.js")))))))
-
-(defclass page-desc ()
-  ((name :accessor name :initform "" :initarg :name)
-   (hidden :accessor hidden :initform nil :initarg :hidden)
-   (restricted :accessor restricted :initform nil :initarg :restricted)
-   (file-name :accessor file-name :initform "")
-   (path :accessor path :initform nil)
-   (title :accessor title :initform "" :initarg :title)
-   (title-en :accessor title-en :initform "" :initarg :title-en)
-   (content :accessor content :initform nil :initarg :content)
-   (content-en :accessor content-en :initform nil :initarg :content-en)
-   (content-func :accessor content-func :initform nil :initarg :content-func)))
-
-(defmethod initialize-instance :after ((page page-desc) &rest init-options &key &allow-other-keys)
-  (declare (ignore init-options))
-  (setf (gethash (name page) *pages*) page)
-  (setf (gethash (concatenate 'string "/" (name page)) interface::*url-params-aliases*) (list :page (name page)))
-  (interface::add-named-page (name page) 'process-repository-request))
-
-(defun get-page (page-name)
-  (gethash page-name *pages*))
-
-(defun process-repository-request (request)
-  (let* ((page-name (getf (interface::session-params request) :page))
-	 (*page* (gethash page-name *pages*)))
-    (when *page*
-      (let ((html-func (content-func *page*)))
-	(interface::with-output-to-request (request html:*html-stream*)
-	  (write-page html-func))))))
-
-(defmethod content-func :around ((page page-desc))
-  (let ((func (call-next-method)))
-    (if func
-	func
-	(if (linked-content page)
-	    (content-func (get-page (linked-content page)))
-	    (let ((french (content page)))
-	      (setf (content-func page)
-		    (let ((html:*html-insert-file-defaults* *source-pages-default*)
-			  (*package* (find-package 'sgna)))
-		      (compile nil `(lambda ()
-				     (when t #+nil(or (not (restricted ,page))
-					       (interface::authentified interface::*session*)
-					       (check-authentification ))
-				       (cond
-					 ((eq interface::*country-language* :fr) ,@(mapcar 'html::html-gen french))
-					 (t ,@(mapcar 'html::html-gen (content-en page))))))))))))))
-
-(defvar %unique-user% (make-instance 'identified-user))
-(defun ensure-user ()
-  (unless *user*
-    (setf (interface::authentified *session*) nil)
-    (switch-user (make-instance 'anonymous-user :store meta::*memory-store*))))
-
-(defun switch-user (user)
-  (interface::clear-url-history *session*)
-  (setf *user* user
-        (interface::user *session*) *user*
-;        (last-access user) (get-universal-time)
-        *user-groups* (interface::groups *user*)))
-
-(defun gen-breadcrumbs (obj)
-  nil)
-
-(defun check-authentification ()
-  (ensure-user)
-  t)
-
-#+nil
-(defun check-authentification ()
-  (ensure-user)
-  (interface::decode-posted-content interface::*request*)
-  (setf %c% (interface::posted-content interface::*request*))
-  (let* ((posted-content (interface::posted-content interface::*request*))
-	 (name (cdr (assoc "name" posted-content :test 'string=)))
-	 (password (cdr (assoc "password" posted-content :test 'string=)))
-	 (password2(cdr (assoc "password2" posted-content :test 'string=)))
-	 (login (cdr (assoc "login" posted-content :test 'string=)))
-	 (register (cdr (assoc "register" posted-content :test 'string=)))
-         (remember (cdr (assoc "remember" posted-content :test 'string=)))
-	 (authorized nil))
-    (if name
-      (let ((user (find name (user-list *sys-params*) :key 'identifier :test #'string=)))
-        (when login
-          (if (and user (equal password (password user)))
-              (progn
-                (switch-user user)
-                (setf (interface::authentified *session*) t)
-                (when remember 
-                  (setf (automatic-login user) t
-                        (cookie user) (interface::cookie *session*)))
-                (return-from check-authentification t))
-              (return-from check-authentification :failed)))
-        (when register
-          (if user
-              (return-from check-authentification :exists-already)
-              (if (string= password password2)
-                  (let ((user (make-instance 'appli-user :parent *sys-params*)))
-                    (switch-user user)
-                    (setf (identifier user) name
-                          (password user) password)
-                    (setf (interface::authentified *session*) t)
-                    (push user (user-list *sys-params*))
-                    (setf (cookie user) (interface::cookie *session*))
-                    (when remember 
-                      (setf (automatic-login user) t))
-                    (return-from check-authentification t))
-                  (return-from check-authentification :passwords-mismatch)))))
-      (when (interface::cookie *session*)
-        (let ((user (find (interface::cookie *session*) 
-                          (user-list *sys-params*) :key 'cookie :test #'string=)))
-          (when (and user (automatic-login user))
-            (switch-user user)
-            (setf (interface::authentified *session*) t)
-            t))))))
-
-(defun authentification-block (status)
-  (unless (interface::authentified *session*)
-    (case status
-      (:failed (html:html ((:p :style "color:red;") "Bad identifier and/or password")))
-      (:exists-already (html:html ((:p :style "color:red;") "This identifier already exists")))
-      (:passwords-mismatch (html:html ((:p :style "color:red;") "Passwords mismatch")))))
-    (html:html
-     ((:script :src "/sha1.js"))
-     (:on-off ((:a :href "#")
-               ((:img :height "9" :src "/static/arblue.gif" :width "9" :border "0"))
-               (:translate '(:fr " Hide " :en " Hide ")))
-              ((:a :href "#")
-               ((:img :height "9" :src "/static/arblue.gif" :width "9" :border "0"))
-               (:translate '(:fr " Login/Register"
-                             :en " Login/Register")))
-              ((:form :method "post" :action (interface::url interface::*request*))
-               :br
-               (:table
-                (:tr (:td (:translate '(:fr "Identifiant " :en "Login ")))
-                     (:td ((:input :type "text" :name "name"))))
-                (:tr (:td (:translate '(:fr "Mot de passe " :en "Password ")))
-                     (:td ((:input :type "password" :name "password")))
-                     (:td ((:input :type "submit" :name "login"
-                                   :onclick "fgt('password').value=CryptoJS.SHA1(fgt('password').value); return true;"
-                                   :value (meta::translate '(:fr "Identifier" :en "Login"))))))
-                (:tr (:td (:translate '(:fr "Confirmer mot de passe " :en "Confirm password ")))
-                     (:td ((:input :type "password" :name "password2")))
-                     (:td ((:input :type "submit" :name "register"
-                                   :onclick "fgt('password').value=CryptoJS.SHA1(fgt('password').value); fgt('password2').value=CryptoJS.SHA1(fgt('password2').value); return true;"
-                                   :value (meta::translate '(:fr "Enregister" :en "Register"))))))
-                (:tr (:td (:translate '(:fr "Reconnexion automatique" :en "Remember me")))
-                     (:td ((:input :type "checkbox" :name "remember"))))))) :br))
-
-(defun authentification-ng-block (status)
-  (unless (interface::authentified *session*)
-    (case status
-      (:failed (html:html ((:p :style "color:red;") "Bad identifier and/or password")))
-      (:exists-already (html:html ((:p :style "color:red;") "This identifier already exists")))
-      (:passwords-mismatch (html:html ((:p :style "color:red;") "Passwords mismatch")))))
-    (html:html
-     (:ng-on-off
-      ((:a :href "#")
-       ((:img :height "9" :src "/static/arblue.gif" :width "9" :border "0"))
-       (:translate '(:fr " Hide " :en " Hide ")))
-
-      ((:a :href "#")
-       ((:img :height "9" :src "/static/arblue.gif" :width "9" :border "0"))
-       (:translate '(:fr " Login/Register"
-                     :en " Login/Register")))
-
-      ((:form :method "post" :action (interface::url interface::*request*))
-       :br
-       (:table
-           (:tr (:td (:translate '(:fr "Identifiant " :en "Login ")))
-                (:td ((:input :type "text" :name "name"))))
-         (:tr (:td (:translate '(:fr "Mot de passe " :en "Password ")))
-              (:td ((:input :type "password" :name "password")))
-              (:td ((:input :type "submit" :name "login" 
-                            :value (meta::translate '(:fr "Identifier" :en "Login"))))))
-         (:tr (:td (:translate '(:fr "Confirmer mot de passe " :en "Confirm password ")))
-              (:td ((:input :type "password" :name "password2")))
-              (:td ((:input :type "submit" :name "register" 
-                            :value (meta::translate '(:fr "Enregister" :en "Register"))))))
-         (:tr (:td (:translate '(:fr "Reconnexion automatique" :en "Remember me")))
-              (:td ((:input :type "checkbox" :name "remember"))))))) :br))
-
-(defun translated-title (page)
-  (cond
-    ((eq interface::*country-language* :fr) (title page))
-    (t (title-en page))))
-
-(defun translated-abrev (page)
-  (cond
-    ((eq interface::*country-language* :fr) (abrev page))
-    (t (abrev-en page))))
-
-(defun process-switch-lang-request (request)
-  (let ((new-params nil))
-    (loop for (key val . rest) on (interface::session-params request) by 'cddr
-	  unless (or (eq key :func)(find key new-params))
-	  do (setf new-params (list* key val new-params)))
-    (interface::redirect-to (interface::encode-session-url nil new-params)
-			    request)))
-
-(interface::add-named-func "slang" 'process-switch-lang-request)
-
-(defparameter *no-page-fr* '())
-
-(defparameter *no-page-en* '())
+(defmethod write-page (app page)
+  (html:html
+   (:doctype)
+   (:html
+    (:head
+     (:title (insert-page-title app page))
+     (insert-html-meta app page)
+     (insert-html-head-links app page))
+    (:body
+     (:when-frontends '(:bootstrap)
+                      ((:div :class "container")
+                       (gen-breadcrumbs app page *object*)
+                       (funcall (content-func page))))
+     (:when-frontends '(:html)
+                      ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
+                      ((:div :style "padding:5px;")
+                       (gen-breadpp page*object*)
+                       :use-ui-ws
+                       (funcall (content-func page))))
+     ((:script :src "/static/fractal-ws.js"))))))
 
 (defun process-404-request (request)
   (let ((new-params nil))
@@ -316,8 +87,9 @@
 
 (interface::add-web-404 "repository.fractalconcept.com" 'process-404-request)
 
-(defun clear-pages ()
-  (maphash #'(lambda (n p)(setf (content-func p) nil)) *pages*))
-
-
+(defun prev-page-link ()
+  (let ((previous (interface::get-previous-page interface::*request*)))
+    (html:html
+     (:when previous
+       ((:a :href previous) (:translate '(:fr "Page précédente" :en "Previous Page")))))))
 
