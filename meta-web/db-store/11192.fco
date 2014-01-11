@@ -1,0 +1,5 @@
+(:guid 113 :version 0 :parent (:obj-id 11178 116)
+:slots ((meta-web::name "admin")
+(meta-web::user-name (:reader :trans-str :en "Administrator" :fr "" :sp ""))
+(meta-web::description "An administrator of the application. For instance an admin can give access rights to users.")
+(meta-web::comment "")))

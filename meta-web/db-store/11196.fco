@@ -1,0 +1,5 @@
+(:guid 113 :version 0 :parent (:obj-id 11178 116)
+:slots ((meta-web::name "dev")
+(meta-web::user-name (:reader :trans-str :en "Developer" :fr "" :sp ""))
+(meta-web::description "A developer of the application can see even more stuff than an admin")
+(meta-web::comment "")))
