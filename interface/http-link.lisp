@@ -61,8 +61,9 @@
     (setf (url-pull link)(encode-session-url nil (list* :func "lpull" url-values)))))
 
 (defun remove-http-link (link)
-  (remhash (interface-id link) *http-links*)
-  (unregister-http-link link))
+  (when link
+    (remhash (interface-id link) *http-links*)
+    (unregister-http-link link)))
 
 ; (defun sync-packets (packet-sync http-link)
 ;   (when packet-sync

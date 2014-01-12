@@ -223,12 +223,15 @@
 	(last-day (last-day month year))
 	(time (if show-time 
 		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
-		  "');")))
+		  "');"))
+        (div-class (princ (gensym "divclass"))))
     (html:html
      #+nil (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
 	       "window.close();};")
-     ""
-     (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.$('#openModalCalendar').modal('hide');};");parent.document.getElementById('close').click();
+      ((:script :src "https://code.jquery.com/jquery.js"))
+      (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.$('#openModalCalendar').modal('hide');};")
+       ;f42($(this).text());
+          
      ((:table :class "calt" :align "center")
       (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
              (html:html ((:th :class "calh") day))))
@@ -239,8 +242,11 @@
 	    do (html:html (:if (or (< d 1)(> d last-day))
 			    ((:td :class "cald"))
 			    ((:td :class "cald" :insert-string (if (= day d) "style='background-color:#ffffff';" ""))
-                             ((:a :fformat (:href "javascript:f42(~a);" d)) d)))
-			  (:when (= (mod col 7) 6) "</tr>")))))))
+                             ((:div :fformat (:class "~a" div-class)) d)
+                             #+nil((:a :fformat (:href "javascript:f42(~a);" d)) d)))
+			  (:when (= (mod col 7) 6) "</tr>"))))
+     (:jscript "$('div." div-class "').click(function(){f42($(this).text())});")
+     )))
 
 (defun calendar-request-handler (request)
       (decode-posted-content request)
@@ -277,49 +283,53 @@
 	(with-output-to-request (request)
 	  (html::html-to-stream
 	   *request-stream*
-	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-	   (:html
-	    (:head
-	     (:title (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-	     ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-	    (:body
-	     :br
-	     (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-	     ((:form :name "go" :method "post" :action "/calendar.html")
-	      ((:input :name "item" :type "hidden" :value item))
-	      ((:div :align "center")
-	       ((:input :name "link" :type "hidden" :value link-name))
-	       ((:select :name "month" :onchange "document.forms['go'].submit();")
-		(loop for m from 1 to 12
-		      for name in (getf *month-names* *country-language* *default-month-names*)
-		      do (if (= month m)
-			   (html:ffmt "<option value=~d SELECTED>~d" m name)
-			   (html:ffmt "<option value=~d>~d" m name))))
-	       "&nbsp;&nbsp;"
-	       ((:select :name "year" :onchange "document.forms['go'].submit();")
-		(loop for a from 1901 below 2100
-		      do (if (= year a)
-			   (html:ffmt "<option value=~d SELECTED>~d" a a)
-			   (html:ffmt "<option value=~d>~d" a a)))))
-	       (html-month item day month year (show-time (item dispatcher)))
+	   "<!doctype html>"
+           (:html
+             (:head
+              ((:meta :http-Equiv "Cache-Control" :Content "no-cache"))
+              ((:meta :http-Equiv "Pragma" :Content "no-cache"))
+              ((:meta :http-Equiv "Expires" :Content "0"))
+              (:title (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
+              ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css"))
+              (:jscript "function f42(d){}"))
+             (:body
+              :br
+              (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
+              ((:form :name "go" :method "post" :action "/calendar.html")
+               ((:input :name "item" :type "hidden" :value item))
+               ((:div :align "center")
+                ((:input :name "link" :type "hidden" :value link-name))
+                ((:select :name "month" :onchange "document.forms['go'].submit();")
+                 (loop for m from 1 to 12
+                    for name in (getf *month-names* *country-language* *default-month-names*)
+                    do (if (= month m)
+                           (html:ffmt "<option value=~d SELECTED>~d" m name)
+                           (html:ffmt "<option value=~d>~d" m name))))
+                "&nbsp;&nbsp;"
+                ((:select :name "year" :onchange "document.forms['go'].submit();")
+                 (loop for a from 1901 below 2100
+                    do (if (= year a)
+                           (html:ffmt "<option value=~d SELECTED>~d" a a)
+                           (html:ffmt "<option value=~d>~d" a a)))))
+               (html-month item day month year (show-time (item dispatcher)))
 	      
-	      ((:div :align "center")
-	       (:when (show-time (item dispatcher))
-		 ((:input :name "hour" :id "hour" :value (princ-to-string hour) :style "width:20px;"))
-		 ":"
-		 ((:input :name "mn" :id "mn" :value (princ-to-string mn) :style "width:20px;"))
-		 ":"
-		 ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br
-		 (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42(~d);" day))
-			     (:translate '(:en "Submit" :fr "Envoyer" :sp "Submit"))) :br))
-	       (when (and dispatcher (meta::null-allowed (slot dispatcher)))
-		 (html:html "&nbsp;&nbsp;"
-			    ((:a :href "javascript:f42('');")
-			     (:translate '(:en "No date" :fr "Aucune date" :sp "Ninguna fecha"))) :br))
-	       ((:a :class "call" :href "javascript:window.close();")
-		(:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
-	      ))))))
+               ((:div :align "center")
+                (:when (show-time (item dispatcher))
+                  ((:input :name "hour" :id "hour" :value (princ-to-string hour) :style "width:20px;"))
+                  ":"
+                  ((:input :name "mn" :id "mn" :value (princ-to-string mn) :style "width:20px;"))
+                  ":"
+                  ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br
+                  (html:html "&nbsp;&nbsp;"
+                             ((:a :fformat (:href "javascript:f42(~d);" day))
+                              (:translate '(:en "Submit" :fr "Envoyer" :sp "Submit"))) :br))
+                (when (and dispatcher (meta::null-allowed (slot dispatcher)))
+                  (html:html "&nbsp;&nbsp;"
+                             ((:a :href "javascript:f42('');")
+                              (:translate '(:en "No date" :fr "Aucune date" :sp "Ninguna fecha"))) :br))
+                ((:a :class "call" :href "javascript:window.close();")
+                 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
+               ))))))
       t)
 
 (interface::add-named-url "/calendar.html" 'calendar-request-handler)
@@ -646,26 +656,26 @@
           (with-output-to-request (request)
             (html::html-to-stream
              *request-stream*
-             "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+             "<!doctype HTML>"
              (:html
-              (if (html-fn (item *dispatcher*))
-                  (funcall (html-fn (item *dispatcher*)) *dispatcher*)
-                  (html:html
-                   (:head
-                    (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-                    ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-                   (:body
-                    :br
-                    (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
-                    (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
-                              "window.setTimeout('window.close();', 600); shot = true;}};")
-                    (loop for object in (when *dispatcher*
-                                          (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
-                       do (html:html "&nbsp;&nbsp;"
-                                     ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-                                      (html:esc (meta::short-description object))) :br))
-                    ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-                                            (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
+               (if (html-fn (item *dispatcher*))
+                   (funcall (html-fn (item *dispatcher*)) *dispatcher*)
+                   (html:html
+                     (:head
+                      (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
+                      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
+                     (:body
+                      :br
+                      (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
+                      (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
+                                "window.setTimeout('window.close();', 600); shot = true;}};")
+                      (loop for object in (when *dispatcher*
+                                            (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
+                         do (html:html "&nbsp;&nbsp;"
+                                       ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                                        (html:esc (meta::short-description object))) :br))
+                      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
+                                              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
 (interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
