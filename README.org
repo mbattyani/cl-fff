@@ -1,0 +1,6 @@
+
+* CL-FFF: Fractal's Fine Framework
+** A Common Lisp Full Stack Framework for Web App
+Please come back soon but do not really try it right now, as we are in the midst of cleaning it so
+it's probably not even working anymore. At that time major rewrites of the code and maybe even of
+the git repository are underway.
