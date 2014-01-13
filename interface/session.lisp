@@ -37,12 +37,13 @@
   (setf (gethash url *url-params-aliases*) list))
 
 (defun make-session-id ()
-  (let ((id (make-string 8)))
-    (loop for i from 0 below 8
-	  do (setf (aref id i) (aref *session-encoding-vector* (random 60))))
+  (let ((id (make-string 12)))
+    (loop for i from 0 below 12
+	  do (setf (aref id i) (aref *session-encoding-vector* (random 63))))
     id))
 
-(gethash url *url-params-aliases*)
+(defun get-url-alias (url)
+  (gethash url *url-params-aliases*))
 
 (defclass session ()
   ((id :initform (make-session-id) :accessor id :initarg :id)
@@ -165,10 +166,10 @@
       (write-url stream values url-prefix absolute)
       (with-output-to-string (s) (write-url s values url-prefix absolute)))))
 
-(defun encode-page (page)
+(defun encode-page (page-name)
   (if (new-cookie *request*)
        (concatenate 'string *request-id* "sdata"
-                    (encode-url-string (concatenate 'string "P" page)))
+                    (encode-url-string (concatenate 'string "P" page-name)))
        (concatenate 'string "/" page-name)))
 
 (defun encode-session-values (stream values)

@@ -21,15 +21,14 @@
 
 (defmethod process-page-request (app *page* request)
   (interface::with-output-to-request (request html:*html-stream*)
-    (write-page app page)))
+    (write-page app *page*)))
 
 (defmethod content-func :around ((page page-desc))
   (let ((func (call-next-method)))
     (if func
 	func
 	(setf (content-func page)
-              (let ((html:*html-insert-file-defaults* *source-pages-default*)
-                    (*package* (find-package *app*)))
+              (let ((*package* (find-package *app*)))
                 (compile nil `(lambda ()
                                 (when (or (not (restricted ,page))
                                           (interface::authentified interface::*session*)
@@ -42,7 +41,7 @@
 (interface::add-named-url "/index.html"
   #'(lambda (request)
       (interface::redirect-to (interface::encode-session-url
-			       nil (list :page "home" 
+			       nil (list :page "home"
 					 :session (interface::id (make-instance 'interface::session))))
 			      request)
       t))
@@ -60,9 +59,8 @@
               (:when-frontends '(:bootstrap)
                ((:section)
                 ((:div :class "page-header")
-                 (:h1 "The framework web interface"))
-                (:p "Nothing much to do here except clicking on the "
-                    ((:a :href #e"projects") "list of the projects in the database"))))))
+                 (:h1 "The app home"))
+                ))))
 
 (defun logout-page-fn()
   (setf *user* nil)
@@ -130,5 +128,3 @@
    :allowed-groups '(:admin :dev)
    :title "Status"
    :content '((status-page-fn)))
-
-

@@ -1,6 +1,6 @@
 (in-package "META-WEB")
 
-(defvar *meta-classes-list* '(sql-list-slot-desc values-table item-value translated-string object-help choice-value slot-info view-info function-info class-info user-group sql-list-info class-group project sql-list-sort-item app-admin))
+(defvar *meta-classes-list* '(sql-list-slot-desc values-table item-value translated-string object-help choice-value slot-info view-info function-info class-info user-group sql-list-info class-group project sql-list-sort-item meta-app))
 
 (defun create-meta-classes (store)
   (dolist (class *meta-classes-list*)

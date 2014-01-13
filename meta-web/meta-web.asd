@@ -10,9 +10,9 @@
   :long-description "Meta Web Interface for the Framework"
   :components ((:file "defpackage")
                (:file "global" :depends-on ("defpackage"))
-	       (:file "style" :depends-on ("global"))
 	       (:file "meta-classes" :depends-on ("global"))
 	       (:file "util-classes" :depends-on ("meta-classes"))
+	       (:file "style" :depends-on ("util-classes"))
 	       (:file "slot-info" :depends-on ("meta-classes"))
 	       (:file "view-info" :depends-on ("meta-classes"))
 	       (:file "class-info" :depends-on ("view-info" "slot-info"))
