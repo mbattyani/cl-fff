@@ -67,7 +67,10 @@
      (:when-frontends '(:bootstrap)
                       ((:div :class "container")
                        (gen-breadcrumbs app page *object*)
-                       (funcall (content-func page))))
+                       (funcall (content-func page)))
+                      ((:modal-window :id "global_modal")
+                       (:body
+                        ((:iframe :width "250px" :height "280px" :id "global_iframe" :name "global_iframe")))))
      (:when-frontends '(:html)
                       ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
                       ((:div :style "padding:5px;")

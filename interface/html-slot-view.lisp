@@ -507,8 +507,10 @@
                       ((= value 30001)
                        (setf (objects-to-delete *dispatcher*) nil))
                       ((= value -7)
-                       (setf (objects-to-delete *dispatcher*) (collect-list-objects list))                       
+                       (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
                        (send-to-interface
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
+                       #+nil(send-to-interface
                         (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"
                                           (name (item *dispatcher*)))))
                       ((and (= value -9) *user*) ; cut
@@ -735,8 +737,8 @@
             ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
            (:body
             :br
-            (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
-                      "window.setTimeout('window.close();', 600); shot = true;}};")
+            ((:script :src "https://code.jquery.com/jquery.js"))
+            (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);shot = true;}};") ;;parent.$('#global_modal').modal('hide');
             (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
                       (:translate '(:en "Do you want to remove these objects:"
                                     :sp "Está seguro de querer eliminar estos objetos:"
@@ -748,12 +750,13 @@
              (dolist (object (objects-to-delete dispatcher))
                (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
             ((:div :align "center")
-             ((:a :class "call" :href "javascript:f42('30000');" )
+             ((:div :class "call" :data-value "30000")
               (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
              "&nbsp;&nbsp;&nbsp;&nbsp;"
-             ((:a :class "call" :href "javascript:f42('30001');" )
+             ((:div :class "call" :data-value "30001")
               (:translate '(:en "No" :fr "Non" :sp "No")))
-             ))))))
+             )
+            (:jscript "$('div.call').click(function(){f42($(this).data('value'))});"))))))
     t))
 
 (interface::add-named-url "/obj-del.html" 'obj-del-request-handler)
