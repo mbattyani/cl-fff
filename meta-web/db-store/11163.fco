@@ -1,7 +1,7 @@
 (:guid 112 :version 0 :parent (:obj-id 11039 115)
 :slots ((meta-web::visible t)
 (meta-web::visible-groups nil)
-(meta-web::name "app-admin")
+(meta-web::name "meta-app")
 (meta-web::user-name (:reader :trans-str :en "application administration" :fr "Administration de l'application" :sp ""))
 (meta-web::description "the generally single instance object to put the application data")
 (meta-web::comment "")

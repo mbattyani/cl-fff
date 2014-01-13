@@ -13,7 +13,7 @@
 (meta-web::version 0)
 (meta-web::instanciable t)
 (meta-web::use-memory-store nil)
-(meta-web::short-description nil)
+(meta-web::short-description "\"Settings\"")
 (meta-web::direct-slots ((:obj-id 11224 109)))
 (meta-web::direct-views nil)
 (meta-web::direct-functions nil)
