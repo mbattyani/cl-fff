@@ -81,7 +81,7 @@
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name description comment class-status guid version sql-name
-		   direct-superclasses
+		   other-superclasses direct-superclasses
 		   instanciable visible visible-groups use-memory-store short-description))
      ("Slots"
       ((:table :class "dvt")
@@ -120,7 +120,7 @@
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name description comment class-status guid version sql-name
-		   direct-superclasses
+		   other-superclasses direct-superclasses
 		   instanciable visible visible-groups use-memory-store short-description))
      ("Slots"
       ((:table :class "dvt")
@@ -165,7 +165,8 @@
 	(class-name (read-from-string (name class-info))))
     (list* 'prog1
 	   (list 'defclass class-name
-		 (mapcar #'(lambda (c) (read-from-string (name c))) (direct-superclasses class-info))
+		 (append (read-from-string (concatenate 'string "(" (other-superclasses class-info) ")"))
+                         (mapcar #'(lambda (c) (read-from-string (name c))) (direct-superclasses class-info)))
 		 (mapcar 'make-slot-def (direct-slots class-info))
 		 `(:user-name ,(make-translation (user-name class-info))
                    :guid ,(guid class-info)
