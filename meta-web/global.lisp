@@ -1,6 +1,7 @@
 (in-package #:meta-web)
 
-(defparameter *graph-file-prefix* (asdf:system-relative-pathname :meta-web "./web-resources/"))
+(defvar *graph-file-prefix* (asdf:system-relative-pathname :meta-web "./web-resources/"))
+(defvar *projects-source-directory-prefix* (asdf/system:system-source-directory :meta-web))
 
 (defvar *current-class* nil)
 (defvar *current-slot* nil)
@@ -18,7 +19,6 @@
 (defparameter *web-root-name* "home")
 (defparameter *static-pages-root* "/fcweb/")
 (defparameter *static-pages-url-root* "/asp/fcweb/")
-(defparameter *source-pages-root* #-win32"/tmp/fcweb/src/" #+win32"f:/fcweb/src/")
 (defparameter *source-pages-default* "~/repository-static/xxx.html")
 
 (defparameter *database-ip* "127.0.0.1")

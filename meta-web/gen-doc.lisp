@@ -557,9 +557,7 @@
 			       :top-margin 30 :bottom-margin 10)
 			"Source:")
 	  (typeset::process-lisp-code
-	   (pathname (concatenate 'string
-				  (sources-directory (meta::parent file))
-				  (name file))))
+	   (pathname (merge-pathnames (name file) (get-source-dir (meta::parent file)))))
 	  :fresh-page)))
     (tt::draw-pages content :margins *margins* :header *header* :footer *footer*)))
 
@@ -800,11 +798,7 @@
 
 (defun gen-doc (project)
   (create-project-classes project)
-  (let ((file (format nil "~a~a-documentation.pdf"
-		      (or (and (> (length (sources-directory project)) 0)
-			       (sources-directory project))
-			  "/tmp/")
-		      (name project)))
+  (let ((file (merge-pathnames (format nil "~a-documentation.pdf" (name project)) (get-source-dir project)))
 	(*margins* '(72 72 72 50))
 	(pdf::*max-number-of-pages* 2000)
 	(*index* nil)

@@ -264,17 +264,24 @@ rankdir=LR;
       (unless pathname
         (interface::send-open-new-win-to-interface (format nil "/~a.lisp" file-id)))))
 
+(defmethod get-source-dir ((obj project))
+  (merge-pathnames (sources-directory obj)
+                   *projects-source-directory-prefix*))
+
+(defmethod get-source-dir ((group class-group))
+  (merge-pathnames (or (and (> (length (sources-directory group)) 0)
+                         (sources-directory group))
+                      (sources-directory (meta::parent group)))
+                   *projects-source-directory-prefix*))
+
 (defun make-update-file (proj)
-  (make-update-project-fn proj nil (concatenate 'string	(sources-directory proj) "upgrade-database.lisp")))
+  (make-update-project-fn proj nil (merge-pathnames "upgrade-database.lisp" (get-source-dir proj))))
 
 (defmethod gen-lisp-files ((group class-group) &optional (make-update t))
   (view-group-classes-source
    group
-   (concatenate 'string
-		(or (and (> (length (sources-directory group)) 0)
-			 (sources-directory group))
-		    (sources-directory (meta::parent group)))
-		(name group) "-classes.lisp"))
+   (merge-pathnames (concatenate 'string (name group) "-classes.lisp")
+                    (get-source-dir group)))
   (when make-update
     (make-update-file (meta::parent group))))
 
@@ -417,9 +424,8 @@ rankdir=LR;
             "(start [path to store])"))))
 
 (defun gen-asdf-file (project)
-  (with-open-file (s (format nil "~a~a.asd1"
-			     (sources-directory project)
-			     (string-downcase (name project)))
+  (with-open-file (s (merge-pathnames (format nil "~a.asd" (string-downcase (name project)))
+                                      (get-source-dir project))
 		     :direction :output :if-exists :supersede :external-format :utf-8)
     (format s ";;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 

@@ -2,7 +2,7 @@
 (meta-web::project-package "meta-web")
 (meta-web::description "Meta-Web is made with Meta-Web")
 (meta-web::version 5)
-(meta-web::sources-directory "~/sources/fc/framework/meta-web/")
+(meta-web::sources-directory "")
 (meta-web::database "MetaFractal")
 (meta-web::application-ip "")
 (meta-web::application-port 0)
