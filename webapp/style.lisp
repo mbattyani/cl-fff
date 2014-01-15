@@ -74,7 +74,7 @@
      (:when-frontends '(:html)
                       ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
                       ((:div :style "padding:5px;")
-                       (gen-breadpp page*object*)
+                       (gen-breadcrumbs app page *object*)
                        :use-ui-ws
                        (funcall (content-func page))))
      ((:script :src "/static/fractal-ws.js"))))))
