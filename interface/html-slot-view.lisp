@@ -727,6 +727,7 @@
     (let* ((*session* (session link))
            (*user* (user *session*))
            (*country-language* (country-language *session*)))
+      ;; (setf (output-queue link) '())
       (with-output-to-request (request)
         (html::html-to-stream
          *request-stream*

@@ -96,7 +96,7 @@
               do
                 (clws:write-to-client-text client (with-output-to-string (x)
                                                     (cl-json:encode-json msg x))))
-         )))
+           (setf (output-queue *http-link*) ()))))
       (t (error "Only type 4 is implemented")))))
 
 (defmethod clws::resource-client-disconnected ((resource echo-resource) client)
