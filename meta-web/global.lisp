@@ -102,8 +102,6 @@
     (meta::save-modified-objects new-store)
     new-store))
 
-(defvar *app*)
-
 (defun start (&key (webserver :hunchentoot) (database :text-files) (first-start nil) (mongo-db-name "mydb")
                 (mongo-db-collection-name +mongo-collection-name+) debug (init-file nil)
                 ascii-store-path )
