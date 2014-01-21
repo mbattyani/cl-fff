@@ -739,7 +739,7 @@
            (:body
             :br
             ((:script :src "https://code.jquery.com/jquery.js"))
-            (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);shot = true;}};") ;;parent.$('#global_modal').modal('hide');
+            (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);shot = true;parent.$('#global_modal').modal('hide');parent.location.href=parent.location.href;}}")
             (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
                       (:translate '(:en "Do you want to remove these objects:"
                                     :sp "Está seguro de querer eliminar estos objetos:"
