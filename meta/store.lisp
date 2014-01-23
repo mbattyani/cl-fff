@@ -108,8 +108,7 @@
   (write-tag #.+end-of-object-tag+))
 
 (defun write-fc-object-as-ascii (object)
-  (let* ((class (class-of object))
-	 (*package* (symbol-package (class-name class))))
+  (let* ((*package* (symbol-package (class-name (class-of object)))))
     (prin1 (version class) *ascii-stream*)
     (write-char #\Space *ascii-stream*)
     (write-fc-object-slots-as-ascii object)
@@ -371,7 +370,7 @@
 
 (defmethod save-object-to-store ((store ascii-store) object)
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
-        (*package* (find-package "COMMON-LISP-USER"))
+        (*package* (symbol-package (class-name (class-of object))))
         (sexpr-string (format nil "~s~%" (convert-object-to-sexpr object))))
     (loop for i from 0
        for close-paren = nil then (char= c #\))
@@ -402,11 +401,11 @@
 
 (defun init-object-from-sexpr (object sexpr)
   (let* ((data-object (create-data-object object))
-	 (class (class-of data-object)))
+	 (class (class-of data-object))
+         (parent-id (getf sexpr :parent)))
     (setf (modified object) nil)
-    (setf %class% class)
-    (when (getf sexpr :parent)
-      (setf (parent object) (convert-sexpr-to-slot-value (getf sexpr :parent))))
+    (when parent-id
+      (setf (parent object) (convert-sexpr-to-slot-value parent-id)))
     (loop with *parent-object* = object
           for (slot-name value) in (getf sexpr :slots)
 	  for slot-value = (convert-sexpr-to-slot-value value)
@@ -423,7 +422,7 @@
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
 	(*read-eval* nil)
         (*default-store* store)
-#+nil	(*package* (find-package "COMMON-LISP-USER")))
+        (*package* (symbol-package (class-name (class-of object)))))
     (with-open-file (s filename :direction :input :external-format :utf-8)
       (init-object-from-sexpr object (read s nil nil)))))
 
@@ -434,8 +433,8 @@
       (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" id)))
 	    (*read-eval* nil)
 	    (*default-store* store)
-	;    (*package* (find-package "COMMON-LISP-USER"))
-	    (sexpr nil)
+            (*package* (symbol-package (class-name (class-of object))))
+            (sexpr nil)
 	    (object nil))
 	(with-open-file (s filename :direction :input :external-format :utf-8)
 	  (setf sexpr (read s nil nil))

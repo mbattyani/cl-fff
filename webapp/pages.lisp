@@ -28,7 +28,7 @@
     (if func
 	func
 	(setf (content-func page)
-              (let ((*package* (find-package *app*)))
+              (let ((*package* (symbol-package (class-name (class-of *app*)))))
                 (compile nil `(lambda ()
                                 (when (or (not (restricted ,page))
                                           (interface::authentified interface::*session*)
