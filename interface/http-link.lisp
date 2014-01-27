@@ -31,7 +31,7 @@
   (setf (gethash action *action-funcs*) func))
 
 (defclass http-link ()
-  ((interface-id   :accessor interface-id  :initform (encode-integer (incf *http-link-id*)))
+  ((interface-id   :accessor interface-id  :initform (make-session-id))
    (session        :accessor session       :initarg :session)
    (last-access-time :accessor last-access-time :initform *session-timer-time*)
 ;   (object         :accessor object        :initarg :object)
