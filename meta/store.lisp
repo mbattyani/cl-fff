@@ -108,7 +108,7 @@
   (write-tag #.+end-of-object-tag+))
 
 (defun write-fc-object-as-ascii (object)
-  (let* ((*package* (symbol-package (class-name (class-of object)))))
+  (let* ((*package* (find-package "COMMON-LISP-USER")))
     (prin1 (version class) *ascii-stream*)
     (write-char #\Space *ascii-stream*)
     (write-fc-object-slots-as-ascii object)
@@ -370,7 +370,7 @@
 
 (defmethod save-object-to-store ((store ascii-store) object)
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
-        (*package* (symbol-package (class-name (class-of object))))
+        (*package* (find-package "COMMON-LISP-USER"))
         (sexpr-string (format nil "~s~%" (convert-object-to-sexpr object))))
     (loop for i from 0
        for close-paren = nil then (char= c #\))
@@ -422,7 +422,7 @@
   (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" (id object))))
 	(*read-eval* nil)
         (*default-store* store)
-        (*package* (symbol-package (class-name (class-of object)))))
+        (*package* (find-package "COMMON-LISP-USER")))
     (with-open-file (s filename :direction :input :external-format :utf-8)
       (init-object-from-sexpr object (read s nil nil)))))
 
@@ -433,7 +433,7 @@
       (let ((filename (merge-pathnames (file-directory store) (format nil "~D.fco" id)))
 	    (*read-eval* nil)
 	    (*default-store* store)
-            (*package* (symbol-package (class-name (class-of object))))
+            (*package* (find-package "COMMON-LISP-USER"))
             (sexpr nil)
 	    (object nil))
 	(with-open-file (s filename :direction :input :external-format :utf-8)
