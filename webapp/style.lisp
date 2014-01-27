@@ -53,7 +53,8 @@
                       ((:link :rel "stylesheet" :href "/static/css/modal.css"))
                       ((:script :src "/static/jquery/jquery.js"))
                       ((:script :src "/static/bootstrap/bootstrap.min.js")))
-     ((:script :src "/static/fgt.js"))))
+     #+nil((:script :src "/static/fgt.js"))
+     ((:script :src "/static/fractal.js"))))
 
 (defmethod write-page (app page)
   (html:html
@@ -77,7 +78,7 @@
                        (gen-breadcrumbs app page *object*)
                        :use-ui-ws
                        (funcall (content-func page))))
-     ((:script :src "/static/fractal-ws.js"))))))
+     #+nil((:script :src "/static/fractal-ws.js"))))))
 
 (defun process-404-request (request)
   (let ((new-params nil))
