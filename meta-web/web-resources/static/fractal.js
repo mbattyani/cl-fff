@@ -137,15 +137,15 @@ function F6451()
 
 function f854(name, id)
 {
- var s = "";
- for (var i = 0; i < 25; i++)
-   {var item=document.getElementById(name+'C'+i)
-     if (item && item.checked)
-	 s=s+'t';
-     else
-	 s=s+'n';
-   }
- return id+'='+s;
+    var s = "";
+    for (var i = 0; i < 25; i++){
+        var item = document.getElementById(name+'C'+i);
+        if (item && item.checked)
+	    s=s+'t';
+        else
+	    s=s+'n';
+    }
+    return id+'='+s;
 }
 
 function open1(url, dx, dy, item)
@@ -278,8 +278,12 @@ function SLk(v456, v457, v458, v459)
       eval(x.responseText);
       x.onreadystatechange = function() {};
     }
-  }
+  };
   x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   x.send ("v654="+v456+"&v645="+v457+"&v465="+encodeURIComponent(v458)+"&v564=1");
 };
+
+function set_src(name, url, item) {
+    document.getElementById(name).setAttribute("src", url+'?link='+v689+'&item='+item);
+}
 
