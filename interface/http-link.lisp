@@ -92,9 +92,9 @@
   (when (output-sent http-link)
     (html:html (loop for string in (output-sent http-link)
 		     when string do (write-string string html:*html-stream*))
-	       (html:ffmt "x_.F5164(~d);x_.F5641(~s, ~s);";x_.F5614(~s);"
+	       (html:ffmt "x_.F5164(~d);x_.F5641(~s, ~s);x_.F5614(~s);"
 			  (output-counter http-link) (url-pull http-link)
-			  (interface-id http-link) #+nil(url-push http-link)) :crlf))
+			  (interface-id http-link) (url-push http-link)) :crlf))
   (pop (output-sent http-link)))
 
 (defun send-to-interface (string &optional (http-link *http-link*))
@@ -160,17 +160,17 @@
 	    (html:html-to-stream s
 	     "{var x_=window;"
 	     (send-packets *http-link*)
-	     ; "F6541();"
-	     (html:ffmt "F5641(~s, ~s);}" ;F5614(~s);}"
-			(url-pull *http-link*) interface-id #+nil(url-push *http-link*)))
+	      "F6541();"
+	     (html:ffmt "F5641(~s, ~s);F5614(~s);}"
+			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
 	     (:html ((:body :optional
 			    #+nil(:onload #+nil"if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
-			       ; "parent.F6541();"
-			       (html:ffmt "parent.F5641(~s, ~s);}" ;parent.F5614(~s);}"
-					  (url-pull *http-link*) interface-id #+nil(url-push *http-link*)))
+                               "parent.F6541();"
+			       (html:ffmt "parent.F5641(~s, ~s);parent.F5614(~s);}"
+					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
 		     )))))
       (with-output-to-request (request s)
@@ -272,7 +272,6 @@
 (add-action-func "12" 'fire-add)
 
 (defun http-link-timer ()
-  #+nil
   (maphash #'(lambda (id link)
 	       (declare (ignore id))
 	       (when (and link
@@ -291,7 +290,7 @@
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
        (html::optimize-progn
-         #+nil,(html::html-gen `(:jscript "window.setInterval('F6451()', 1000);"
+         ,(html::html-gen `(:jscript "window.setInterval('F6451()', 5000);"
                                           (html:ffmt "v686=~s;" http-link-url)))
          ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
                                      :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
@@ -316,12 +315,12 @@
 	(setf (last-access-time interface) *session-timer-time*)
 	(html:html-to-stream s
 	     (:html (:head ((:meta :http-equiv "Content-Type" :content "text/html; charset=UTF-8")))
-		    ((:body :optional (:onload (unless no-refresh "" #+nil"if (!getxh()) setTimeout('location.reload(true)',2100);")))
+		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',2100);")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
-			       ; "parent.F6541();"
-			       (html:ffmt "parent.F5641(~s);";parent.F5614(~s);"
-                                          (url-pull interface) #+nil(url-push interface)))
+			       "parent.F6541();"
+			       (html:ffmt "parent.F5641(~s);parent.F5614(~s);"
+                                          (url-pull interface) (url-push interface)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull interface)))
 		     ))))
       (redirect-to (url-pull (make-instance 'http-link :session *session* :params (session-params request))) request)))
