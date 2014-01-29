@@ -45,7 +45,7 @@
 (defparameter *hunchentoot-acceptor* nil)
 
 (defun start-hunchentoot ()
-  (setf *hunchentoot-acceptor* (make-instance 'hunchentoot:easy-acceptor :port *local-port*  :document-root (namestring *web-directory*)))
+  (setf *hunchentoot-acceptor* (make-instance 'hunchentoot:easy-acceptor :port *local-port*  :document-root (namestring *web-directory*) :message-log-destination nil :access-log-destination nil))
   (hunchentoot:start *hunchentoot-acceptor*))
 
 (defun stop-hunchentoot ()
