@@ -13,13 +13,16 @@
                   :object-help
                   (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")
                   :functions
-                  (list (make-instance 'meta-level::fc-function :name 'paste-from-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "" :fr "paste-from-user-clipboard" :de "" :sp "" :it "") :visible nil :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")) (make-instance 'meta-level::fc-function :name 'cut-to-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "" :fr "cut-to-user-clipboard" :de "" :sp "" :it "") :visible nil :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")) (make-instance 'meta-level::fc-function :name 'clear-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "Empty the clipboard" :fr "Vider le presse-papier" :de "" :sp "" :it "") :visible t :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")))
+                  (list (make-instance 'meta-level::fc-function :name 'paste-from-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "" :fr "paste-from-user-clipboard" :de "" :sp "" :it "") :visible nil :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")) (make-instance 'meta-level::fc-function :name 'cut-to-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "" :fr "cut-to-user-clipboard" :de "" :sp "" :it "") :visible nil :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")) (make-instance 'meta-level::fc-function :name 'clear-user-clipboard :user-name (make-instance 'meta-level:translated-string :en "Clear the clipboard" :fr "Vider le presse-papier" :de "" :sp "" :it "") :visible t :visible-groups 'nil :get-value-title (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-text (make-instance 'meta-level:translated-string :en "" :fr "" :de "" :sp "" :it "") :get-value-sql "" :html-tag-attributes 'nil :disable-predicate 'nil :object-help (make-instance 'meta-level::object-help :en "" :fr "" :de "" :sp "" :it "" :en-h "" :fr-h "" :de-h "" :sp-h "" :it-h "")))
                   :visible
                   t
                   :visible-groups
                   'nil
                   :instanciable
                   t))
+
+(defmethod meta::short-description ((obj clipboard))
+  #T(:fr "Presse-papier" :en "Clipboard"))
 
 (defvar *clipboard-dest-context-item* nil)
 
@@ -103,11 +106,11 @@
                                                         (object source-dispatcher) (slot source-dispatcher)))
                ((:a :format (:href "javascript:Fck('~a', f854('~a',-10));" 
                                    source-item-name source-item-name))
-                ((:img :border "0" :src "/p.jpg" :width "22" :height "18" :alt "Paste")) :br
+                ((:img :border "0" :src "/static/p.jpg" :width "22" :height "18" :alt "Paste")) :br
                 ((:a :href (encode-object-url *object*))" " nb-objects
                  (:if (> nb-objects 1)
-                      (:translate '(:fr " objets copiés" :en "copied objects"))
-                      (:translate '(:fr " objet copié" :en "copied object"))))))))))))
+                      (:translate '(:fr " objets dans le presse-papier" :en " objects in clipboard"))
+                      (:translate '(:fr " objet dans le presse-papier" :en " object in clipboard"))))))))))))
 
 (defmethod interface::make-set-status-javascript ((item clipboard-item) status slot)
   )
@@ -133,17 +136,18 @@
 
 (make-instance 'interface::object-view :object-class 'clipboard :special-view nil
 	       :country-languages '(:fr :en) :name "showclip" :source-code
- `((:h1 (:translate '(:fr "Contenu du presse-papier" :en "clipboard content")))
+ `((:h1 (:translate '(:fr "Contenu du presse-papier" :en "Clipboard content")))
    (if (objects *object*)
        (html:html
-        (:p (:i "Ces objets ont été copiés à partir de la liste \""
-                (:b (:esc (meta::translate (meta::user-name (source-slot *object*))))) "\" de l'objet :"
-                ((:a :href (encode-object-url (source-object *object*)))
+        (:p (:i (:translate '(:fr "Ces objets ont été copiés à partir de la liste "
+                              :en "These objects have been copied from the list "))
+                (:b (:esc (meta::translate (meta::user-name (source-slot *object*)))))
+                (:translate '(:fr " de :" :en " from :"))
+                #+nil((:a :href (encode-object-url (source-object *object*)))
                  (:esc (meta::short-description (source-object *object*))))))
         (:slot-table objects)
         (:obj-fn-table clear-user-clipboard))
-       (html:html
-        (:p "Le presse-papier est vide")))))
+       (html:html (:p (:translate '(:fr "Le presse-papier est vide" :en "The clipboard is empty")))))))
 
 ;;; cliboard link
 
