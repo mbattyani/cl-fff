@@ -2,7 +2,6 @@
 
 (defvar *html-stream*)
 
-
 (defmacro with-fast-array-references (bindings &body body)
   "Declares the arrays in bindings (var value &optional type)
 as type and sets speed to 3 with safety 0 within its scope."
@@ -20,7 +19,7 @@ as type and sets speed to 3 with safety 0 within its scope."
     '((#\> . "&gt;")
       (#\< . "&lt;")
       (#\& . "&amp;")
-      (#\ÿ . "<br>")
+      ;; (#\ÿ . "<br>")
       (#\" . "&quot;")
       #+nil(#\space . "&nbsp;"))
     "&; delimited tokens are used to print special tokens.")
@@ -286,5 +285,3 @@ Arguments to directives are supported only as indicated."
                      (svref '#(nil "January" "February" "March" "April" "May" "June"
                                "July" "August" "September" "October" "November" "December") month) year)))))
       ""))
-  
-  

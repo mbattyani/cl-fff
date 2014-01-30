@@ -14,5 +14,5 @@
 	       (:file "html-gen2" :depends-on ("html-utils"))
 	       (:file "func-tags" :depends-on ("html-gen2"))
 	       )
-  :depends-on (:utility :cl-html-parse)
+  :depends-on (#:utility #:cl-html-parse #:parenscript)
   )
