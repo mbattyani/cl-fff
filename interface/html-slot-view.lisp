@@ -510,7 +510,7 @@
                       ((= value -7)
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
                        (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))
                        #+nil(send-to-interface
                         (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"
                                           (name (item *dispatcher*)))))
@@ -518,7 +518,8 @@
                        (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
                        (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
                        (send-to-interface
-                        (html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*)))
+                        #+nil(html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
                                           (name (item *dispatcher*)))))
                       ((and (= value -10) *user*) ; paste
                        (paste-clipboard (clipboard *user*) object slot))))))))))
