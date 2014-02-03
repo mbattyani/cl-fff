@@ -56,6 +56,12 @@
      #+nil((:script :src "/static/fgt.js"))
      ((:script :src "/static/fractal.js"))))
 
+(defmethod insert-page-header (app page)
+  )
+
+(defmethod insert-page-footer (app page)
+  )
+
 (defmethod write-page (app page)
   (html:html
    (:doctype)
@@ -65,6 +71,7 @@
      (insert-html-meta app page)
      (insert-html-head-links app page))
     (:body
+     (insert-page-header app page)
      (:when-frontends '(:bootstrap)
                       ((:div :class "container")
                        (gen-breadcrumbs app page *object*)
@@ -78,6 +85,7 @@
                        (gen-breadcrumbs app page *object*)
                        :use-ui-ws
                        (funcall (content-func page))))
+     (insert-page-footer app page)
      #+nil((:script :src "/static/fractal-ws.js"))))))
 
 (defun process-404-request (request)
@@ -96,4 +104,3 @@
     (html:html
      (:when previous
        ((:a :href previous) (:translate '(:fr "Page précédente" :en "Previous Page")))))))
-
