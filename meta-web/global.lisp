@@ -150,3 +150,20 @@
   (when hunchentoot?
     (stop-hunchentoot)))
 
+(defclass identified-user ()
+  ((clipboard :accessor clipboard :initform (make-instance 'interface::clipboard :store meta::*memory-store*))))
+(defmethod interface::clipboard ((user identified-user))
+  (clipboard user))
+
+(defvar %unique-user% nil)
+
+(defun ensure-user ((app meta-web))
+  (unless *user*
+    (unless %unique-user%
+      (setf %unique-user% (make-instance 'identified-user)))
+    (setf (interface::authentified *session*) t)
+    (switch-user %unique-user%)))
+
+(defmethod check-authentification ((app meta-web) page)
+  (ensure-user)
+  t)
