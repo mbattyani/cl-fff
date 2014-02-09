@@ -157,13 +157,3 @@
 
 (defvar %unique-user% nil)
 
-(defun ensure-user ((app meta-web))
-  (unless *user*
-    (unless %unique-user%
-      (setf %unique-user% (make-instance 'identified-user)))
-    (setf (interface::authentified *session*) t)
-    (switch-user %unique-user%)))
-
-(defmethod check-authentification ((app meta-web) page)
-  (ensure-user)
-  t)

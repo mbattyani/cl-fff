@@ -3,6 +3,6 @@
 (defmethod insert-page-title ((app meta-app) page)
   (let* ((object-id (getf (interface::session-params *request*) :object))
          (object (interface::decode-object-id object-id)))
-    (webapp::ensure-user)
+    (webapp::ensure-user app)
     (html:html "Web App Framework" (:when object " - " (:esc (meta::short-description object))))))
 

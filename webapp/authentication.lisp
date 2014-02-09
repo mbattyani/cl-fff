@@ -30,7 +30,7 @@
 (defmethod  (setf auto-login) (value user)
   )
 
-(defmethod  (setf last-acces) (time user)
+(defmethod  (setf last-access) (time user)
   )
 
 (defmethod check-authentification (app page)

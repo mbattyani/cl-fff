@@ -21,3 +21,14 @@
                             (:h1 "Project List:")
                             (meta-web::html-project-list)))
                           :br))
+
+(defmethod ensure-user ((app meta-app))
+  (unless *user*
+    (unless %unique-user%
+      (setf %unique-user% (make-instance 'identified-user)))
+    (setf (interface::authentified *session*) t)
+    (switch-user %unique-user%)))
+
+(defmethod check-authentification ((app meta-app) page)
+  (ensure-user app)
+  t)
