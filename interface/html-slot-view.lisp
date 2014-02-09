@@ -181,7 +181,7 @@
                              ((:modal-window :id "openModalCalendar")
                               (:body
                                #+nil((:div :id "selectedTarget"))
-                               ((:iframe :width "250px" :height "280px" :id "calendar_iframe" :name "calendar_iframe"))))))
+                               ((:iframe :width "200px" :height "280px" :id "calendar_iframe" :name "calendar_iframe"))))))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
@@ -327,7 +327,8 @@
                   (html:html "&nbsp;&nbsp;"
                              ((:a :href "javascript:f42('');")
                               (:translate '(:en "No date" :fr "Aucune date" :sp "Ninguna fecha"))) :br))
-                ((:a :class "call" :href "javascript:window.close();")
+                (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
+                 (:a :class "call" :href "javascript:parent.$('#openModalCalendar').modal('hide');") ;window.close();
                  (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
                ))))))
       t)
@@ -509,7 +510,7 @@
                       ((= value -7)
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
                        (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))
                        #+nil(send-to-interface
                         (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"
                                           (name (item *dispatcher*)))))
@@ -517,7 +518,8 @@
                        (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
                        (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
                        (send-to-interface
-                        (html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*)))
+                        #+nil(html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
                                           (name (item *dispatcher*)))))
                       ((and (= value -10) *user*) ; paste
                        (paste-clipboard (clipboard *user*) object slot))))))))))
@@ -593,9 +595,12 @@
 	      ,@(when t
 		      `((:when t; (modifiable-p ,slot)
 			  ((:span :align "right")
-			   ((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a');"
-					 (name item)))
-			    ,sub-obj-name))))))
+			   #+nil((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a');" (name item)))
+			    ,sub-obj-name)
+                           ((:modal-button :id "obj-pick-button" :target "#global_modal"
+                                           :onclick ,(format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item)))
+                            ,sub-obj-name)
+                           )))))
 	    `(html:html
 	      ((:div :class ,class :style ,(format nil "width:~a;" width )) ;height:~a; height
 	       ,@forms
@@ -634,9 +639,13 @@
 		  ,@(when (meta::get-object-func slot)
 			  `((:when (modifiable-p ,slot)
 			      ((:span :align "right")
-			       ((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a')"
+			       #+nil((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a')"
 					     (name item)))
-				,sub-obj-name)))))
+				,sub-obj-name)
+                               ((:modal-button :target "#global_modal"
+                                 :onclick ,(format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item)))
+                                ,sub-obj-name)
+                               ))))
 		  ,@(when (and (meta::can-create-new-object slot) (not (meta::get-object-func slot)))
 			  `((:when (modifiable-p ,slot)
 			      ((:span :align "right")
@@ -667,17 +676,23 @@
                       (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
                       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
                      (:body
+                      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+         ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
                       :br
                       (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
-                      (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
+                      #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
                                 "window.setTimeout('window.close();', 600); shot = true;}};")
+                      (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item "',d);"
+                                "shot = true;}};")
                       (loop for object in (when *dispatcher*
                                             (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
                          do (html:html "&nbsp;&nbsp;"
                                        ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
                                         (html:esc (meta::short-description object))) :br))
-                      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-                                              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
+                      ((:div :align "center")
+                       (#+nil(:a :class "call" :href "javascript:window.close();")
+                             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+                             (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
 (interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
@@ -695,23 +710,30 @@
 	  (with-output-to-request (request)
 	    (html::html-to-stream
 	     *request-stream*
-	     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+	     "<!doctype HTML>"
 	     (:html
 	      (:head
 	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet à ajouter")))
 	       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
 	      (:body
+               ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+               ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
+               
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-               (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
+               #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
                               "window.setTimeout('window.close();', 600); shot = true;}};")
+               (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);"
+                              "shot = true;parent.$('#global_modal').modal('hide');}};")
 	       (loop for object in (when dispatcher (sub-classes dispatcher))
 		     for i from 1
 		     do (html:html "&nbsp;&nbsp;"
 				   ((:a :fformat (:href "javascript:f42('~a');" i))
 				    (html:esc (meta::translate (meta::user-name object)))) :br))
-	       ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+	       ((:div :align "center")
+                (#+nil(:a :class "call" :href "javascript:window.close();")
+                      (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+                      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 	t))
 (interface::add-named-url "/obj-new.html" 'obj-new-request-handler)
 
@@ -731,14 +753,15 @@
       (with-output-to-request (request)
         (html::html-to-stream
          *request-stream*
-         "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
+         "<!doctype HTML>"
          (:html
            (:head
             (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
             ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
            (:body
+            ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+            ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
             :br
-            ((:script :src "https://code.jquery.com/jquery.js"))
             (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);shot = true;parent.$('#global_modal').modal('hide');parent.location.href=parent.location.href;}}")
             (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
                       (:translate '(:en "Do you want to remove these objects:"
@@ -803,32 +826,37 @@
 				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-val-html-fn))))
 	`(html:html ((:input :type "text" :id ,(name item) :disabled "true" ,@attrs))
 	  (:when (modifiable-p ,slot)
-	    ((:a :id ,(action-link item)
+            ((:modal-button :id ,(action-link item)
+                            :target "#global_modal"
+                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                            (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))
+	    #+nil((:a :id ,(action-link item)
 		 :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a');"
 				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
 
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
 (defun pick-request-handler (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (*dispatcher* nil))
-	(when link
-	  (setf link (gethash link *http-links*))
-	  (when (and link item)
-	    (setf *dispatcher* (gethash item (dispatchers link)))
-	    (let* ((*session* (session link))
-		   (*user* (user *session*))
-		   (*country-language* (country-language *session*)))
-	      (with-output-to-request (request)
-		(html::html-to-stream
-		 *request-stream*
-		 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">"
-		 (:html
-		  (when *dispatcher*
-		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
-      t)
+  (decode-posted-content request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (*dispatcher* nil))
+    (when link
+      (setf link (gethash link *http-links*))
+      (when (and link item)
+        (setf *dispatcher* (gethash item (dispatchers link)))
+        (let* ((*session* (session link))
+               (*user* (user *session*))
+               (*country-language* (country-language *session*)))
+          (with-output-to-request (request)
+            (html::html-to-stream
+             *request-stream*
+             "<!doctype HTML>"
+             (:html
+               (when *dispatcher*
+                 (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
+  t)
+
 (interface::add-named-url "/pick-val.html" 'pick-request-handler)
 
 (defun std-pick-val-html-fn (dispatcher)
@@ -841,10 +869,14 @@
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur"  :sp "Elija un valor")))
       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
+      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-      (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
+      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
+      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
+		"parent.$('#global_modal').modal('hide');};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(when (meta::null-allowed (slot dispatcher))
@@ -859,8 +891,10 @@
                                                      (html:quote-javascript-string value)
                                                      value)))
 			     (html:esc text)) :br)))
-      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+      ((:div :align "center")
+       (#+nil(:a :class "call" :href "javascript:window.close();")
+             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 (defun std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -909,13 +943,19 @@ function fh(name)
 }
 ")
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
         (:if (typep dispatcher 'html-slot-list-dispatcher)
-             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
+             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
-                       "window.setTimeout('window.close();', 600); shot = true;}};"))
+             (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
+                       "shot = true;parent.$('#global_modal').modal('hide');}};")
+             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+                       "window.setTimeout('window.close();', 600); shot = true;}};")
+             (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
+                       "shot = true;parent.$('#global_modal').modal('hide');}};"))
 	(:p (:translate (meta::get-value-text slot)))
 	(when dispatcher
 	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
@@ -926,8 +966,9 @@ function fh(name)
 			      :draw-node-fn #'draw-item)))
 	:br :br
 	((:div :align "center")
-         ((:a :class "call" :href "javascript:window.close();")
-          (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+         (#+nil(:a :class "call" :href "javascript:window.close();")
+               (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+               (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 (defun std-fn-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -975,17 +1016,24 @@ function fh(name)
 }
 ")
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-        (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
+        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
+                  "shot = true;parent.$('#global_modal').modal('hide');}};")
+        #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
                   "window.setTimeout('window.close();', 600); shot = true;}};")
 	(:p (:translate (meta::get-value-text fc-fn)))
 	(when dispatcher
 	  (draw-simple-tree (funcall (meta::get-object-func fc-fn) object) 0 t t ()
 			    :draw-node-fn #'draw-item :opened-node t))
 	:br :br
-	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				(:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+	((:div :align "center")
+       (#+nil(:a :class "call" :href "javascript:window.close();")
+             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
+        )))))
 
 (defun std-pick-huge-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -1047,6 +1095,8 @@ function fh(name)
 }
 ")
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
 	((:form :name "go" :method "post" :action "/pick-val.html")
@@ -1055,8 +1105,12 @@ function fh(name)
 	 ((:input :id "index" :name "index" :type "hidden"))
 	 ((:input :id "level" :name "level" :type "hidden"))
 	 ((:input :id "action":name "action" :type "hidden"))
-	 (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
+	 #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		   "window.close();};"
+		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
+		   "document.forms['go'].submit();};")
+         (:jscript "function f42(d){parent.Fch('" item-name "',d);"
+		   "parent.$('#global_modal').modal('hide');};"
 		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
 		   "document.forms['go'].submit();};")
 
@@ -1073,8 +1127,11 @@ function fh(name)
 			((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
                                                                                                        :sp "Ninguna de estas opciones"))))))
 	 :br :br
-	 ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
+	 ((:div :align "center")
+          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+           (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
+          #+nil((:a :class "call" :href "javascript:window.close();")
+                (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
 
 ;;; slot-obj-link
 
@@ -1106,10 +1163,15 @@ function fh(name)
 		      #+nil((:a :id ,(action-link obj-link)
 			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
 					  (name obj-link))) (:translate '(:en "Change" :fr "Changer")))
-                      ((:a :id ,(action-link obj-link)
+                      #+nil((:a :id ,(action-link obj-link)
 			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
 					  (name obj-link)))
-                       ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))))))))))
+                       ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))
+                      ((:modal-button :id ,(action-link obj-link)
+                            :target "#global_modal"
+                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link)))
+                            ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))
+                      ))))))))
 
 (html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
 
@@ -1123,22 +1185,29 @@ function fh(name)
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
+      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
+      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		"window.close();};")
+      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
+		"parent.$('#global_modal').modal('hide');};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(when (meta::null-allowed (slot dispatcher))
 	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                            :sp "Ninguna de estas opciones"))) :br :br))
+		     ((:a :href "javascript:f42('nil');")
+                      (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                    :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
 			     (html:esc (meta::short-description object))) :br)))
-      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+      ((:div :align "center")
+       (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
+        (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 
 ;;; pick-color
@@ -1162,10 +1231,15 @@ function fh(name)
 				 :html-fn (or (meta::get-object-func slot) 'std-pick-color-html-fn))))
 	`(html:html ((:input :type "text" :id ,(name item) :readonly "true" ,@attrs))
 	  (:when (modifiable-p ,slot)
-	    ((:a :id ,(action-link item)
+	    #+nil((:a :id ,(action-link item)
 		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
 				(name item))) 
-             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))))))))
+             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
+            ((:modal-button :id ,(action-link item)
+                            :target "#global_modal"
+                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                                ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
+            ))))))
 
 (html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
 
@@ -1201,10 +1275,12 @@ function fh(name)
 	(:title (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
 	((:link :rel "stylesheet" :type "text/css" :href "/static/pcol.css")))
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-        (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
-                  "window.setTimeout('window.close();', 600); shot = true;}};")
+        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
+                  "shot = true;parent.$('#global_modal').modal('hide');}};")
 #+nil        (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
 		  "window.close();};")
 	((:table :class "pcolt" :align "center")
@@ -1224,8 +1300,10 @@ function fh(name)
 		 (loop for (r g b nil) in row
 		       do (color-td r g b))))))
 	:br
-	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				(:translate '(:en "Close" :fr "Fermer")))))))))
+        ((:div :align "center")
+         (#+nil(:a :class "call" :href "javascript:window.close();")
+               (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+               (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 ;;; slot-pick-multi-val
 
@@ -1271,17 +1349,28 @@ function fh(name)
 	       (:when (modifiable-p ,slot)
 		 (:tr
 		  ((:td :align "right" :valign "top")
-		   ((:a :id ,(action-link item)
+                   #+nil((:a :id ,(action-link item)
 			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
 				       (name item))) 
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+                   ((:modal-button :id ,(action-link item)
+                                   :target "#global_modal"
+                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                                 
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+		   )))))
 	    `(html:html
               ((:span :id ,(name item) ,@attrs))
               (:when (modifiable-p ,slot)
-                ((:a :id ,(action-link item)
+                #+nil((:a :id ,(action-link item)
                      :href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
                                     (name item)))
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+                ((:modal-button :id ,(action-link item)
+                                   :target "#global_modal"
+                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                                 
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
@@ -1304,11 +1393,16 @@ function fh(name)
       (:title (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
      (:body
+      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
       :br
       (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+      #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		"else window.opener.Fck('" item-name "',-i);"
 		"};")
+      (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
+		"else parent.Fck('" item-name "',-i);"
+		"parent.$('#global_modal').modal('hide');};")
       (:p (:translate (meta::get-value-text slot)))
       (when dispatcher
 	(loop for (text value) in (funcall (choices-fn dispatcher) object)
@@ -1322,8 +1416,11 @@ function fh(name)
 			    (html:esc text) :br)
 	      (push value choices))
 	(setf (item-state dispatcher) (nreverse choices)))
-      ((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-			      (:translate '(:en "Close" :fr "Fermer"))))))))
+      ((:div :align "center")
+       ( #+nil(:a :class "call" :href "javascript:window.close();")
+              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
+       )))))
 
 (defun std-mpick-treeview-html-fn (dispatcher)
   (let* ((item (interface::item dispatcher))
@@ -1374,13 +1471,21 @@ function fh(name)
      item.style.display = 'none';
 }
 ")
+       ((:script :src "https://code.jquery.com/jquery.js"))
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
         (:if nil ;(typep dispatcher 'html-slot-list-dispatcher)
-             (:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
+             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+             (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
+                       "shot = true;}parent.$('#global_modal').modal('hide');};")
+             (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
+		"else parent.Fck('" item-name "',-i);"
+		"parent.$('#global_modal').modal('hide');};")
+             #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		"else window.opener.Fck('" item-name "',-i);"
 		"};"))
 	(:p (:translate (meta::get-value-text slot)))
@@ -1393,7 +1498,7 @@ function fh(name)
 #+nil
          ((:a :class "call" :href "javascript:window.close();")
           (:translate '(:en "Remove all" :fr "Tout enlever")))
-         ((:a :class "call" :href "javascript:window.close();")
+         ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
           (:translate '(:en "Close" :fr "Fermer"))))))))
 #+nil
   (let* ((item (interface::item dispatcher))
@@ -1503,6 +1608,8 @@ function fh(name)
 .ic  {height:16px; width:16px; border:0;}
 ")
        (:body
+        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
 
@@ -1512,7 +1619,12 @@ function fh(name)
 	 ((:input :id "index" :name "index" :type "hidden"))
 	 ((:input :id "level" :name "level" :type "hidden"))
 	 ((:input :id "action" :name "action" :type "hidden"))
-	 (:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
+	 (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
+		   "else parent.Fck('" item-name "',-i);"
+		   "parent.$('#global_modal').modal('hide');};"
+		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
+		   "document.forms['go'].submit();parent.$('#global_modal').modal('hide');};")
+         #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
 		   "else window.opener.Fck('" item-name "',-i);"
 		   "};"
 		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
@@ -1522,8 +1634,10 @@ function fh(name)
 	   (draw-huge-tree (funcall (choices-fn dispatcher) object) 0 0 t t () path #'draw-item2))
 	(setf (item-state dispatcher) (nreverse choices))
 	:br :br
-	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				(:translate '(:en "Close" :fr "Fermer"))))))))))
+	((:div :align "center")
+         ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
+          #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
+          (:translate '(:en "Close" :fr "Fermer"))))))))))
 
 (defun test-mpick (object)
   (declare (ignore object))
