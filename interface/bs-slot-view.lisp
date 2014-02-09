@@ -1,16 +1,5 @@
 (in-package #:interface)
 
-;;; ***** slot-name ************
-
-(defun slot-name-tag (attributes form)
-  (declare (ignore attributes))
-  (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
-		    :test #'string= :key #'c2mop:slot-definition-name)))
-    (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
-    `(write-string ,(get-user-name slot) html:*html-stream*)))
-
-(html:add-func-tag :slot-name 'slot-name-tag)
-
 ;;;***** slot edit **************
 
 (defclass html-edit (html-item)
@@ -511,7 +500,7 @@
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
                        #+nil
                        (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))
                        (send-to-interface
                         (html:fast-format nil "show_modal_content('Sure?', );"))
                        #+nil(send-to-interface
@@ -695,7 +684,7 @@
                       ((:div :align "center")
                        (#+nil(:a :class "call" :href "javascript:window.close();")
                              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-                                              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
+                             (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
 (interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
@@ -736,7 +725,7 @@
 	       ((:div :align "center")
                 (#+nil(:a :class "call" :href "javascript:window.close();")
                       (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+                      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 	t))
 (interface::add-named-url "/obj-new.html" 'obj-new-request-handler)
 
@@ -840,25 +829,25 @@
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
 (defun pick-request-handler (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (*dispatcher* nil))
-	(when link
-	  (setf link (gethash link *http-links*))
-	  (when (and link item)
-	    (setf *dispatcher* (gethash item (dispatchers link)))
-	    (let* ((*session* (session link))
-		   (*user* (user *session*))
-		   (*country-language* (country-language *session*)))
-	      (with-output-to-request (request)
-		(html::html-to-stream
-		 *request-stream*
+  (decode-posted-content request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (*dispatcher* nil))
+    (when link
+      (setf link (gethash link *http-links*))
+      (when (and link item)
+        (setf *dispatcher* (gethash item (dispatchers link)))
+        (let* ((*session* (session link))
+               (*user* (user *session*))
+               (*country-language* (country-language *session*)))
+          (with-output-to-request (request)
+            (html::html-to-stream
+             *request-stream*
              "<!doctype HTML>"
-		 (:html
-		  (when *dispatcher*
-		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
-      t)
+             (:html
+               (when *dispatcher*
+                 (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
+  t)
 
 (interface::add-named-url "/pick-val.html" 'pick-request-handler)
 
@@ -897,7 +886,7 @@
       ((:div :align "center")
        (#+nil(:a :class "call" :href "javascript:window.close();")
              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 (defun std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -971,7 +960,7 @@ function fh(name)
 	((:div :align "center")
          (#+nil(:a :class "call" :href "javascript:window.close();")
                (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-          (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+               (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 (defun std-fn-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -1134,7 +1123,7 @@ function fh(name)
           ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
            (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
           #+nil((:a :class "call" :href "javascript:window.close();")
-				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
+                (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
 
 ;;; slot-obj-link
 
@@ -1202,7 +1191,7 @@ function fh(name)
 	  (html:html "&nbsp;&nbsp;"
 		     ((:a :href "javascript:f42('nil');")
                       (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                            :sp "Ninguna de estas opciones"))) :br :br))
+                                    :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
@@ -1210,7 +1199,7 @@ function fh(name)
       ((:div :align "center")
        (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
         (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 
 ;;; pick-color
@@ -1373,7 +1362,7 @@ function fh(name)
                                    :target "#global_modal"
                                  :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
                                  
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
@@ -1640,7 +1629,7 @@ function fh(name)
 	((:div :align "center")
          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
           #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-				(:translate '(:en "Close" :fr "Fermer"))))))))))
+          (:translate '(:en "Close" :fr "Fermer"))))))))))
 
 (defun test-mpick (object)
   (declare (ignore object))

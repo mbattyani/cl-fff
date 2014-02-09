@@ -56,6 +56,18 @@
      #+nil((:script :src "/static/fgt.js"))
      ((:script :src "/static/fractal.js"))))
 
+(defmethod insert-global-modal (app page)
+  (html:html
+   ((:div :class "modal fade" :id "GlobalModal" :tabindex "-1" :role "dialog"
+            :aria-labelledby "GlobalModal" :aria-hidden "true")
+    ((:div :class "modal-dialog")
+     ((:div :class "modal-content")
+      ((:div :class "modal-header")
+       ((:h4 :class "modal-title")) "Title")
+      ((:div :class "modal-body") "Body")
+      ((:div :class "modal-footer")
+       ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))))
+
 (defmethod insert-page-header (app page)
   )
 
@@ -71,6 +83,7 @@
      (insert-html-meta app page)
      (insert-html-head-links app page))
     (:body
+     (insert-global-modal app page)
      (insert-page-header app page)
      (:when-frontends '(:bootstrap)
                       ((:div :class "container")

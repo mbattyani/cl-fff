@@ -273,8 +273,8 @@ function SLk(v456, v457, v458, v459)
   if (!v688) return;
 
   x.open("POST", v459, true);
-  x.onreadystatechange = function() { 
-    if(x.readyState == 4) { 
+  x.onreadystatechange = function() {
+    if(x.readyState == 4) {
       eval(x.responseText);
       x.onreadystatechange = function() {};
     }
@@ -287,3 +287,11 @@ function set_src(name, url, item) {
     document.getElementById(name).setAttribute("src", url+'?link='+v689+'&item='+item);
 }
 
+function show_modal_content(title, content) {
+    var modal = $('#GlobalModal');
+    var body = modal.find('.modal-body').first();
+    var header = modal.find('.modal-header').first();
+    header.html(title);
+    body.html(content);
+    modal.modal();
+}
