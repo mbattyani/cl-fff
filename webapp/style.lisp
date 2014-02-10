@@ -44,7 +44,7 @@
 
 (defmethod insert-html-head-links (app page)
   (html:html
-     ((:link :rel "shortcut icon" :href "/static/favicon.ico" :type "image/x-icon"))
+     ((:link :rel "shortcut icon" :href "/static/favicon.png" :type "image/png"))
      ((:link :rel "stylesheet" :href "/static/css/fcweb.css"))
      ((:link :rel "stylesheet" :href "/static/css/modal.css"))
      (:when-frontends '(:bootstrap)
