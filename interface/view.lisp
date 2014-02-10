@@ -246,6 +246,10 @@
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t
                                                  ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) :time-of-day)
+                     (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
+                                                 :show-time t :show-date nil
+                                                 ,@(meta::html-tag-attributes slot)))))
                     ((eq (meta::value-type slot) 'boolean)
                      (std-row `((:slot-check-box ,(c2mop:slot-definition-name slot)))))
                     (t (std-row `((:slot-edit ,(c2mop:slot-definition-name slot)
