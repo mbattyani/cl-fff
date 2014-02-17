@@ -47,7 +47,7 @@
           (:bootstrap
            (if (modifiable-p slot)
                `(html:html
-                 ((:input :type "text" :id ,(name edit) :class "form-control col-lg-6" :style "display:none;" :insert-string
+                 ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
                           ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
                  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs)))))
@@ -112,7 +112,7 @@
 	(case *frontend*
             (:bootstrap
              (if (modifiable-p slot)
-                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control col-lg-6" :style "display:none;"
+                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
                                             :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
                              ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                  `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))))
@@ -130,15 +130,18 @@
 ;;; ********* Date Edit ************
 
 (defclass html-date (html-item)
-  ((show-time :accessor show-time :initform nil :initarg :show-time)))
+  ((show-time :accessor show-time :initform nil :initarg :show-time)
+   (show-date :accessor show-date :initform t :initarg :show-date)))
 
 (defmethod make-set-value-javascript ((item html-date) value slot)
   (if value
       (multiple-value-bind (s mn h d m y) 
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-	(let ((j-value (if (show-time item)
-			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
-			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
+	(let ((j-value (if (not (show-time item))
+                           (format nil "~2,'0d/~2,'0d/~d" d m y)
+			   (if (show-date item)
+                               (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
+                               (format nil "~2,'0d:~2,'0d:~2,'0d" h mn s)))))
 	  (concatenate 'string "x_.f826si('" (name item) "', '" j-value "');")))
       (concatenate 'string "x_.f826si('" (name item) "', '');")))
 
@@ -157,9 +160,11 @@
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
       (let ((edit (make-instance 'html-date :tooltip (meta::tooltip slot) :slot slot
-				 :show-time (getf attrs :show-time))))
+				 :show-time (getf attrs :show-time)
+                                 :show-date (getf attrs :show-date t))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :show-time)
+	(remf attrs :show-date)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"

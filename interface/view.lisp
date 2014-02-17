@@ -193,8 +193,8 @@
             collect
               (flet ((std-row (&rest body)
                        `((:div :class "form-group")
-                         ((:label :class "control-label col-lg-2") ,user-name ,unit)
-                         ((:div :class "col-lg-6") ,@body))))
+                         ((:label :class "control-label col-xs-4 col-sm-3 col-md-3") ,user-name ,unit)
+                         ((:div :class " col-xs-8 col-sm-7 col-md-7 col-lg-6") ,@body))))
                 (append
                  (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
                  (list
@@ -209,14 +209,14 @@
                                                     ,@(html:merge-attributes (meta::html-tag-attributes slot) '(:class "dvcv"))))))
                        (t
                         `((:div :class "form-group")
-                          ((:label :class "control-label col-lg-2") ,user-name ,unit)
-                          ((:div :class "col-lg-6")
+                          ((:label :class "control-label col-xs-4 col-sm-3") ,user-name ,unit)
+                          ((:div :class "col-xs-8 col-sm-7")
                            ((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
                                                                               (meta::html-tag-attributes slot) '(:class "dvl")))))))))
                     ((meta::fc-class-p (meta::value-type slot))
                      (case (meta::view-type slot)
                        ((:embed t)
-                        `((:div :class "form-group") ((:label :class "col-lg-2 control-label") ,user-name)
+                        `((:div :class "form-group") ((:label :class "col-sm-4 control-label") ,user-name)
                           (:object-view :object (,(meta::accessor slot) interface::*object*))))
                        (:embed-val
                         (std-row `(:object-view :object (,(meta::accessor slot) interface::*object*))))
@@ -245,6 +245,10 @@
                     ((eq (meta::value-type slot) :universal-time)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t
+                                                 ,@(meta::html-tag-attributes slot)))))
+                    ((eq (meta::value-type slot) :time-of-day)
+                     (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
+                                                 :show-time t :show-date nil
                                                  ,@(meta::html-tag-attributes slot)))))
                     ((eq (meta::value-type slot) 'boolean)
                      (std-row `((:slot-check-box ,(c2mop:slot-definition-name slot)))))
@@ -276,7 +280,7 @@
 		     :name view-name :country-languages (list country-language)
 		     :user-group ()
 		     :frontend (list frontend)
-		     :source-code (nconc (make-std-object-slots-view class nil nil)
+		     :source-code (nconc (make-std-object-slots-view class nil nil) 
 					 (make-std-object-functions-view class))))))
 
 (defun clean-direct-views (class)
