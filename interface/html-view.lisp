@@ -163,13 +163,22 @@
       (setf attrs (copy-list attrs))
       (remf attrs :force-visible)
       `(html:html
-	((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
-	  :style "display:none;" ,@attrs) ,@form)
-	((:a :id ,(name item)
-	  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
-			      (format nil "HREF=\"javascript:open1('/pick-val.html','250px','500px','~a');\"" (name item))
-			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
-	  ,@attrs) ,@form)))))
+	(:when-frontends '(:bootstrap)
+            ((:button :id ,(concatenate 'string (name item) "d") :disabled "disabled"
+                 :class "btn btn-default" :style "display:none;" ,@attrs) ,@form)
+            ((:button :id ,(name item) :class "btn btn-default"
+                 :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
+                                     (format nil "onclick=\"open1('/pick-val.html','250px','500px','~a');\"" (name item))
+                                     (format nil "onclick='f825foc(~s);'" (name item)))
+                              ,@attrs) ,@form))
+        (:when-frontends '(:html)
+            ((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
+                 :style "display:none;" ,@attrs) ,@form)
+            ((:a :id ,(name item)
+                 :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
+                                     (format nil "HREF=\"javascript:open1('/pick-val.html','250px','500px','~a');\"" (name item))
+                                     (format nil "HREF='javascript:f825foc(~s);'" (name item)))
+                              ,@attrs) ,@form))))))
 
 ;((:a :href "" :id ,(name item)
 ;     :insert-string ,(format nil "onclick='f825foc(~s);'" (name item)) ,@attrs) ,@form)

@@ -47,7 +47,7 @@
           (:bootstrap
            (if (modifiable-p slot)
                `(html:html
-                 ((:input :type "text" :id ,(name edit) :class "form-control col-lg-6" :style "display:none;" :insert-string
+                 ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
                           ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
                  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs)))))
@@ -112,7 +112,7 @@
 	(case *frontend*
             (:bootstrap
              (if (modifiable-p slot)
-                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control col-lg-6" :style "display:none;"
+                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
                                             :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
                              ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                  `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))))
@@ -140,7 +140,7 @@
 	(let ((j-value (if (not (show-time item))
                            (format nil "~2,'0d/~2,'0d/~d" d m y)
 			   (if (show-date item)
-			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
+                               (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
                                (format nil "~2,'0d:~2,'0d:~2,'0d" h mn s)))))
 	  (concatenate 'string "x_.f826si('" (name item) "', '" j-value "');")))
       (concatenate 'string "x_.f826si('" (name item) "', '');")))
