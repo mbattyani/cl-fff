@@ -151,8 +151,7 @@
                   (setf forms (nconc (reverse (if use-frontend
                                                   (funcall func *frontend* value)
                                                   (funcall func value)))
-                                     forms)))
-                  t))
+                                     forms)) t)))
              ((stringp value)
               (push `(write-string ,(format nil " ~a=\"~a\"" (dc-string attribute) value) *html-stream*) forms))
              #+nil((and (listp value)

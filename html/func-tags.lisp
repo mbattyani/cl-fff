@@ -134,6 +134,13 @@
 
 (add-func-tag :insert-file 'insert-file-tag)
 
+(defun doctype-tag (attributes forms)
+  (declare (ignore attributes forms))
+  (html-gen
+   `((:!doctype "html"))))
+
+(add-func-tag :doctype 'doctype-tag)
+
 (defun jscript-tag (attributes forms)
   (html-gen
    `((:script :language "JavaScript" :type "text/javascript" ,@attributes) ,@forms)))

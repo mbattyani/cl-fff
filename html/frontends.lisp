@@ -2,8 +2,6 @@
 
 ;;; The frontend classes
 
-(defvar *frontend* nil "The current frontend")
-
 (defclass frontend ()
   ((browser :accessor browser :initform nil :initarg :browser)
    (browser-version :accessor browser-version :initform nil :initarg :browser-version)
@@ -53,3 +51,5 @@
       (eq (type-of fe) 'bootstrap)
       t))
 
+(defvar *frontend* (make-instance 'bootstrap) "The current frontend") ; ugly hack for now
+(defparameter *default-frontend* *frontend*) ; yeah I knpw...
