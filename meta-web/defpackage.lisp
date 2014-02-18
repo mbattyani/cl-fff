@@ -3,4 +3,5 @@
   (:use common-lisp iterate webapp)
   (:shadowing-import-from meta-level defclass)
   (:import-from interface *user* *session* *object* *request* *country-language* *user-groups*)
+  (:import-from html *frontend* is-bootstrap is-html)
   )

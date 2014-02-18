@@ -374,7 +374,7 @@ rankdir=LR;
              "(in-package fcw)" :br
              "(start [path to store])"))))
 
-(make-instance 'interface::object-view :object-class 'project :frontend '(:bootstrap)
+(make-instance 'interface::object-view :object-class 'project ; :frontend '(:bootstrap)
 	       :country-languages '(:en :fr) :name "proj-v" :source-code
   `((:tab
      ("Description"

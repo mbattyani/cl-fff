@@ -54,7 +54,8 @@
 	 ((:td :class "dvcv") ((:slot-edit italian :class "dvcve")))))))))
 
 (make-instance 'interface::object-view :object-class 'translated-string
-	       :country-languages '(:en) :name "ts-en" :frontend '(:bootstrap) :source-code 
+	       :country-languages '(:en) :name "ts-en" ;:frontend '(:bootstrap)
+               :source-code 
    `((:tab
       ("English"
        ((:slot-edit english)))

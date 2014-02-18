@@ -4,7 +4,7 @@
    :name "home"
    :title "Home"
    :content '(:progn
-              (:when-frontends '(:bootstrap)
+              (:when (is-bootstrap *frontend*)
                ((:section)
                 ((:div :class "page-header")
                  (:h1 "The framework web interface"))
@@ -15,7 +15,7 @@
                :name "projects"
                :title "Projects"
                :content '(:progn
-                          (:when-frontends '(:bootstrap)
+                          (:when (is-bootstrap *frontend*)
                            ((:section)
                             ((:div :class "page-header"))
                             (:h1 "Project List:")
