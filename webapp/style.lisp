@@ -2,14 +2,14 @@
 
 (defmethod webapp::gen-breadcrumbs (app page obj &key (home-url "/"))
   (let ((descriptions (localize obj)))
-    (case *frontend*
-      (:bootstrap
+    (cond
+      ((is-bootstrap *frontend*)
        (html:html
         ((:ul :class "breadcrumb")
          (:li ((:a :href home-url) (:translate '(:fr "Accueil" :en "Home"))))
          (loop for ((description url) . next) on descriptions do
               (html:html (:li ((:a :href url) (:esc description))))))))
-      (:html
+      (t
        (if (> (reduce #'+ descriptions :key #'(lambda (x) (length (first x)))) 20)
            (html:html
             ((:table :border "0")
@@ -47,12 +47,12 @@
      ((:link :rel "shortcut icon" :href "/static/favicon.png" :type "image/png"))
      ((:link :rel "stylesheet" :href "/static/css/fcweb.css"))
      ((:link :rel "stylesheet" :href "/static/css/modal.css"))
-     (:when-frontends '(:bootstrap)
-                      ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap.min.css"))
-                      ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap-theme.min.css"))
-                      ((:link :rel "stylesheet" :href "/static/css/modal.css"))
-                      ((:script :src "/static/jquery/jquery.js"))
-                      ((:script :src "/static/bootstrap/bootstrap.min.js")))
+     (:when (is-bootstrap *frontend*)
+       ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap.min.css"))
+       ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap-theme.min.css"))
+       ((:link :rel "stylesheet" :href "/static/css/modal.css"))
+       ((:script :src "/static/jquery/jquery.js"))
+       ((:script :src "/static/bootstrap/bootstrap.min.js")))
      #+nil((:script :src "/static/fgt.js"))
      ((:script :src "/static/fractal.js"))))
 
@@ -85,19 +85,19 @@
     (:body
      (insert-global-modal app page)
      (insert-page-header app page)
-     (:when-frontends '(:bootstrap)
-                      ((:div :class "container")
-                       (gen-breadcrumbs app page *object*)
-                       (funcall (content-func page)))
-                      ((:modal-window :id "global_modal")
-                       (:body
-                        ((:iframe :width "250px" :height "280px" :id "global_iframe" :name "global_iframe")))))
-     (:when-frontends '(:html)
-                      ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
-                      ((:div :style "padding:5px;")
-                       (gen-breadcrumbs app page *object*)
-                       :use-ui-ws
-                       (funcall (content-func page))))
+     (:when (is-bootstrap *frontend*)
+       ((:div :class "container")
+        (gen-breadcrumbs app page *object*)
+        (funcall (content-func page)))
+       ((:modal-window :id "global_modal")
+        (:body
+         ((:iframe :width "250px" :height "280px" :id "global_iframe" :name "global_iframe")))))
+     (:when (is-html *frontend* t)
+       ((:img :border "0" :src "/static/made-with-lisp-logo.jpg"))
+       ((:div :style "padding:5px;")
+        (gen-breadcrumbs app page *object*)
+        :use-ui-ws
+        (funcall (content-func page))))
      (insert-page-footer app page)
      #+nil((:script :src "/static/fractal-ws.js"))))))
 
