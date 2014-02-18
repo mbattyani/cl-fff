@@ -1,7 +1,5 @@
 (in-package #:html)
 
-(defvar *frontend* :bootstrap) ;other values :html
-
 (defun dc-string (obj)
   (string-downcase (string obj)))
 
@@ -55,11 +53,11 @@
 
 (defvar *func-tags-table* (make-hash-table)) ; lambda(attributes forms) => compiled forms
 
-(defun add-func-tag (tag macro)
-  (setf (gethash tag *func-tags-table*) macro))
+(defun add-func-tag (tag macro &optional use-frontend)
+  (setf (gethash tag *func-tags-table*) (list macro use-frontend)))
 
 (defun func-tag (tag)
-  (gethash tag *func-tags-table*))
+  (values-list (gethash tag *func-tags-table*)))
 
 (defvar *empty-table* (make-hash-table))
 
@@ -85,8 +83,12 @@
 	   ((empty-tag-p tag)
 	    (when (rest form) (warn "Ignoring body of empty tag ~S" tag))
 	    (open-tag tag attributes))
-	   ((func-tag tag)
-	    (funcall (func-tag tag) attributes (rest form)))
+           ((multiple-value-bind (func use-frontend) (func-tag tag)
+                (when func
+                  (return-from html-gen
+                    (if use-frontend
+                        (funcall func *frontend* attributes (rest form))
+                        (funcall func attributes (rest form)))))))
 	   (t `(optimize-progn
 		,(open-tag tag attributes)
 		,@(mapcar #'(lambda (e) (html-gen e)) (rest form))
@@ -98,7 +100,12 @@
     (if (keywordp form)
         (cond
           ((empty-tag-p form) (open-tag form nil))
-          ((func-tag form) (funcall (func-tag form) nil nil))
+          ((multiple-value-bind (func use-frontend) (func-tag form)
+                (when func
+                  (return-from html-gen
+                    (if use-frontend
+                        (funcall func *frontend* nil nil)
+                        (funcall func nil nil))))))
           (t `(optimize-progn
                 ,(open-tag form nil)
                 ,(close-tag form))))
@@ -121,11 +128,11 @@
 
 (defvar *func-attr-table* (make-hash-table))
 
-(defun add-func-attr (attr macro)
-  (setf (gethash attr *func-attr-table*) macro))
+(defun add-func-attr (attr macro &optional use-frontend)
+  (setf (gethash attr *func-attr-table*) (list macro use-frontend)))
 
 (defun func-attr (attr)
-  (gethash attr *func-attr-table*))
+  (values-list (gethash attr *func-attr-table*)))
 
 (defmethod open-tag (tag (attributes cons))
  `(optimize-progn
@@ -139,25 +146,27 @@
            (when (numberp value)
              (setf value (format nil "~a" value)))
 	   (cond
-	     ((func-attr attribute)
-	      (setf forms (nconc (reverse (funcall (func-attr attribute) value)) forms)))
-	     (t (cond
-		  ((stringp value)
-		   (push `(write-string ,(format nil " ~a=\"~a\"" (dc-string attribute) value) *html-stream*) forms))
-                  #+nil((and (listp value)
-                       (eq (car value) :ps))
-                   (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
-                   (push `(write-string ,(funcall #'ps:ps* (cadr value)) *html-stream*) forms)
-                   (push `(write-char #\" *html-stream*) forms)
-                   )
-		  (value
-		   (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
-		   (push `(write-string-quoting-specials ,value) forms)
-		   (push `(write-char #\" *html-stream*) forms))
-		  (t (push `(write-char #\Space *html-stream*) forms)
-		     (push `(write-string ,(dc-string attribute) *html-stream*) forms)))))
-	   finally return (nreverse forms))
-
+	     ((multiple-value-bind (func use-frontend) (func-attr attribute)
+                (when func
+                  (setf forms (nconc (reverse (if use-frontend
+                                                  (funcall func *frontend* value)
+                                                  (funcall func value)))
+                                     forms)))
+                  t))
+             ((stringp value)
+              (push `(write-string ,(format nil " ~a=\"~a\"" (dc-string attribute) value) *html-stream*) forms))
+             #+nil((and (listp value)
+                 (eq (car value) :ps))
+                    (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
+                    (push `(write-string ,(funcall #'ps:ps* (cadr value)) *html-stream*) forms)
+                    (push `(write-char #\" *html-stream*) forms))
+             (value
+              (push `(write-string ,(format nil " ~a=\"" (dc-string attribute)) *html-stream*) forms)
+              (push `(write-string-quoting-specials ,value) forms)
+              (push `(write-char #\" *html-stream*) forms))
+             (t (push `(write-char #\Space *html-stream*) forms)
+                 (push `(write-string ,(dc-string attribute) *html-stream*) forms)))
+        finally return (nreverse forms))
    (write-char #\> *html-stream*)))
 
 (defmethod open-tag ((tag (eql :crlf)) attributes)

@@ -6,8 +6,7 @@
 	   #:force-style #:quote-javascript-string #:quote-string
 	   #:html-to-stream #:html-to-string #:html-to-file #:html #:html-gen #:fmt
 	   #:ffmt #:esc #:define-empty-tags #:add-func-attr #:add-func-tag
-           #:merge-attributes
-           #:parse-html
+           #:merge-attributes #:*frontend*
 	   ))
 
 

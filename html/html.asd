@@ -9,10 +9,12 @@
   :description "HTML generation macro and utilities"
   :long-description "HTML generation macro and utilities"
   :components ((:file "defpackage")
+               (:file "frontends" :depends-on ("defpackage"))
 	       (:file "html-utils" :depends-on ("defpackage"))
 	       (:file "parsers" :depends-on ("html-utils"))
 	       (:file "html-gen2" :depends-on ("html-utils"))
 	       (:file "func-tags" :depends-on ("html-gen2"))
+	       (:file "frontend-tags" :depends-on ("func-tags"))
 	       )
   :depends-on (#:utility #:cl-html-parse #:parenscript)
   )
