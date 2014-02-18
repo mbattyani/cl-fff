@@ -250,6 +250,7 @@
    )
   (:default-initargs))
 
+#+nil
 (defclass simple-list (ui-item)
   ((html :accessor html :initform nil :initarg :html)
    (click-id :initform nil :accessor click-id :initarg :click-id)

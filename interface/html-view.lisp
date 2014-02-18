@@ -163,7 +163,7 @@
       (setf attrs (copy-list attrs))
       (remf attrs :force-visible)
       `(html:html
-	(:when-frontends '(:bootstrap)
+	(:when (is-bootstrap *frontend*)
             ((:button :id ,(concatenate 'string (name item) "d") :disabled "disabled"
                  :class "btn btn-default" :style "display:none;" ,@attrs) ,@form)
             ((:button :id ,(name item) :class "btn btn-default"
@@ -171,7 +171,7 @@
                                      (format nil "onclick=\"open1('/pick-val.html','250px','500px','~a');\"" (name item))
                                      (format nil "onclick='f825foc(~s);'" (name item)))
                               ,@attrs) ,@form))
-        (:when-frontends '(:html)
+        (:when (is-html *frontend*)
             ((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
                  :style "display:none;" ,@attrs) ,@form)
             ((:a :id ,(name item)
@@ -244,7 +244,7 @@
 
 (defun slot-table-tag (attributes form)
   (destructuring-bind (&key no-table ) attributes
-  `(html:html ,@(make-std-object-slots-view *current-class* form no-table))))
+    `(html:html ,@(make-std-object-slots-view *frontend* *current-class* form no-table))))
 
 (html::add-func-tag :slot-table 'slot-table-tag)
 

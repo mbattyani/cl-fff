@@ -60,7 +60,7 @@
    (application-data :initform nil :accessor application-data)
    (country-language-id :initform nil :accessor country-language-id)
    (country-language :initform nil :accessor country-language)
-   (frontend :initform :bootstrap #+nil :html :accessor frontend) ;temporary force frontend to bootstrap
+   (frontend :initform nil :accessor frontend)
    (url-history :initform nil :accessor url-history)
    ))
 
@@ -288,17 +288,26 @@
       (setf (session-params request) session-params))
     session))
 
+(defun choose-frontend (request session)
+  (if (frontend session)
+      (frontend session)
+      (let ((frontend html::*default-frontend* ;ugly hack
+             #+nil (make-instance 'bootstrap)))  ;to be changed with more choices
+        (setf (frontend session) frontend)
+        frontend)))
+
 (defun create-session (request)
   (if (web-robot-request? request)
       (make-instance 'session :id *robot-session-id* :robot-session t)
     (let ((session (make-instance 'session)))
+      (choose-frontend request session)
       (setf (cookie session) (cookie request)))))
 
 (defun encode-page-reader (stream subchar arg)
   (declare (ignore arg subchar))
   (let ((first-char (peek-char nil stream t nil t)))
     (cond ((char= first-char #\space)
-	   (read-char stream)	  ; skip over whitespaceitalian
+	   (read-char stream)	  ; skip over whitespace
 	   (encode-page-reader stream nil nil))
 	  ((char= first-char #\") ;read a string
 	   `(encode-page ,(read stream t nil t)))

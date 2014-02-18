@@ -43,8 +43,8 @@
       (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
-	(case *frontend*
-          (:bootstrap
+	(cond
+          ((is-bootstrap *frontend*)
            (if (modifiable-p slot)
                `(html:html
                  ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
@@ -109,8 +109,8 @@
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	(case *frontend*
-            (:bootstrap
+	(cond
+            ((is-bootstrap *frontend*)
              (if (modifiable-p slot)
                  `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
                                             :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
@@ -178,7 +178,7 @@
                             (:div
                              ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
                              (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe")))))
-                           (:when-frontends '(:bootstrap)
+                           (:when (is-bootstrap *frontend*)
                              ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
                                              :onclick
                                              #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))

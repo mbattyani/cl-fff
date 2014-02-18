@@ -1,11 +1,22 @@
 (in-package #:interface)
 
+;;; ***** slot-name ************
+
+(defun bs-slot-name-tag (attributes form)
+  (declare (ignore attributes))
+  (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
+		    :test #'string= :key #'c2mop:slot-definition-name)))
+    (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
+    `(write-string ,(get-user-name slot) html:*html-stream*)))
+
+(html:add-func-tag :slot-name 'bs-slot-name-tag)
+
 ;;;***** slot edit **************
 
-(defclass html-edit (html-item)
+(defclass bs-edit (html-item)
   ())
 
-(defmethod make-set-value-javascript ((item html-edit) value slot)
+(defmethod make-set-value-javascript ((item bs-edit) value slot)
   (when (meta::choices slot)
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (html:quote-javascript-string
@@ -17,26 +28,26 @@
 	(concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")
 	(concatenate 'string "x_.f826si('" (name item) "', '" j-value "');"))))
 
-(defmethod make-set-status-javascript ((item html-edit) status slot)
+(defmethod make-set-status-javascript ((item bs-edit) status slot)
   (when (modifiable-p *dispatcher*)
     (if status
 	(concatenate 'string "x_.f8252h('" (name item) "');")
 	(concatenate 'string "x_.f8252s('" (name item) "');"))))
 
-(defun slot-edit-tag (attributes form)
+(defun bs-slot-edit-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let* ((edit (make-instance 'html-edit :tooltip (meta::tooltip slot) :slot slot
+      (let* ((edit (make-instance 'bs-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
-	(case *frontend*
-          (:bootstrap
+	(cond
+          ((is-bootstrap *frontend*)
            (if (modifiable-p slot)
                `(html:html
-                 ((:input :type "text" :id ,(name edit) :class "form-control col-lg-6" :style "display:none;" :insert-string
+                 ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
                           ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
                  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs)))))
@@ -52,10 +63,10 @@
 
 ;;;***** slot span **************
 
-(defclass html-span (html-item)
+(defclass bs-span (html-item)
   ((format-fn :accessor format-fn :initarg :format-fn :initform nil)))
 
-(defmethod make-set-value-javascript ((item html-span) value slot)
+(defmethod make-set-value-javascript ((item bs-span) value slot)
   (when (meta::choices slot)
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (if (format-fn item)
@@ -67,16 +78,16 @@
                        (t (funcall (meta::value-to-string-fn slot) value)))))))
     (concatenate 'string "x_.fgt('" (name item) "').innerHTML='" j-value "';")))
 
-(defmethod make-set-status-javascript ((item html-span) status slot)
+(defmethod make-set-status-javascript ((item bs-span) status slot)
   )
 
-(defun slot-span-tag (attributes form)
+(defun bs-slot-span-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let* ((edit (make-instance 'html-span :tooltip (meta::tooltip slot)
+      (let* ((edit (make-instance 'bs-span :tooltip (meta::tooltip slot)
                                              :slot slot :format-fn (getf attrs :format-fn))))
         (remf attrs :format-fn)
 	`(html:html ((:span :id ,(name edit) ,@attrs)))))))
@@ -85,23 +96,23 @@
 
 ;;**** Multiline Edit ***************************
 
-(defclass html-medit (html-edit)
+(defclass bs-medit (bs-edit)
   ())
 
-(defun slot-medit-tag (attributes form)
+(defun bs-slot-medit-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let ((edit (make-instance 'html-medit :tooltip (meta::tooltip slot) :slot slot
+      (let ((edit (make-instance 'bs-medit :tooltip (meta::tooltip slot) :slot slot
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	(case *frontend*
-            (:bootstrap
+	(cond
+            ((is-bootstrap *frontend*)
              (if (modifiable-p slot)
-                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control col-lg-6" :style "display:none;"
+                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
                                             :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
                              ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
                  `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))))
@@ -118,20 +129,23 @@
 
 ;;; ********* Date Edit ************
 
-(defclass html-date (html-item)
-  ((show-time :accessor show-time :initform nil :initarg :show-time)))
+(defclass bs-date (html-item)
+  ((show-time :accessor show-time :initform nil :initarg :show-time)
+   (show-date :accessor show-date :initform t :initarg :show-date)))
 
-(defmethod make-set-value-javascript ((item html-date) value slot)
+(defmethod make-set-value-javascript ((item bs-date) value slot)
   (if value
       (multiple-value-bind (s mn h d m y) 
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-	(let ((j-value (if (show-time item)
-			   (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
-			   (format nil "~2,'0d/~2,'0d/~d" d m y))))
+	(let ((j-value (if (not (show-time item))
+                           (format nil "~2,'0d/~2,'0d/~d" d m y)
+			   (if (show-date item)
+                               (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
+                               (format nil "~2,'0d:~2,'0d:~2,'0d" h mn s)))))
 	  (concatenate 'string "x_.f826si('" (name item) "', '" j-value "');")))
       (concatenate 'string "x_.f826si('" (name item) "', '');")))
 
-(defmethod make-set-status-javascript ((item html-date) status slot)
+(defmethod make-set-status-javascript ((item bs-date) status slot)
   (when (modifiable-p *dispatcher*)
     (if status
 	(concatenate 'string
@@ -139,16 +153,18 @@
 	(concatenate 'string
 		     "x_.fgt('" (name item) "l').style.visibility='inherit';"))))
 
-(defun slot-date-edit-tag (attributes form)
+(defun bs-slot-date-edit-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let ((edit (make-instance 'html-date :tooltip (meta::tooltip slot) :slot slot
-				 :show-time (getf attrs :show-time))))
+      (let ((edit (make-instance 'bs-date :tooltip (meta::tooltip slot) :slot slot
+				 :show-time (getf attrs :show-time)
+                                 :show-date (getf attrs :show-date t))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :show-time)
+	(remf attrs :show-date)
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
@@ -162,7 +178,7 @@
                             (:div
                              ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
                              (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe")))))
-                           (:when-frontends '(:bootstrap)
+                           (:when (is-bootstrap *frontend*)
                              ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
                                              :onclick
                                              #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))
@@ -175,39 +191,7 @@
 
 (html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
 
-(defun first-week-day (month year)
-  (multiple-value-bind (sec min hr d m y dw)
-      (decode-universal-time 
-       (encode-universal-time 1 1 1 1 month year 0) 0)
-    (declare (ignore sec min hr d m y))
-    dw))
-
-(defun last-day (month year)
-  (if (= month 2)
-      (if (or (and (= (mod year 4) 0) (/= (mod year 100) 0) ) (= (mod year 400) 0)) 29 28)
-      (aref #(31 28 31 30 31 30 31 31 30 31 30 31) (1- month))))
-
-(defvar *month-fr* '("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-		     "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre"))
-
-(defparameter *month-names* '(:fr ("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
-                                   "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre")
-                              :sp ("Enero" "Febrero" "Marzo" "Abril" "Mayo" "Junio" 
-                                   "Julio" "Agosto" "Septiembre" "Octubre"  "Noviembre" "Diciembre")
-                              :en ("January" "February" "March" "April" "May" "June"
-                                   "July" "August" "September" "October" "November" "Décember")))
-
-(defvar *default-month-names* '("January" "February" "March" "April" "May" "June"
-                                "July" "August" "September" "October" "November" "December"))
-
-(defparameter *day-names* '(:fr ("Di" "Lu" "Ma" "Me" "Je" "Ve" "Sa")
-                            :sp ("Do" "Lu" "Ma" "Mi" "Ju" "Vi" "Sa")
-                            :en ("Su" "Mo" "Tu" "We" "Th" "Fr" "Sa")))
-
-(defvar *default-day-names* '("January" "February" "March" "April" "May" "June"
-                                "July" "August" "September" "October" "November" "Décember"))
-
-(defun html-month (item day month year show-time)
+(defun bs-html-month (item day month year show-time)
   (let ((first-week-day (first-week-day month year))
 	(last-day (last-day month year))
 	(time (if show-time 
@@ -237,7 +221,7 @@
      (:jscript "$('div." div-class "').click(function(){f42($(this).text())});")
      )))
 
-(defun calendar-request-handler (request)
+(defun bs-calendar-request-handler (request)
       (decode-posted-content request)
       (let* ((link-name (cdr (assoc "link" (posted-content request) :test 'string=)))
 	     (link (gethash link-name *http-links*))
@@ -325,21 +309,21 @@
 (interface::add-named-url "/calendar.html" 'calendar-request-handler)
 
 ;;; ***** Combo *************
-(defclass html-combo (html-item)
+(defclass bs-combo (html-item)
   ())
 
-(defmethod make-set-value-javascript ((item html-combo) value slot)
+(defmethod make-set-value-javascript ((item bs-combo) value slot)
   (let ((position (position value (meta::choices slot) :key #'first :test #'equal)))
     (unless position (setf position -1))
     (html:fast-format nil "x_.fgt('~a').selectedIndex='~a';" (name item) position)))
 
-(defun slot-combo-tag (attributes form)
+(defun bs-slot-combo-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let ((combo (make-instance 'html-combo :tooltip (meta::tooltip slot) :slot slot))
+      (let ((combo (make-instance 'bs-combo :tooltip (meta::tooltip slot) :slot slot))
 	    (choices (loop for (nil string) in (meta::choices slot) collect (meta::translate string)))) ;value
 	`(html:html
 	  ((:select :id ,(name combo)
@@ -356,19 +340,19 @@
 
 ;;**** Check Box ***************************
 
-(defclass html-check-box (html-item)
+(defclass bs-check-box (html-item)
   ())
 
-(defmethod make-set-value-javascript ((item html-check-box) value slot)
+(defmethod make-set-value-javascript ((item bs-check-box) value slot)
   (html:fast-format nil "x_.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
-(defun slot-check-box-tag (attributes form)
+(defun bs-slot-check-box-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let ((check-box (make-instance 'html-check-box :tooltip (meta::tooltip slot) :slot slot)))
+      (let ((check-box (make-instance 'bs-check-box :tooltip (meta::tooltip slot) :slot slot)))
 	`(html:html ((:input :type "checkbox" :id ,(name check-box)
 		      :insert-string
 		      (if (modifiable-p ,slot)
@@ -381,14 +365,14 @@
 
 ;;**** slot-list ***************************
 
-(defclass html-slot-list (html-item)
+(defclass bs-slot-list (html-item)
   ((action-func  :initform nil :accessor action-func :initarg :action-fn)
    (html-fn :accessor html-fn :initform nil :initarg :html-fn)
    (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
    (list-format :accessor list-format :initform nil)
    (table-class  :initform ""  :accessor table-class)))
 
-(defclass html-slot-list-dispatcher (slot-dispatcher)
+(defclass bs-slot-list-dispatcher (slot-dispatcher)
   ((start :accessor start :initform 0)
    (max-nb :accessor max-nb :initform 25)
    (list-format :accessor list-format :initform nil)
@@ -396,34 +380,17 @@
    (selected-objects-idx :accessor selected-objects-idx :initform '())
    (sub-classes :accessor sub-classes :initform nil)))
 
-(defmethod make-dispatcher (interface object (item html-slot-list))
-  (let ((dispatcher (make-instance 'html-slot-list-dispatcher :interface interface :object object :item item)))
+(defmethod make-dispatcher (interface object (item bs-slot-list))
+  (let ((dispatcher (make-instance 'bs-slot-list-dispatcher :interface interface :object object :item item)))
     (setf (list-format dispatcher)
 	  (or (list-format item)
 	      (find-best-list-format (meta::value-type (slot dispatcher)) *country-language* *user-groups* *frontend*)))
     dispatcher))
 
-(defmethod make-set-status-javascript ((item html-slot-list) status slot)
+(defmethod make-set-status-javascript ((item bs-slot-list) status slot)
   "")
 
-(defun collect-selected-objects-idx (select-string)
-  (setf (selected-objects-idx *dispatcher*)
-	(when select-string
-	  (loop for index from 0
-	     for c across select-string
-	     when (char= c #\t)
-	     collect index))))
-
-(defun collect-list-idx ()
-  (let ((start (start *dispatcher*)))
-    (mapcar #'(lambda (x) (+ start x)) (selected-objects-idx *dispatcher*))))
-
-(defun collect-list-objects (list)
-  (setf list (nthcdr (start *dispatcher*) list))
-  (loop for idx in (selected-objects-idx *dispatcher*)
-     collect (elt list idx)))
-
-(defmethod slot-list-action-fn (object value click-str)
+(defmethod bs-slot-list-action-fn (object value click-str)
   (let* ((slot (slot *dispatcher*))
          (*dispatcher* *dispatcher*)
 	 (list (funcall (get-value-fn *dispatcher*) object))
@@ -500,7 +467,7 @@
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
                        #+nil
                        (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))
+                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
                        (send-to-interface
                         (html:fast-format nil "show_modal_content('Sure?', );"))
                        #+nil(send-to-interface
@@ -516,7 +483,7 @@
                       ((and (= value -10) *user*) ; paste
                        (paste-clipboard (clipboard *user*) object slot))))))))))
   
-(defmethod make-set-value-javascript ((item html-slot-list) list slot)
+(defmethod make-set-value-javascript ((item bs-slot-list) list slot)
   (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
     (let ((length (length list))
 	  (max-nb (max-nb *dispatcher*))
@@ -575,7 +542,7 @@
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
-      (let ((item (make-instance 'html-slot-list :tooltip (meta::tooltip slot) :slot slot
+      (let ((item (make-instance 'bs-slot-list :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (meta::get-object-func slot)
 				 :html-fn (meta::get-value-html-fn slot)
 				 :action-fn 'slot-list-action-fn :list-format (meta::list-format slot)))
@@ -684,7 +651,7 @@
                       ((:div :align "center")
                        (#+nil(:a :class "call" :href "javascript:window.close();")
                              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-                             (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
+                                              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
     t)
 
 (interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
@@ -725,7 +692,7 @@
 	       ((:div :align "center")
                 (#+nil(:a :class "call" :href "javascript:window.close();")
                       (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-                      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 	t))
 (interface::add-named-url "/obj-new.html" 'obj-new-request-handler)
 
@@ -829,25 +796,25 @@
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
 (defun pick-request-handler (request)
-  (decode-posted-content request)
-  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-        (*dispatcher* nil))
-    (when link
-      (setf link (gethash link *http-links*))
-      (when (and link item)
-        (setf *dispatcher* (gethash item (dispatchers link)))
-        (let* ((*session* (session link))
-               (*user* (user *session*))
-               (*country-language* (country-language *session*)))
-          (with-output-to-request (request)
-            (html::html-to-stream
-             *request-stream*
+      (decode-posted-content request)
+      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+	    (*dispatcher* nil))
+	(when link
+	  (setf link (gethash link *http-links*))
+	  (when (and link item)
+	    (setf *dispatcher* (gethash item (dispatchers link)))
+	    (let* ((*session* (session link))
+		   (*user* (user *session*))
+		   (*country-language* (country-language *session*)))
+	      (with-output-to-request (request)
+		(html::html-to-stream
+		 *request-stream*
              "<!doctype HTML>"
-             (:html
-               (when *dispatcher*
-                 (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
-  t)
+		 (:html
+		  (when *dispatcher*
+		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
+      t)
 
 (interface::add-named-url "/pick-val.html" 'pick-request-handler)
 
@@ -886,7 +853,7 @@
       ((:div :align "center")
        (#+nil(:a :class "call" :href "javascript:window.close();")
              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 (defun std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -939,7 +906,7 @@ function fh(name)
         ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-        (:if (typep dispatcher 'html-slot-list-dispatcher)
+        (:if (typep dispatcher 'bs-slot-list-dispatcher)
              #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
              (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
@@ -960,7 +927,7 @@ function fh(name)
 	((:div :align "center")
          (#+nil(:a :class "call" :href "javascript:window.close();")
                (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-               (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
+          (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
 
 (defun std-fn-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -1123,7 +1090,7 @@ function fh(name)
           ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
            (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
           #+nil((:a :class "call" :href "javascript:window.close();")
-                (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
+				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
 
 ;;; slot-obj-link
 
@@ -1167,7 +1134,7 @@ function fh(name)
 
 (html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
 
-(defun std-pick-obj-html-fn (dispatcher)
+(defun bs-std-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
 	 (item-name (name item))
 	 ;(object (object dispatcher))
@@ -1191,7 +1158,7 @@ function fh(name)
 	  (html:html "&nbsp;&nbsp;"
 		     ((:a :href "javascript:f42('nil');")
                       (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                    :sp "Ninguna de estas opciones"))) :br :br))
+                                                                            :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
 			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
@@ -1199,8 +1166,7 @@ function fh(name)
       ((:div :align "center")
        (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
         (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
-
+			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 ;;; pick-color
 
@@ -1235,22 +1201,7 @@ function fh(name)
 
 (html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
 
-(defun luminance (r g b)
-  (+ (* 0.3 r)(* 0.59 g)(* 0.11 b)))
-
-(defun rgb-to-hsv (r g b)
-  (let* ((min (min r g b))
-	 (max (max r g b))
-	 (delta (- max min)))
-    (values (if (zerop delta) -1
-		(float (cond
-			 ((= r max)(/ (- g b) delta))
-			 ((= g max)(+ 2 (/ (- b r) delta)))
-			 (t(+ 4 (/ (- r g) delta))))))
-	    (if (zerop max) 0 (float (/ delta max)))
-	    max)))
-
-(defun std-pick-color-html-fn (dispatcher)
+(defun bs-std-pick-color-html-fn (dispatcher)
   (flet ((color-td (r g b)
 	   (let ((color (format nil "#~2,'0x~2,'0x~2,'0x" r g b)))
 	     (html:html ((:td :bgcolor color :fformat (:onclick "f42('~a');" color))"&nbsp;&nbsp;&nbsp;")))))
@@ -1320,7 +1271,7 @@ function fh(name)
 	(funcall (set-value-fn *dispatcher*) (cons choice list) object)
 	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
 
-(defun slot-pick-multi-val-tag (attributes form)
+(defun bs-slot-pick-multi-val-tag (attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -1362,7 +1313,7 @@ function fh(name)
                                    :target "#global_modal"
                                  :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
                                  
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
@@ -1373,7 +1324,7 @@ function fh(name)
      for text = (meta::translate tr-string)
      collect (list text value)))
 
-(defun std-pick-multi-val-html-fn (dispatcher)
+(defun bs-std-pick-multi-val-html-fn (dispatcher)
   (let* ((item (interface::item dispatcher))
 	 (item-name (interface::name item))
 	 (object (interface::object dispatcher))
@@ -1469,7 +1420,7 @@ function fh(name)
         ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
 	:br
 	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-        (:if nil ;(typep dispatcher 'html-slot-list-dispatcher)
+        (:if nil ;(typep dispatcher 'bs-slot-list-dispatcher)
              #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
                        "window.setTimeout('window.close();', 600); shot = true;}};")
              (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
@@ -1629,7 +1580,7 @@ function fh(name)
 	((:div :align "center")
          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
           #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-          (:translate '(:en "Close" :fr "Fermer"))))))))))
+				(:translate '(:en "Close" :fr "Fermer"))))))))))
 
 (defun test-mpick (object)
   (declare (ignore object))
