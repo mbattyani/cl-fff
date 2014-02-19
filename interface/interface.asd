@@ -30,7 +30,7 @@
 ;	       (:file "bs-view" :depends-on ("html-view"))
 	       (:file "clipboard" :depends-on ("html-view" "view"))
                (:file "html-slot-view" :depends-on ("html-view" "process-url" "clipboard"))
-;               (:file "bs-slot-view" :depends-on ("bs-view" "html-slot-view"))
+               (:file "bs-slot-view" :depends-on (#+nil"bs-view" "html-slot-view"))
 	       (:file "std-web" :depends-on ("specials"))
                (:file "clws-link" )
                )

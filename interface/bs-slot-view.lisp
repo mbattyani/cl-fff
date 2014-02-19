@@ -2,14 +2,14 @@
 
 ;;; ***** slot-name ************
 
-(defun bs-slot-name-tag (attributes form)
-  (declare (ignore attributes))
-  (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
-		    :test #'string= :key #'c2mop:slot-definition-name)))
-    (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
-    `(write-string ,(get-user-name slot) html:*html-stream*)))
+;; (defun bs-slot-name-tag (attributes form)
+;;   (declare (ignore attributes))
+;;   (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
+;; 		    :test #'string= :key #'c2mop:slot-definition-name)))
+;;     (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
+;;     `(write-string ,(get-user-name slot) html:*html-stream*)))
 
-(html:add-func-tag :slot-name 'bs-slot-name-tag)
+;(html:add-func-tag :slot-name 'bs-slot-name-tag)
 
 ;;;***** slot edit **************
 
@@ -34,7 +34,7 @@
 	(concatenate 'string "x_.f8252h('" (name item) "');")
 	(concatenate 'string "x_.f8252s('" (name item) "');"))))
 
-(defun bs-slot-edit-tag (attributes form)
+(defmethod slot-edit-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -43,23 +43,15 @@
       (let* ((edit (make-instance 'bs-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
-	(cond
-          ((is-bootstrap *frontend*)
-           (if (modifiable-p slot)
-               `(html:html
-                 ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
-                          ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
-                 ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-               `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs)))))
-          (t
-           `(html:html (:if (modifiable-p ,slot)
-                            (:progn
-                              ((:input :type "text" :id ,(name edit) :style "display:none;" :insert-string
-                                       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
-                              ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-                            ((:span :id ,(concatenate 'string (name edit) "d") ,@attrs))))))))))
+	(if (modifiable-p slot)
+            `(html:html
+              ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
+                       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
+              ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+            `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs))))
+        ))))
 
-(html:add-func-tag :slot-edit 'slot-edit-tag)
+;(html:add-func-tag :slot-edit 'slot-edit-tag t)
 
 ;;;***** slot span **************
 
@@ -81,25 +73,25 @@
 (defmethod make-set-status-javascript ((item bs-span) status slot)
   )
 
-(defun bs-slot-span-tag (attributes form)
+(defmethod slot-span-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot: ~a" slot-name)))
       (let* ((edit (make-instance 'bs-span :tooltip (meta::tooltip slot)
                                              :slot slot :format-fn (getf attrs :format-fn))))
         (remf attrs :format-fn)
 	`(html:html ((:span :id ,(name edit) ,@attrs)))))))
 
-(html:add-func-tag :slot-span 'slot-span-tag)
+;(html:add-func-tag :slot-span 'slot-span-tag)
 
 ;;**** Multiline Edit ***************************
 
 (defclass bs-medit (bs-edit)
   ())
 
-(defun bs-slot-medit-tag (attributes form)
+(defmethod slot-medit-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -109,23 +101,13 @@
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	(cond
-            ((is-bootstrap *frontend*)
-             (if (modifiable-p slot)
-                 `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
-                                            :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
-                             ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-                 `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))))
-            (t
-             `(html:html (:if (modifiable-p ,slot)
-                              (:progn
-                                ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :style "display:none;"
-                                         :cols ,(getf attrs :cols "50") :insert-string
-                                         ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
-                                ((:span :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-                              ((:span :id ,(concatenate 'string (name edit) "d")))))))))))
+	(if (modifiable-p slot)
+            `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
+                                    :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
+                        ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+            `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;"))))))))
 
-(html:add-func-tag :slot-medit 'slot-medit-tag)
+;(html:add-func-tag :slot-medit 'slot-medit-tag)
 
 ;;; ********* Date Edit ************
 
@@ -153,7 +135,7 @@
 	(concatenate 'string
 		     "x_.fgt('" (name item) "l').style.visibility='inherit';"))))
 
-(defun bs-slot-date-edit-tag (attributes form)
+(defmethod slot-date-edit-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -168,28 +150,19 @@
 	`(html:html (:if (modifiable-p ,slot)
 			 (:progn
 			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
-			   #+nil ((:a :id ,(concatenate 'string (name edit) "l")
-				:href ,(format nil "javascript:open1('/calendar.html', '250px', '280px', '~a')"
-					       (name edit))) (:translate '(:en "calendar" :fr "calendrier" :sp "calendario")))
                            " "
                            #+nil((:a :id ,(concatenate 'string (name edit) "l") :href "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit)))
                             "Change...")
-                           #+nil((:div :id "openModalCalendar" :class "modalDialog")
-                            (:div
-                             ((:a :id "close" :href "#close" :title "Close calendar" :class "close") "X")
-                             (:p ((:iframe :width "250px" :height "280px" :id "calendar_iframe")))))
-                           (:when (is-bootstrap *frontend*)
-                             ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
-                                             :onclick
-                                             #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))
-                                             ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
-                             ((:modal-window :id "openModalCalendar")
-                              (:body
-                               #+nil((:div :id "selectedTarget"))
-                               ((:iframe :width "200px" :height "280px" :id "calendar_iframe" :name "calendar_iframe"))))))
+                           ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
+                                           :onclick
+                                           #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))
+                                           ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
+                           ((:modal-window :id "openModalCalendar")
+                            (:body
+                             ((:iframe :width "200px" :height "280px" :id "calendar_iframe" :name "calendar_iframe")))))
 			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
 
-(html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
+;(html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
 
 (defun bs-html-month (item day month year show-time)
   (let ((first-week-day (first-week-day month year))
@@ -306,7 +279,7 @@
                ))))))
       t)
 
-(interface::add-named-url "/calendar.html" 'calendar-request-handler)
+;(interface::add-named-url "/calendar.html" 'calendar-request-handler)
 
 ;;; ***** Combo *************
 (defclass bs-combo (html-item)
@@ -317,7 +290,7 @@
     (unless position (setf position -1))
     (html:fast-format nil "x_.fgt('~a').selectedIndex='~a';" (name item) position)))
 
-(defun bs-slot-combo-tag (attributes form)
+(defmethod slot-combo-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -336,7 +309,7 @@
 		   for i from 0
 		   collect (format nil "<option value = ~d>~a" i choice))))))))
 
-(html:add-func-tag :slot-combo 'slot-combo-tag)
+;(html:add-func-tag :slot-combo 'slot-combo-tag t)
 
 ;;**** Check Box ***************************
 
@@ -346,7 +319,7 @@
 (defmethod make-set-value-javascript ((item bs-check-box) value slot)
   (html:fast-format nil "x_.fgt('~a').checked=~a;" (name item) (if value "true" "false")))
 
-(defun bs-slot-check-box-tag (attributes form)
+(defmethod slot-check-box-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -361,10 +334,11 @@
 			  "disabled='true'")
 		      ,@attrs)))))))
 
-(html:add-func-tag :slot-check-box 'slot-check-box-tag)
+;(html:add-func-tag :slot-check-box 'slot-check-box-tag t)
 
 ;;**** slot-list ***************************
 
+#|
 (defclass bs-slot-list (html-item)
   ((action-func  :initform nil :accessor action-func :initarg :action-fn)
    (html-fn :accessor html-fn :initform nil :initarg :html-fn)
@@ -1902,3 +1876,4 @@ Content-Type: application/octet-stream
          ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js")))))))
 
 (interface::add-named-url "/modal.html" 'modal-test-request-handler)
+|#
