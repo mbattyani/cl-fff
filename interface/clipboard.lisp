@@ -120,7 +120,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots interface::*current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let* ((item (make-instance 'clipboard-item :tooltip (meta::tooltip slot) :slot slot
                                   :container *root-item* :display-nb-only (getf attrs :display-nb-only))))
 	`(html:html ((:span :id ,(interface::name item))) 

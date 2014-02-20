@@ -6,7 +6,7 @@
 ;;   (declare (ignore attributes))
 ;;   (let ((slot (find (symbol-name (first form)) (c2mop:class-slots *current-class*)
 ;; 		    :test #'string= :key #'c2mop:slot-definition-name)))
-;;     (unless slot (error (format nil "Slot inconnu : ~a" (first form))))
+;;     (unless slot (error (format nil "Unknown slot : ~a" (first form))))
 ;;     `(write-string ,(get-user-name slot) html:*html-stream*)))
 
 ;(html:add-func-tag :slot-name 'bs-slot-name-tag)
@@ -39,7 +39,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let* ((edit (make-instance 'bs-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
@@ -96,7 +96,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((edit (make-instance 'bs-medit :tooltip (meta::tooltip slot) :slot slot
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
@@ -140,7 +140,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((edit (make-instance 'bs-date :tooltip (meta::tooltip slot) :slot slot
 				 :show-time (getf attrs :show-time)
                                  :show-date (getf attrs :show-date t))))
@@ -295,7 +295,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((combo (make-instance 'bs-combo :tooltip (meta::tooltip slot) :slot slot))
 	    (choices (loop for (nil string) in (meta::choices slot) collect (meta::translate string)))) ;value
 	`(html:html
@@ -324,7 +324,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((check-box (make-instance 'bs-check-box :tooltip (meta::tooltip slot) :slot slot)))
 	`(html:html ((:input :type "checkbox" :id ,(name check-box)
 		      :insert-string
@@ -515,7 +515,7 @@
     (declare (ignore height))
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((item (make-instance 'bs-slot-list :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (meta::get-object-func slot)
 				 :html-fn (meta::get-value-html-fn slot)
@@ -753,7 +753,7 @@
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-val :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (meta::get-object-func slot)
 				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-val-html-fn))))
@@ -1086,7 +1086,7 @@ function fh(name)
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
 				     :html-fn (or (meta::get-value-html-fn slot) 'std-pick-obj-html-fn))))
@@ -1157,7 +1157,7 @@ function fh(name)
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-color :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn t
 				 :html-fn (or (meta::get-object-func slot) 'std-pick-color-html-fn))))
@@ -1251,7 +1251,7 @@ function fh(name)
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name))
 	  (vertical (getf attrs :vertical)))
-      (unless slot (error (format nil "Slot inconnu : ~a" slot-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((item (make-instance 'html-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
 				 :choices-fn (or (meta::get-object-func slot) 'std-get-mval-choices)
 				 :action-fn 'html-pick-multi-val-action-fn
