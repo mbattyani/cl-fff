@@ -1130,7 +1130,7 @@ function fh(name)
 		       (meta::short-description value)
 		       (meta::translated-void-link-text slot)))))
 
-(defun slot-obj-link-tag (attributes form)
+(defmethod slot-obj-link-tag ((frontend html) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -1155,7 +1155,7 @@ function fh(name)
                             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))
                       ))))))))
 
-(html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
+(html:add-func-tag :slot-obj-link 'slot-obj-link-tag t)
 
 (defun std-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
@@ -1620,18 +1620,6 @@ function fh(name)
          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
           #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
 				(:translate '(:en "Close" :fr "Fermer"))))))))))
-
-(defun test-mpick (object)
-  (declare (ignore object))
-  '(("LTD_DIRECT" "LTD_DIRECT")
-    ("TEL_PABX" "TEL_PABX")
-    ("SOGEDIN" "SOGEDIN")
-    ("TEL_DIRECT" "TEL_DIRECT")
-    ("SGLINK" "SGLINK")
-    ("SGPAC" "SGPAC")
-    ("TELEX" "TELEX")
-    ("SOGETRADE" "SOGETRADE")
-    ("INTERNET" "INTERNET")))
 
 (defun make-tree (n base)
   (cons (list (format nil "~d" base) base)

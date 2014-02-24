@@ -327,14 +327,91 @@
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((check-box (make-instance 'bs-check-box :tooltip (meta::tooltip slot) :slot slot)))
 	`(html:html ((:input :type "checkbox" :id ,(name check-box)
-		      :insert-string
-		      (if (modifiable-p ,slot)
-			  ,(format nil "onclick='Fch(~s,~a.checked);'"
-				   (name check-box)(name check-box))
-			  "disabled='true'")
-		      ,@attrs)))))))
+                             :insert-string
+                             (if (modifiable-p ,slot)
+                                 ,(format nil "onclick='Fch(~s,~a.checked);'"
+                                          (name check-box)(name check-box))
+                                 "disabled='true'")
+                             ,@attrs)))))))
 
 ;(html:add-func-tag :slot-check-box 'slot-check-box-tag t)
+
+;;; slot-obj-link
+
+(defclass bs-obj-link (html-pick-val)
+  ())
+
+(defmethod make-set-value-javascript ((item bs-obj-link) value slot)
+  (html:fast-format nil "x_.fgt('~a').href='~a';x_.fgt('~a').innerHTML='~a';"
+		    (name item)
+		    (if (meta::fc-object-p value) (encode-object-url value) "javascript:void(0)")
+		    (name item)
+		    (html:quote-javascript-string
+		     (if value
+		       (meta::short-description value)
+		       (meta::translated-void-link-text slot)))))
+
+(defmethod slot-obj-link-tag ((frontend bootstrap) attributes form)
+  (declare (ignore form))
+  (destructuring-bind (slot-name . attrs) attributes
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
+      (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
+				     :choices-fn (meta::get-object-func slot)
+				     :html-fn (or (meta::get-value-html-fn slot) 'bs-std-pick-obj-html-fn))))
+	`(html:html
+          ((:div :class "input-group")
+           ((:p :class "form-control-static")
+            ((:a :href "" :id ,(name obj-link) ,@attrs)))
+           "&nbsp;"
+           ,@(when (action-link obj-link)
+                   `((:when (modifiable-p ,slot)
+                       ((:span :class "input-group-btn")
+                        ((:a :class "btn btn-default" :data-toggle "modal"
+                             :id ,(action-link obj-link)  :type "button"
+                             :data-target "#global_modal"
+                             :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link))
+                             #+nil(format nil "show_modal_content('~a','/pick-val.html', '~a');"
+                                               (meta::translate (meta::get-value-title slot)
+                                                                :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))
+                                               (name obj-link)))
+                         ((:span :class "glyphiocn glyphicon-expand")))))))))))))
+
+(defun bs-std-pick-obj-html-fn (dispatcher)
+  (let* ((item (item dispatcher))
+	 (item-name (name item))
+	 ;(object (object dispatcher))
+	 (slot (slot dispatcher)))
+    (html:html
+     (:head
+      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
+      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
+     (:body
+      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
+      :br
+      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
+      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
+		"window.close();};")
+      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
+		"parent.$('#global_modal').modal('hide');};")
+      (:p (:translate (meta::get-value-text slot)))
+      (when dispatcher
+	(when (meta::null-allowed (slot dispatcher))
+	  (html:html "&nbsp;&nbsp;"
+		     ((:a :href "javascript:f42('nil');")
+                      (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                                                            :sp "Ninguna de estas opciones"))) :br :br))
+	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
+	      do (html:html "&nbsp;&nbsp;"
+			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+			     (html:esc (meta::short-description object))) :br)))
+      ((:div :align "center")
+       (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
+        (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
+			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+
 
 ;;**** slot-list ***************************
 
@@ -1066,82 +1143,6 @@ function fh(name)
           #+nil((:a :class "call" :href "javascript:window.close();")
 				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
 
-;;; slot-obj-link
-
-(defclass html-obj-link (html-pick-val)
-  ())
-
-(defmethod make-set-value-javascript ((item html-obj-link) value slot)
-  (html:fast-format nil "x_.fgt('~a').href='~a';x_.fgt('~a').innerHTML='~a';"
-		    (name item)
-		    (if (meta::fc-object-p value) (encode-object-url value) "javascript:void(0)")
-		    (name item)
-		    (html:quote-javascript-string
-		     (if value
-		       (meta::short-description value)
-		       (meta::translated-void-link-text slot)))))
-
-(defun slot-obj-link-tag (attributes form)
-  (declare (ignore form))
-  (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
-		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
-				     :choices-fn (meta::get-object-func slot)
-				     :html-fn (or (meta::get-value-html-fn slot) 'std-pick-obj-html-fn))))
-	`(html:html ((:a :href "" :id ,(name obj-link) ,@attrs)) 
-	  ,@(when (action-link obj-link)
-		  `((:when (modifiable-p ,slot) ;"&nbsp; "
-		      #+nil((:a :id ,(action-link obj-link)
-			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
-					  (name obj-link))) (:translate '(:en "Change" :fr "Changer")))
-                      #+nil((:a :id ,(action-link obj-link)
-			   :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a')"
-					  (name obj-link)))
-                       ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))
-                      ((:modal-button :id ,(action-link obj-link)
-                            :target "#global_modal"
-                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link)))
-                            ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "middle" :title "Change")))
-                      ))))))))
-
-(html:add-func-tag :slot-obj-link 'slot-obj-link-tag)
-
-(defun bs-std-pick-obj-html-fn (dispatcher)
-  (let* ((item (item dispatcher))
-	 (item-name (name item))
-	 ;(object (object dispatcher))
-	 (slot (slot dispatcher)))
-    (html:html
-     (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-     (:body
-      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-      :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
-		"window.close();};")
-      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
-		"parent.$('#global_modal').modal('hide');};")
-      (:p (:translate (meta::get-value-text slot)))
-      (when dispatcher
-	(when (meta::null-allowed (slot dispatcher))
-	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');")
-                      (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                            :sp "Ninguna de estas opciones"))) :br :br))
-	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
-	      do (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-			     (html:esc (meta::short-description object))) :br)))
-      ((:div :align "center")
-       (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-        (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
-
 ;;; pick-color
 
 (defclass html-pick-color (html-pick-val)
@@ -1555,18 +1556,6 @@ function fh(name)
          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
           #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
 				(:translate '(:en "Close" :fr "Fermer"))))))))))
-
-(defun test-mpick (object)
-  (declare (ignore object))
-  '(("LTD_DIRECT" "LTD_DIRECT")
-    ("TEL_PABX" "TEL_PABX")
-    ("SOGEDIN" "SOGEDIN")
-    ("TEL_DIRECT" "TEL_DIRECT")
-    ("SGLINK" "SGLINK")
-    ("SGPAC" "SGPAC")
-    ("TELEX" "TELEX")
-    ("SOGETRADE" "SOGETRADE")
-    ("INTERNET" "INTERNET")))
 
 (defun make-tree (n base)
   (cons (list (format nil "~d" base) base)
