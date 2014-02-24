@@ -299,7 +299,7 @@
       (let ((combo (make-instance 'bs-combo :tooltip (meta::tooltip slot) :slot slot))
 	    (choices (loop for (nil string) in (meta::choices slot) collect (meta::translate string)))) ;value
 	`(html:html
-	  ((:select :id ,(name combo)
+	  ((:select :id ,(name combo) :class "form-control"
 	    :insert-string
 	    (if (modifiable-p ,slot)
 		,(format nil "onchange=\"Fch('~a',~a.value);\""(name combo)(name combo))

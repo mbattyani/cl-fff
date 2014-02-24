@@ -1,26 +1,5 @@
 (in-package #:interface)
 
-;;; ******** linked html *********
-(defclass bs-linked-html (html-item)
-  ((func :initform nil :accessor func :initarg :func)))
-
-(defmethod visible-p ((item bs-linked-html))
-  t)
-
-(defmethod make-set-value-javascript ((item bs-linked-html) value slot)
-   (funcall (func item)))
-
-(defmethod make-set-status-javascript ((item bs-linked-html) status slot)
-  "")
-
-(defun bs-linked-html-tag (attributes forms)
-  (loop with func = (second attributes)
-	for slot-name in (first attributes)
-	for slot = (find (symbol-name slot-name)
-			 (c2mop:class-slots *current-class*) :test #'string=
-			 :key #'c2mop:slot-definition-name)
-	do (make-instance 'bs-linked-html :slot slot :func func))
-  (cons 'html::optimize-progn (mapcar 'html:html-gen forms)))
 
 ;;;**** push-button *****
 (defclass bs-push-button (html-item)
@@ -29,7 +8,7 @@
 (defmethod make-set-value-javascript ((item bs-push-button) value slot)
   )
 
-(defun bs-push-button-slot-tag (attributes form)
+(defmethod push-button-slot-tag ((frontend bootstrap) attributes form)
   (let ((item (make-instance 'bs-push-button :action-fn (first form))))
     `(html:html ((:input :type "submit" :name ,(name item)
 		  :insert-string ,(format nil "onclick='Fck(~s, 0);'" (name item))
@@ -100,7 +79,7 @@
       (concatenate 'string "x_.f8252h('" (name item) "');")
       (concatenate 'string "x_.f8252s('" (name item) "');")))
 
-(defun bs-fn-link-tag (attributes form)
+(defmethod fn-link-tag ((frontend bootstrap) attributes form)
   (destructuring-bind (fc-function . attrs) attributes
     (when (symbolp fc-function)
       (setf fc-function (find fc-function (meta::effective-functions *current-class*) :key 'meta::name)))
@@ -114,18 +93,16 @@
       (setf attrs (copy-list attrs))
       (remf attrs :force-visible)
       `(html:html
-	((:a :id ,(concatenate 'string (name item) "d") :disabled "true"
-	  :style "display:none;" ,@attrs) ,@form)
-	((:a :id ,(name item)
+        ((:button :id ,(concatenate 'string (name item) "d") :disabled "disabled"
+                  :class "btn btn-default" :style "display:none;" ,@attrs) ,@form)
+        ((:button :id ,(name item) :class "btn btn-default"
 	  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
-			      (format nil "HREF=\"javascript:open1('/pick-val.html','250px','500px','~a');\"" (name item))
-			      (format nil "HREF='javascript:f825foc(~s);'" (name item)))
+                                      (format nil "onclick=\"open1('/pick-val.html','250px','500px','~a');\"" (name item))
+                                      (format nil "onclick='f825foc(~s);'" (name item)))
 	  ,@attrs) ,@form)))))
 
 ;((:a :href "" :id ,(name item)
 ;     :insert-string ,(format nil "onclick='f825foc(~s);'" (name item)) ,@attrs) ,@form)
-
-(html:add-func-tag :fn-link 'bs-fn-link-tag)
 
 (defun bs-fn-link-tag2 (attributes form)
   (destructuring-bind (fc-function . attrs) attributes
@@ -134,7 +111,7 @@
     (let* ((fn-name (meta::name fc-function))
 	   (item (make-instance 'bs-fn-link
 				:choices-fn (meta::get-object-func fc-function)
-				:html-fn (or (meta::get-value-html-fn fc-function) 'std-fn-pick-obj-html-fn)
+				:html-fn (or (meta::get-value-html-fn fc-function) 'bs-std-fn-pick-obj-html-fn)
 				:action-fn fn-name
 				:force-visible (getf attrs :force-visible)
 				:fc-function fc-function)))
@@ -152,9 +129,7 @@
 ;((:a :href "" :id ,(name item)
 ;     :insert-string ,(format nil "onclick='f825foc(~s);'" (name item)) ,@attrs) ,@form)
 
-(html:add-func-tag :fn-link2 'bs-fn-link-tag2)
-
-(defun std-fn-pick-obj-html-fn (dispatcher)
+(defun bs-std-fn-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
 	 (item-name (name item))
 	 ;(object (object dispatcher))

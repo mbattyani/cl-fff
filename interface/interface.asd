@@ -27,7 +27,7 @@
                (:file "ui-html" :depends-on ("ui-desc" #+nil "view-layout"))
 	       (:file "dispatcher" :depends-on ("ui-desc" "ui-html"))
 	       (:file "html-view" :depends-on ("ui-html" "dispatcher" #+nil "view-layout" #+nil "layouts" #+nil "pane-utilities"))
-;	       (:file "bs-view" :depends-on ("html-view"))
+	       (:file "bs-view" :depends-on ("html-view"))
 	       (:file "clipboard" :depends-on ("html-view" "view"))
                (:file "html-slot-view" :depends-on ("html-view" "process-url" "clipboard"))
                (:file "bs-slot-view" :depends-on (#+nil"bs-view" "html-slot-view"))
