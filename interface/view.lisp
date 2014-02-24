@@ -255,7 +255,11 @@
                                                  :show-time t :show-date nil
                                                  ,@(meta::html-tag-attributes slot)))))
                     ((eq (meta::value-type slot) 'boolean)
-                     (std-row `((:slot-check-box ,(c2mop:slot-definition-name slot)))))
+                     `((:div :class "form-group")
+                       ((:div :class "checkbox col-xs-offset-4 col-sm-offset-3 col-xs-8 col-sm-7 col-md-7 col-lg-6")
+                        (:label
+                         ((:slot-check-box ,(c2mop:slot-definition-name slot)))
+                         ,user-name))))
                     (t (std-row `((:slot-edit ,(c2mop:slot-definition-name slot)
                                               ,@(meta::html-tag-attributes slot)))))))))))))
 
