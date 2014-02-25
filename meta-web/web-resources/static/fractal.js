@@ -293,5 +293,26 @@ function show_modal_content(title, content) {
     var header = modal.find('.modal-header').first();
     header.html(title);
     body.html(content);
+$('body').on('hidden.bs.modal', '.modal', function () {
+  $(this).removeData('bs.modal');
+});
     modal.modal();
+}
+
+function show_remote_modal_content(title, url, item_id) {
+    var modal = $('#GlobalModal');
+    var body = modal.find('.modal-body').first();
+    var header = modal.find('.modal-header').first();
+    body.html('content');
+    console.log(modal);
+    console.log(modal.data('bs.modal'));
+/*    $('#GlobalModal').data('bs.modal').options.remote = url;*/
+    header.html(title);
+    modal.on('hidden.bs.modal', function () {
+  $(this).removeData('bs.modal');
+});
+    modal.modal({
+        remote: url+'?link='+v689+'&item='+item_id,
+        hidden: false
+});
 }

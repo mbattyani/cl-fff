@@ -96,10 +96,10 @@
         ((:button :id ,(concatenate 'string (name item) "d") :disabled "disabled"
                   :class "btn btn-default" :style "display:none;" ,@attrs) ,@form)
         ((:button :id ,(name item) :class "btn btn-default"
-	  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
+                  :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
                                       (format nil "onclick=\"open1('/pick-val.html','250px','500px','~a');\"" (name item))
                                       (format nil "onclick='f825foc(~s);'" (name item)))
-	  ,@attrs) ,@form)))))
+                  ,@attrs) ,@form)))))
 
 ;((:a :href "" :id ,(name item)
 ;     :insert-string ,(format nil "onclick='f825foc(~s);'" (name item)) ,@attrs) ,@form)

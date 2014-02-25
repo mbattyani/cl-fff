@@ -380,7 +380,7 @@
 
 (defclass html-slot-list-dispatcher (slot-dispatcher)
   ((start :accessor start :initform 0)
-   (max-nb :accessor max-nb :initform 25)
+   (max-nb :accessor max-nb :initform 50)
    (list-format :accessor list-format :initform nil)
    (objects-to-delete :accessor objects-to-delete :initform nil)
    (selected-objects-idx :accessor selected-objects-idx :initform '())

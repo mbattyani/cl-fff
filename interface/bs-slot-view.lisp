@@ -359,7 +359,7 @@
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
-				     :html-fn (or (meta::get-value-html-fn slot) 'bs-std-pick-obj-html-fn))))
+				     :html-fn 'bs-std-pick-obj-html-fn #+nil(or (meta::get-value-html-fn slot) 'bs-std-pick-obj-html-fn))))
 	`(html:html
           ((:div :class "input-group")
            ((:p :class "form-control-static")
@@ -370,12 +370,12 @@
                        ((:span :class "input-group-btn")
                         ((:a :class "btn btn-default" :data-toggle "modal"
                              :id ,(action-link obj-link)  :type "button"
-                             :data-target "#global_modal"
-                             :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link))
-                             #+nil(format nil "show_modal_content('~a','/pick-val.html', '~a');"
+                             :data-target "#GlobalModal" #+nil "#global_modal"
+                             :onclick #+nil(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link))
+                             ,(format nil "show_remote_modal_content('~a','/pick-val.html', '~a');"
                                                (meta::translate (meta::get-value-title slot)
                                                                 :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))
-                                               (name obj-link)))
+                                             (name obj-link)))
                          ((:span :class "glyphiocn glyphicon-expand")))))))))))))
 
 (defun bs-std-pick-obj-html-fn (dispatcher)
@@ -384,9 +384,32 @@
 	 ;(object (object dispatcher))
 	 (slot (slot dispatcher)))
     (html:html
-     (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
+     ((:div :class "modal-dialog")
+      ((:div :class "modal-content")
+       ((:div :class "modal-header")
+        ((:h4 :class "modal-title"))
+        (:translate (meta::get-value-title slot)
+                    :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
+       ((:div :class "modal-body")
+        (:p (:translate (meta::get-value-text slot)))
+        (:jscript "function f42(d){parent.Fch('" item-name "',d);"
+                  "parent.$('#global_modal').modal('hide');};")
+        (when dispatcher
+          (when (meta::null-allowed (slot dispatcher))
+            (html:html "&nbsp;&nbsp;"
+                       ((:a :href "javascript:f42('nil');")
+                        (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                      :sp "Ninguna de estas opciones"))) :br :br))
+          (loop for object in (mw::projects wa::*app*) ;(funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
+             do (html:html "&nbsp;&nbsp;"
+                           ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                            (html:esc (meta::short-description object))) :br))))
+       ((:div :class "modal-footer")
+        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))
+     )
+    #+nil
+    (html:html
+     
      (:body
       ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
       ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
