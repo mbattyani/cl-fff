@@ -359,7 +359,7 @@
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
-				     :html-fn 'bs-std-pick-obj-html-fn #+nil(or (meta::get-value-html-fn slot) 'bs-std-pick-obj-html-fn))))
+				     :html-fn (or (meta::get-value-html-fn slot) 'bs-std-pick-obj-html-fn))))
 	`(html:html
           ((:div :class "input-group")
            ((:p :class "form-control-static")
@@ -392,48 +392,20 @@
                     :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
        ((:div :class "modal-body")
         (:p (:translate (meta::get-value-text slot)))
-        (:jscript "function f42(d){parent.Fch('" item-name "',d);"
-                  "parent.$('#global_modal').modal('hide');};")
+        (:jscript "function f42(d){Fch('" item-name "',d);"
+                  "$('#GlobalModal').modal('hide');};")
         (when dispatcher
           (when (meta::null-allowed (slot dispatcher))
             (html:html "&nbsp;&nbsp;"
                        ((:a :href "javascript:f42('nil');")
                         (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
                                       :sp "Ninguna de estas opciones"))) :br :br))
-          (loop for object in (mw::projects wa::*app*) ;(funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
+          (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
              do (html:html "&nbsp;&nbsp;"
                            ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
                             (html:esc (meta::short-description object))) :br))))
        ((:div :class "modal-footer")
-        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))
-     )
-    #+nil
-    (html:html
-     
-     (:body
-      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-      :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
-		"window.close();};")
-      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
-		"parent.$('#global_modal').modal('hide');};")
-      (:p (:translate (meta::get-value-text slot)))
-      (when dispatcher
-	(when (meta::null-allowed (slot dispatcher))
-	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');")
-                      (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                            :sp "Ninguna de estas opciones"))) :br :br))
-	(loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
-	      do (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-			     (html:esc (meta::short-description object))) :br)))
-      ((:div :align "center")
-       (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-        (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
+        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))))
 
 
 ;;**** slot-list ***************************
