@@ -376,7 +376,7 @@
                                                (meta::translate (meta::get-value-title slot)
                                                                 :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))
                                              (name obj-link)))
-                         ((:span :class "glyphiocn glyphicon-expand")))))))))))))
+                         ((:span :class "glyphicon glyphicon-expand")))))))))))))
 
 (defun bs-std-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
