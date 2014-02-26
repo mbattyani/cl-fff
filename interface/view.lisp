@@ -206,17 +206,19 @@
                     ((meta::list-of-values slot)
                      (case (meta::view-type slot)
                        (:list-val
-                        (std-row `((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
-                                                                                     (meta::html-tag-attributes slot) '(:class "dvl" :height "60px"))))))
+                        (std-row `((:slot-list ,(c2mop:slot-definition-name slot)
+                                               ,@(html:merge-attributes
+                                                  (meta::html-tag-attributes slot) '(:class "dvl" :height "60px"))))))
                        (:pick-mval
                         (std-row `((:slot-pick-mval ,(c2mop:slot-definition-name slot)
-                                                    ,@(html:merge-attributes (meta::html-tag-attributes slot) '(:class "dvcv"))))))
+                                                    ,@(meta::html-tag-attributes slot)))))
                        (t
                         `((:div :class "form-group")
                           ((:label :class "control-label col-xs-4 col-sm-3") ,user-name ,unit)
                           ((:div :class "col-xs-8 col-sm-7")
-                           ((:slot-list ,(c2mop:slot-definition-name slot) ,@(html:merge-attributes
-                                                                              (meta::html-tag-attributes slot) '(:class "dvl")))))))))
+                           ((:slot-list ,(c2mop:slot-definition-name slot)
+                                        ,@(html:merge-attributes
+                                           (meta::html-tag-attributes slot) '(:class "dvl")))))))))
                     ((meta::fc-class-p (meta::value-type slot))
                      (case (meta::view-type slot)
                        ((:embed t)
@@ -225,7 +227,7 @@
                        (:embed-val
                         (std-row `(:object-view :object (,(meta::accessor slot) interface::*object*))))
                        (t
-                        (std-row `((:slot-obj-link ,(c2mop:slot-definition-name slot) :class "dvcv"))))))
+                        (std-row `((:slot-obj-link ,(c2mop:slot-definition-name slot)))))))
                     ((eq (meta::view-type slot) :named-slot-view)
                      (std-row `((,(meta::slot-view-name slot) ,(c2mop:slot-definition-name slot)
                                   ,@(meta::html-tag-attributes slot)))))
