@@ -197,8 +197,8 @@
             collect
               (flet ((std-row (&rest body)
                        `((:div :class "form-group")
-                         ((:label :class "control-label col-xs-4 col-sm-3 col-md-3") ,user-name ,unit)
-                         ((:div :class " col-xs-8 col-sm-7 col-md-7 col-lg-6") ,@body))))
+                         ((:label :class "control-label col-sm-3 col-md-3") ,user-name ,unit)
+                         ((:div :class "col-sm-7 col-md-7 col-lg-6") ,@body))))
                 (append
                  (if (meta::visible slot) '(:progn) `(:when (visible-p ,slot)))
                  (list
@@ -214,8 +214,8 @@
                                                     ,@(meta::html-tag-attributes slot)))))
                        (t
                         `((:div :class "form-group")
-                          ((:label :class "control-label col-xs-4 col-sm-3") ,user-name ,unit)
-                          ((:div :class "col-xs-8 col-sm-7")
+                          ((:label :class "control-label col-sm-3") ,user-name ,unit)
+                          ((:div :class "col-sm-7")
                            ((:slot-list ,(c2mop:slot-definition-name slot)
                                         ,@(html:merge-attributes
                                            (meta::html-tag-attributes slot) '(:class "dvl")))))))))
@@ -258,7 +258,7 @@
                                                  ,@(meta::html-tag-attributes slot)))))
                     ((eq (meta::value-type slot) 'boolean)
                      `((:div :class "form-group")
-                       ((:div :class "checkbox col-xs-offset-4 col-sm-offset-3 col-xs-8 col-sm-7 col-md-7 col-lg-6")
+                       ((:div :class "checkbox col-sm-offset-3 col-sm-7 col-md-7 col-lg-6")
                         (:label
                          ((:slot-check-box ,(c2mop:slot-definition-name slot)))
                          ,user-name))))

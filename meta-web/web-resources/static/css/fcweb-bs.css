@@ -1,4 +1,10 @@
 
+.radio input[type="radio"], .radio-inline input[type="radio"], .checkbox input[type="checkbox"], .checkbox-inline input[type="checkbox"] {
+float: left;
+margin-left: 0px;
+margin-right: 10px;
+}
+
 .hide { display: none }
 
 .tabs { color: #000000; }
