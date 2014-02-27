@@ -879,6 +879,8 @@
 			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
 
 (defun std-pick-treeview-html-fn (dispatcher)
+  (when (is-bootstrap *frontend*)
+    (return-from std-pick-treeview-html-fn (bs-std-pick-treeview-html-fn dispatcher)))
   (flet ((draw-item (node)
 	   (let* ((name (first node))
 		  (text (first name))

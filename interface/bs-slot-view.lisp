@@ -407,6 +407,68 @@
        ((:div :class "modal-footer")
         ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))))
 
+(defun bs-std-pick-treeview-html-fn (dispatcher)
+  (flet ((draw-item (node)
+	   (let* ((name (first node))
+		  (text (first name))
+		  (value (second name)))
+	     (if value
+		 (html:html "&nbsp;&nbsp;"
+			    ((:a :fformat (:href "javascript:f42('~a');"
+						 (if (stringp value)
+						     (html:quote-javascript-string value)
+						     value)))
+			     (html:esc text)))
+		 (html:html "&nbsp;&nbsp;"
+			    (html:esc text))))))
+    (let* ((item (interface::item dispatcher))
+	   (item-name (interface::name item))
+	   (object (interface::object dispatcher))
+	   (slot (interface::slot dispatcher))
+	   (null-allowed (meta::null-allowed (slot dispatcher))))
+      (html:html
+     ((:div :class "modal-dialog")
+      ((:div :class "modal-content")
+       ((:div :class "modal-header")
+        ((:h4 :class "modal-title"))
+        (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
+       ((:div :class "modal-body")
+        (:p (:translate (meta::get-value-text slot)))
+        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
+                       "shot = true;parent.$('#global_modal').modal('hide');}};")
+        (when dispatcher
+          (bs-simple-tree (funcall (meta::get-object-func (slot dispatcher))(object dispatcher)))
+          (when (meta::null-allowed (slot dispatcher))
+            (html:html "&nbsp;&nbsp;"
+                       ((:a :href "javascript:f42('nil');")
+                        (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
+                                      :sp "Ninguna de estas opciones"))) :br :br))))
+       ((:div :class "modal-footer")
+        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))))))
+
+(defvar %bs-tree-id% 0)
+
+(defun bs-simple-tree (tree)
+  (incf %bs-tree-id%)
+  (html:html
+   ((:div :class "panel-group" :fformat (:id "tree~d" %bs-tree-id%))
+    ((:div :class "panel panel-default")
+     ((:div :class "panel-heading")
+      ((:h4 :class "panel-title")
+       ((:a :data-toggle "collapse" :fformat (:data-parent "#tree~d" %bs-tree-id%) :href "#"))
+       (:esc (caar tree))))
+     (html:html
+      ((:div :class "panel-collapse collapse.in")
+       ((:div :class "panel-body")
+        ((:div :class "list-group")
+         (loop for ((text object-id) . rest) in (cdr tree)
+            for node in (cdr tree)
+            do (if rest
+                   (bs-simple-tree node)
+                   (when object-id
+                     (html:html
+                      ((:a :class "list-group-item" :fformat (:href "javascript:f42('~a');" object-id))
+                       (html:esc text))))))))))))))
 
 ;;**** slot-list ***************************
 
@@ -551,21 +613,7 @@
 			 :fformat (:id "~aC~d" (name (item *dispatcher*)) index)
 			 :optional (:checked (and (find index (selected-objects-idx *dispatcher*)) "true")))))))
 
-(defun std-list-format-fn (start objects max-nb total-length)
-  (declare (ignore total-length))
-  (html:html
-    ((:table :class (table-class (item *dispatcher*)))
-     (loop repeat max-nb
-           for object in objects
-   	   for index from start
-   	   for index1 = (1+ index) do
-	  (html:html
-	    (:tr
-	     ((:td :class "dvcv") index1)
-	     ((:td :class "dvcv") (std-list-checkbox index start))
-	     ((:td :class "dvcv")
-	      ((:a :href (encode-object-url object))
-	       (html:esc (meta:list-description object *object*))))))))))
+
 
 (make-instance 'slot-list-format :name "default-format"
 	       :header-fn #'(lambda (container-obj)
@@ -657,136 +705,11 @@
 			       ((:a :href ,(format nil "javascript:f825foc('~a');" (name item)))
 				,sub-obj-name)))))))))))))))
 
-(defun pick2-request-handler (request)
-  (decode-posted-content request)
-  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-        (*dispatcher* nil))
-    (when link
-      (setf link (gethash link *http-links*))
-      (when (and link item)
-        (let* ((*session* (session link))
-               (*user* (user *session*))
-               (*country-language* (country-language *session*)))
-          (setf *dispatcher* (gethash item (dispatchers link)))
-          (with-output-to-request (request)
-            (html::html-to-stream
-             *request-stream*
-             "<!doctype HTML>"
-             (:html
-               (if (html-fn (item *dispatcher*))
-                   (funcall (html-fn (item *dispatcher*)) *dispatcher*)
-                   (html:html
-                     (:head
-                      (:title (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
-                      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-                     (:body
-                      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-         ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-                      :br
-                      (:h1 (:translate '(:en "pick an object" :fr "Choisissez un objet"  :sp "Elija un objeto")))
-                      #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item "',d);"
-                                "window.setTimeout('window.close();', 600); shot = true;}};")
-                      (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item "',d);"
-                                "shot = true;}};")
-                      (loop for object in (when *dispatcher*
-                                            (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
-                         do (html:html "&nbsp;&nbsp;"
-                                       ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-                                        (html:esc (meta::short-description object))) :br))
-                      ((:div :align "center")
-                       (#+nil(:a :class "call" :href "javascript:window.close();")
-                             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-                                              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))))))
-    t)
-
 (interface::add-named-url "/obj-pick2.html" 'pick2-request-handler)
 
-(defun obj-new-request-handler (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (dispatcher nil))
-	(when link (setf link (gethash link *http-links*)))
-	(when (and link item) (setf dispatcher (gethash item (dispatchers link))))
-	(let* ((*session* (session link))
-	       (*user* (user *session*))
-	       (*country-language* (country-language *session*)))
-	  (with-output-to-request (request)
-	    (html::html-to-stream
-	     *request-stream*
-	     "<!doctype HTML>"
-	     (:html
-	      (:head
-	       (:title (:translate '(:en "Type of object to add" :fr "Type d'objet à ajouter")))
-	       ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-	      (:body
-               ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-               ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-               
-	       :br
-	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
-               #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
-                              "window.setTimeout('window.close();', 600); shot = true;}};")
-               (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);"
-                              "shot = true;parent.$('#global_modal').modal('hide');}};")
-	       (loop for object in (when dispatcher (sub-classes dispatcher))
-		     for i from 1
-		     do (html:html "&nbsp;&nbsp;"
-				   ((:a :fformat (:href "javascript:f42('~a');" i))
-				    (html:esc (meta::translate (meta::user-name object)))) :br))
-	       ((:div :align "center")
-                (#+nil(:a :class "call" :href "javascript:window.close();")
-                      (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-				       (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
-	t))
 (interface::add-named-url "/obj-new.html" 'obj-new-request-handler)
 
 ;(defun ask-yes-no-question (request title question yes-id no-id)
-
-(defun obj-del-request-handler (request)
-  (decode-posted-content request)
-  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-        (dispatcher nil))
-    (when link (setf link (gethash link *http-links*)))
-    (when (and link item) (setf dispatcher (gethash item (dispatchers link))))
-    (let* ((*session* (session link))
-           (*user* (user *session*))
-           (*country-language* (country-language *session*)))
-      ;; (setf (output-queue link) '())
-      (with-output-to-request (request)
-        (html::html-to-stream
-         *request-stream*
-         "<!doctype HTML>"
-         (:html
-           (:head
-            (:title (:translate '(:en "Delete" :fr "Suppression" :sp "Eliminar")))
-            ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-           (:body
-            ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-            ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-            :br
-            (:jscript "var shot;function f42(d){if (!shot) {parent.Fck('" item "',d);shot = true;parent.$('#global_modal').modal('hide');parent.location.href=parent.location.href;}}")
-            (:h1 (:if (> (length (objects-to-delete dispatcher)) 1)
-                      (:translate '(:en "Do you want to remove these objects:"
-                                    :sp "Está seguro de querer eliminar estos objetos:"
-                                    :fr "Voulez vous vraiment supprimer ces objets:"))
-                      (:translate '(:en "Do you want to remove this object:"
-                                    :sp "Está seguro de querer eliminar este objeto:"
-                                    :fr "Voulez vous vraiment supprimer cet objet:"))))
-            (:p
-             (dolist (object (objects-to-delete dispatcher))
-               (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
-            ((:div :align "center")
-             ((:div :class "call" :data-value "30000")
-              (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
-             "&nbsp;&nbsp;&nbsp;&nbsp;"
-             ((:div :class "call" :data-value "30001")
-              (:translate '(:en "No" :fr "Non" :sp "No")))
-             )
-            (:jscript "$('div.call').click(function(){f42($(this).data('value'))});"))))))
-    t))
 
 (interface::add-named-url "/obj-del.html" 'obj-del-request-handler)
 
@@ -841,303 +764,6 @@
 
 (html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
 
-(defun pick-request-handler (request)
-      (decode-posted-content request)
-      (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
-	    (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	    (*dispatcher* nil))
-	(when link
-	  (setf link (gethash link *http-links*))
-	  (when (and link item)
-	    (setf *dispatcher* (gethash item (dispatchers link)))
-	    (let* ((*session* (session link))
-		   (*user* (user *session*))
-		   (*country-language* (country-language *session*)))
-	      (with-output-to-request (request)
-		(html::html-to-stream
-		 *request-stream*
-             "<!doctype HTML>"
-		 (:html
-		  (when *dispatcher*
-		    (funcall (html-fn (item *dispatcher*)) *dispatcher*)))))))))
-      t)
-
-(interface::add-named-url "/pick-val.html" 'pick-request-handler)
-
-(defun std-pick-val-html-fn (dispatcher)
-  (let* ((item (interface::item dispatcher))
-	 (item-name (interface::name item))
-	 ;(object (interface::object dispatcher))
-	 (slot (interface::slot dispatcher)))
-    (html:html
-     (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur"  :sp "Elija un valor")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-     (:body
-      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-      :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-      #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
-		"window.close();};")
-      (:jscript "function f42(d){parent.Fch('" item-name "',d);"
-		"parent.$('#global_modal').modal('hide');};")
-      (:p (:translate (meta::get-value-text slot)))
-      (when dispatcher
-	(when (meta::null-allowed (slot dispatcher))
-	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" 
-                                                                        :fr "Aucun de ces choix" 
-                                                                        :sp "Ninguna de estas opciones"))) :br :br))
-	(loop for (text value) in (funcall (choices-fn dispatcher)(object dispatcher))
-	      do (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');"
-                                                 (if (stringp value)
-                                                     (html:quote-javascript-string value)
-                                                     value)))
-			     (html:esc text)) :br)))
-      ((:div :align "center")
-       (#+nil(:a :class "call" :href "javascript:window.close();")
-             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-			      (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))
-
-(defun std-pick-treeview-html-fn (dispatcher)
-  (flet ((draw-item (node)
-	   (let* ((name (first node))
-		  (text (first name))
-		  (value (second name)))
-	     (if value
-		 (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');"
-						 (if (stringp value)
-						     (html:quote-javascript-string value)
-						     value)))
-			     (html:esc text)))
-		 (html:html "&nbsp;&nbsp;"
-			    (html:esc text))))))
-    (let* ((item (interface::item dispatcher))
-	   (item-name (interface::name item))
-	   (object (interface::object dispatcher))
-	   (slot (interface::slot dispatcher))
-	   (null-allowed (meta::null-allowed (slot dispatcher))))
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-.sp  {position:relative;}
-")
-       (:jscript
-	"function fs(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'inline';
-}
-    
-function fh(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'none';
-}
-")
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-        (:if (typep dispatcher 'bs-slot-list-dispatcher)
-             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
-                       "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
-                       "shot = true;parent.$('#global_modal').modal('hide');}};")
-             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
-                       "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
-                       "shot = true;parent.$('#global_modal').modal('hide');}};"))
-	(:p (:translate (meta::get-value-text slot)))
-	(when dispatcher
-	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
-			    :draw-node-fn #'draw-item :opened-node t)
-	  (when null-allowed
-	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix" 
-                                                                                 :sp "Ninguna de estas opciones")) "")) 0  nil t ()
-			      :draw-node-fn #'draw-item)))
-	:br :br
-	((:div :align "center")
-         (#+nil(:a :class "call" :href "javascript:window.close();")
-               (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-          (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
-
-(defun std-fn-pick-treeview-html-fn (dispatcher)
-  (flet ((draw-item (node)
-	   (let* ((name (first node))
-		  (text (first name))
-		  (value (second name)))
-	     (if value
-		 (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');"
-						 (if (stringp value)
-						     (html:quote-javascript-string value)
-						     value)))
-			     (html:esc text)))
-		 (html:html "&nbsp;&nbsp;"
-			    (html:esc text))))))
-    (let* ((item (interface::item dispatcher))
-	   (item-name (interface::name item))
-	   (object (interface::object dispatcher))
-	   (fc-fn (fc-function (item dispatcher))))
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-.sp  {position:relative;}
-")
-       (:jscript
-	"function fs(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'inline';
-}
-    
-function fh(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'none';
-}
-")
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate (meta::get-value-title fc-fn) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
-                  "shot = true;parent.$('#global_modal').modal('hide');}};")
-        #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fch('" item-name "',d);"
-                  "window.setTimeout('window.close();', 600); shot = true;}};")
-	(:p (:translate (meta::get-value-text fc-fn)))
-	(when dispatcher
-	  (draw-simple-tree (funcall (meta::get-object-func fc-fn) object) 0 t t ()
-			    :draw-node-fn #'draw-item :opened-node t))
-	:br :br
-	((:div :align "center")
-       (#+nil(:a :class "call" :href "javascript:window.close();")
-             (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-        (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
-        )))))
-
-(defun std-pick-huge-treeview-html-fn (dispatcher)
-  (flet ((draw-item (node)
-	   (let* ((name (first node))
-		  (text (first name))
-		  (value (second name)))
-	     (if value
-		 (html:html "&nbsp;&nbsp;"
-			    ((:a :fformat (:href "javascript:f42('~a');"
-						 (if (stringp value)
-						     (html:quote-javascript-string value)
-						     value)))
-			     (html:esc text)))
-		 (html:html "&nbsp;&nbsp;"
-			    (html:esc text))))))
-    (let* ((item (interface::item dispatcher))
-	   (item-name (interface::name item))
-	   (object (interface::object dispatcher))
-	   (slot (interface::slot dispatcher))
-	   (index (cdr (assoc "index" (posted-content *request*) :test 'string=)))
-	   (level (cdr (assoc "level" (posted-content *request*) :test 'string=)))
-	   (action (cdr (assoc "action" (posted-content *request*) :test 'string=)))
-	   (path (item-state2 dispatcher))
-	   (null-allowed (meta::null-allowed (slot dispatcher))))
-      (setf index (ignore-errors (parse-integer index :junk-allowed t)))
-      (setf level (ignore-errors (parse-integer level :junk-allowed t)))
-      (when (and level index)
-	(when (>= (length path) level)
-	  (setf path (subseq path 0 level)))
-	(if (string= action "o")
-	  (setf path (nconc path (list index)))))
-      (setf path (or path '(0)))
-      (setf (item-state2 dispatcher) path)
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-.sp  {position:absolute;}
-")
-       (:jscript
-	"function fs(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'inline';
-}
-    
-function fh(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'none';
-}
-")
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
-	((:form :name "go" :method "post" :action "/pick-val.html")
-	 ((:input :id "item" :name "item" :type "hidden" :value item-name))
-	 ((:input :id "link" :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
-	 ((:input :id "index" :name "index" :type "hidden"))
-	 ((:input :id "level" :name "level" :type "hidden"))
-	 ((:input :id "action":name "action" :type "hidden"))
-	 #+nil(:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
-		   "window.close();};"
-		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
-		   "document.forms['go'].submit();};")
-         (:jscript "function f42(d){parent.Fch('" item-name "',d);"
-		   "parent.$('#global_modal').modal('hide');};"
-		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
-		   "document.forms['go'].submit();};")
-
-	 (:p (:translate (meta::get-value-text slot)))
-	 (when dispatcher
-	   (draw-huge-tree (funcall (choices-fn dispatcher) object) 0 0 t (not null-allowed)
-			   () path #'draw-item)
-	   (when null-allowed
-	     (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                                  :sp "Ninguna de estas opciones")) "")) 0  nil t ()
-			       :draw-node-fn #'draw-item)
-	     #+ignore
-	     (html:html "&nbsp;&nbsp;"
-			((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                                                                                       :sp "Ninguna de estas opciones"))))))
-	 :br :br
-	 ((:div :align "center")
-          ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-           (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
-          #+nil((:a :class "call" :href "javascript:window.close();")
-				 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))))))))
-
 ;;; pick-color
 
 (defclass html-pick-color (html-pick-val)
@@ -1171,53 +797,6 @@ function fh(name)
 
 (html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
 
-(defun bs-std-pick-color-html-fn (dispatcher)
-  (flet ((color-td (r g b)
-	   (let ((color (format nil "#~2,'0x~2,'0x~2,'0x" r g b)))
-	     (html:html ((:td :bgcolor color :fformat (:onclick "f42('~a');" color))"&nbsp;&nbsp;&nbsp;")))))
-    (let* ((colors nil)
-	   (item (interface::item dispatcher))
-	   (item-name (interface::name item)))
-      (dotimes (r 6)
-	(dotimes (g 6)
-	  (dotimes (b 6)
-	    (push (list (* r 51) (* g 51) (* b 51)(luminance r g b)) colors))))
-      (setf colors (sort colors #'> :key 'fourth))
-      (html:html
-       (:head
-	(:title (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/pcol.css")))
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate '(:en "Choose a color" :fr "Choisissez une couleur")))
-        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
-                  "shot = true;parent.$('#global_modal').modal('hide');}};")
-#+nil        (:jscript "window.focus();function f42(d){window.opener.Fch('" item-name "',d);"
-		  "window.close();};")
-	((:table :class "pcolt" :align "center")
-	 (loop for x below 18
-	       for row = (loop repeat 12 collect (pop colors))
-	       for bl = (round (* 255 (- 1 (/ x 17))))
-	       do
-	       (html:html
-		(:tr
-		 (color-td  bl bl bl)
-		 (color-td  bl  0  0)
-		 (color-td   0 bl  0)
-		 (color-td   0  0 bl)
-		 (color-td   0 bl bl)
-		 (color-td  bl  0 bl)
-		 (color-td  bl bl  0)
-		 (loop for (r g b nil) in row
-		       do (color-td r g b))))))
-	:br
-        ((:div :align "center")
-         (#+nil(:a :class "call" :href "javascript:window.close();")
-               (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-               (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))))))))
-
 ;;; slot-pick-multi-val
 
 (defclass html-pick-multi-val (html-pick-val)
@@ -1241,503 +820,9 @@ function fh(name)
 	(funcall (set-value-fn *dispatcher*) (cons choice list) object)
 	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
 
-(defun bs-slot-pick-multi-val-tag (attributes form)
-  (declare (ignore form))
-  (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
-		      :test #'string= :key #'c2mop:slot-definition-name))
-	  (vertical (getf attrs :vertical)))
-      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((item (make-instance 'html-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
-				 :choices-fn (or (meta::get-object-func slot) 'std-get-mval-choices)
-				 :action-fn 'html-pick-multi-val-action-fn
-				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-multi-val-html-fn))))
-      (setf attrs (copy-list attrs))
-      (remf attrs :vertical)
-	(if vertical
-	    `(html:html
-	      ((:table :width "100%")
-	       (:tr
-		(:td ((:span :id ,(name item) ,@attrs))))
-	       (:when (modifiable-p ,slot)
-		 (:tr
-		  ((:td :align "right" :valign "top")
-                   #+nil((:a :id ,(action-link item)
-			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
-				       (name item))) 
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-                   ((:modal-button :id ,(action-link item)
-                                   :target "#global_modal"
-                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                 
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-		   )))))
-	    `(html:html
-              ((:span :id ,(name item) ,@attrs))
-              (:when (modifiable-p ,slot)
-                #+nil((:a :id ,(action-link item)
-                     :href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
-                                    (name item)))
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-                ((:modal-button :id ,(action-link item)
-                                   :target "#global_modal"
-                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                 
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
-
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
-(defun std-get-mval-choices (object)
-  (declare (ignore object))
-  (loop
-     for (value tr-string) in (meta::choices (interface::slot interface::*dispatcher*))
-     for text = (meta::translate tr-string)
-     collect (list text value)))
-
-(defun bs-std-pick-multi-val-html-fn (dispatcher)
-  (let* ((item (interface::item dispatcher))
-	 (item-name (interface::name item))
-	 (object (interface::object dispatcher))
-	 (slot (interface::slot dispatcher))
-	 (slot-value (funcall (get-value-fn dispatcher) object))
-	 (choices ()))
-    (html:html
-     (:head
-      (:title (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-     (:body
-      ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-      ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-      :br
-      (:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose values" :fr "Choisissez des valeurs")))
-      #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
-		"else window.opener.Fck('" item-name "',-i);"
-		"};")
-      (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
-		"else parent.Fck('" item-name "',-i);"
-		"parent.$('#global_modal').modal('hide');};")
-      (:p (:translate (meta::get-value-text slot)))
-      (when dispatcher
-	(loop for (text value) in (funcall (choices-fn dispatcher) object)
-	      for i from 0
-	      do (html:html "&nbsp;&nbsp;"
-			    ((:input :type "checkbox" :fformat (:id "CB~d" i)
-				     :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
-				     :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")
-                                     #+nil(if (and value (member (decode-object-id value) slot-value :test #'equal)) "CHECKED" "")
-				     ))
-			    (html:esc text) :br)
-	      (push value choices))
-	(setf (item-state dispatcher) (nreverse choices)))
-      ((:div :align "center")
-       ( #+nil(:a :class "call" :href "javascript:window.close();")
-              (:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-              (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar")))
-       )))))
-
-(defun std-mpick-treeview-html-fn (dispatcher)
-  (let* ((item (interface::item dispatcher))
-         (item-name (interface::name item))
-         (object (interface::object dispatcher))
-         (slot (interface::slot dispatcher))
-         (slot-value (funcall (get-value-fn dispatcher) object))
-         (choices ())
-         (i 0))
-    (flet ((draw-item2 (node)
-             (let* ((name (first node))
-		    (text (first name))
-		    (value (second name)))
-	       (if value
-		   (html:html "&nbsp;&nbsp;"
-			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
-				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
-				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
-			      (incf i)
-			      (push value choices)
-			      (html:esc text))
-                   (html:html "&nbsp;&nbsp;"
-                              (html:esc text))))))
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-.sp  {position:relative;}
-")
-       (:jscript
-	"function fs(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'inline';
-}
-    
-function fh(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'none';
-}
-")
-       ((:script :src "https://code.jquery.com/jquery.js"))
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-        (:if nil ;(typep dispatcher 'bs-slot-list-dispatcher)
-             #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fad('" item-name "',d);"
-                       "window.setTimeout('window.close();', 600); shot = true;}};")
-             (:jscript "var shot;function f42(d){if (!shot) {parent.Fad('" item-name "',d);"
-                       "shot = true;}parent.$('#global_modal').modal('hide');};")
-             (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
-		"else parent.Fck('" item-name "',-i);"
-		"parent.$('#global_modal').modal('hide');};")
-             #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
-		"else window.opener.Fck('" item-name "',-i);"
-		"};"))
-	(:p (:translate (meta::get-value-text slot)))
-	(when dispatcher
-	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t t ()
-			    :draw-node-fn #'draw-item2)
-	  (setf (item-state dispatcher) (nreverse choices)))
-	:br :br
-	((:div :align "center")
-#+nil
-         ((:a :class "call" :href "javascript:window.close();")
-          (:translate '(:en "Remove all" :fr "Tout enlever")))
-         ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');")
-          (:translate '(:en "Close" :fr "Fermer"))))))))
-#+nil
-  (let* ((item (interface::item dispatcher))
-	 (item-name (interface::name item))
-	 (object (interface::object dispatcher))
-	 (slot (interface::slot dispatcher))
-	 (slot-value (funcall (get-value-fn dispatcher) object))
-	 (choices ())
-	 (i 0))
-    (flet ((draw-item2 (node)
-	     (let* ((name (first node))
-		    (text (first name))
-		    (value (second name)))
-	       (if value
-		   (html:html "&nbsp;&nbsp;"
-			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
-				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
-				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
-			      (incf i)
-			      (push value choices)
-			      (html:esc text)))
-	       (html:html "&nbsp;&nbsp;"
-			  (html:esc text)))))
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.d2  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-.sp  {position:absolute;}
-")
-       (:jscript
-	"function fs(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'inline';
-}
-    
-function fh(name)
-{
-  var item;
-  item=document.getElementById(name);
-  if (item)
-     item.style.display = 'none';
-}
-")
-       (:body
-	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
-		"else window.opener.Fck('" item-name "',-i);"
-		"};")
-	(:p (:translate (meta::get-value-text slot)))
-	(when dispatcher
-	  (draw-simple-tree (funcall (choices-fn dispatcher) object) 0 t t ()
-			    :draw-node-fn #'draw-item2))
-	(setf (item-state dispatcher) (nreverse choices))
-	:br :br
-	((:div :align "center")((:a :class "call" :href "javascript:window.close();")
-				(:translate '(:en "Close" :fr "Fermer")))))))))
-
-(defun std-mpick-huge-treeview-html-fn (dispatcher)
-  (let* ((item (interface::item dispatcher))
-	 (item-name (interface::name item))
-	 (object (interface::object dispatcher))
-	 (slot (interface::slot dispatcher))
-	 (slot-value (funcall (get-value-fn dispatcher) object))
-	 (index (cdr (assoc "index" (posted-content *request*) :test 'string=)))
-	 (level (cdr (assoc "level" (posted-content *request*) :test 'string=)))
-	 (action (cdr (assoc "action" (posted-content *request*) :test 'string=)))
-	 (path (item-state2 dispatcher))
-	 (choices ())
-	 (i 0))
-    (setf index (ignore-errors (parse-integer index :junk-allowed t)))
-    (setf level (ignore-errors (parse-integer level :junk-allowed t)))
-    (when (and level index)
-      (when (>= (length path) level)
-	(setf path (subseq path 0 level)))
-      (if (string= action "o")
-	  (setf path (nconc path (list index)))))
-    (setf path (or path '(0)))
-    (setf (item-state2 dispatcher) path)
-    (flet ((draw-item2 (node)
-	     (let* ((name (first node))
-		    (text (first name))
-		    (value (second name)))
-	       (if value
-		   (html:html "&nbsp;&nbsp;"
-			      ((:input :type "checkbox" :fformat (:id "CB~d" i)
-				       :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
-				       :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
-			      (incf i)
-			      (push value choices)
-			      (html:esc text)))
-	       (html:html "&nbsp;&nbsp;"
-			  (html:esc text)))))
-      (html:html
-       (:head
-	(:title (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-	((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css")))
-       (:style "
-.d1  {overflow:visible; height:16px; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
-.ic  {height:16px; width:16px; border:0;}
-")
-       (:body
-        ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
-        ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-	:br
-	(:h1 (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur")))
-
-	((:form :name "go" :method "post" :action "/pick-val.html")
-	 ((:input :name "item" :type "hidden" :value item-name))
-	 ((:input :name "link" :type "hidden" :value (interface-id (interface dispatcher))))
-	 ((:input :id "index" :name "index" :type "hidden"))
-	 ((:input :id "level" :name "level" :type "hidden"))
-	 ((:input :id "action" :name "action" :type "hidden"))
-	 (:jscript "function f42(i,st){if (st) parent.Fck('" item-name "',i);"
-		   "else parent.Fck('" item-name "',-i);"
-		   "parent.$('#global_modal').modal('hide');};"
-		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
-		   "document.forms['go'].submit();parent.$('#global_modal').modal('hide');};")
-         #+nil(:jscript "window.focus();function f42(i,st){if (st) window.opener.Fck('" item-name "',i);"
-		   "else window.opener.Fck('" item-name "',-i);"
-		   "};"
-		   "function f43(l,i,a){fgt('index').value=i;fgt('level').value=l;fgt('action').value=a;"
-		   "document.forms['go'].submit();};")
-	 (:p (:translate (meta::get-value-text slot)))
-	 (when dispatcher
-	   (draw-huge-tree (funcall (choices-fn dispatcher) object) 0 0 t t () path #'draw-item2))
-	(setf (item-state dispatcher) (nreverse choices))
-	:br :br
-	((:div :align "center")
-         ((:a :class "call" :href "javascript:parent.$('#global_modal').modal('hide');");javascript:window.close();
-          #+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-				(:translate '(:en "Close" :fr "Fermer"))))))))))
-
-(defun make-tree (n base)
-  (cons (list (format nil "~d" base) base)
-	(when (>= n 1)
-	  (loop for i from 0 to 9
-		for val = (+ i base)
-		collect (make-tree (1- n) (* val 10))))))
-
-(defparameter *tree* (make-tree 2 0))
-
-(defmethod leaf-node-p ((node list))
-  (not (cdr node)))
-
-(defmethod non-leaf-node-p ((node list))
-  (cdr node))
-
-(defmethod map-sub-nodes (fn (node list))
-  (loop for (sub-node . rest) on (cdr node)
-	for first = t then nil
-	for i from 0
-	do (funcall fn sub-node first (not rest) i)))
-
-(defmethod draw-node ((node list))
-  (html:html
-   ((:input :type "checkbox" :style "height:16px;border:0px;"))
-   (html::ffmt "~a" (caar node))))
-
-(defun draw-prev-lines1 (previous-lasts)
-  (loop for pl in previous-lasts do
-	    (if pl
-		(html:html ((:img :src "empty.gif" :class "ic" :align "top")))
-		(html:html ((:img :src "line1.gif" :class "ic" :align "top"))))))
-
-(defvar *div-id* 0)
-
-(defun draw-simple-tree1 (node level path first last previous-lasts &optional (draw-node-fn #'draw-node))
-  (let* ((non-leaf-node (non-leaf-node-p node))
-	 (div-c (format nil "D~d" (incf *div-id*)))
-	 (div-o (format nil "D~d" (incf *div-id*))))
-    (setf first (and first (zerop level)))
-    (if non-leaf-node
-	(html:html
-	 ((:div :class "d1" :id div-c :style "display:'';")
-	  (draw-prev-lines1 previous-lasts)
-	  ((:img :src
-		 (if last
-		     (if first "plus1.gif" "plus2.gif")
-		     (if first "plus4.gif" "plus3.gif"))
-		 :class "ic" :align "top" :fformat (:onclick "f825s('~a');f825h('~a');" div-o div-c)))
-	  ((:img :src "folderClosed.gif" :class "ic" :align "top"))
-	  "&nbsp;"
-	  (funcall draw-node-fn node))
-	 ((:div :class "d1" :id div-o :style "display:none;")
-	   (draw-prev-lines1 previous-lasts)
-	  ((:img :src
-		 (if last
-		     (if first "minus1.gif" "minus2.gif")
-		     (if first "minus4.gif" "minus3.gif"))
-		 :class "ic" :align "top" :fformat (:onclick "f825s('~a');f825h('~a');" div-c div-o)))
-	  ((:img :src "folderOpen.gif" :class "ic" :align "top"))
-	  "&nbsp;"
-	  (funcall draw-node-fn node)
-	  (when open-node ;; fixme
-	    (incf level)
-	    (setf previous-lasts (append previous-lasts (list last)))
-	    (map-sub-nodes #'(lambda (node first last index)
-                               (declare (ignore index))
-			       (draw-simple-tree1 node level path first last previous-lasts))
-			   node))))
-	(html:html
-	 ((:div :class "d1")
-	  (draw-prev-lines1 previous-lasts)
-	  ((:img :src
-		 (if last
-		     (if first "line1.gif" "line2.gif")
-		     "line3.gif")
-		 :class "ic" :align "top"))
-	  ((:img :src "leaf.gif" :class "ic" :align "top"))
-	  "&nbsp;"
-	  (funcall draw-node-fn node))))))
-
-(defun draw-prev-lines2 (previous-lasts)
-  (loop for pl in previous-lasts
-	for pos from 0 by 16 do
-	(if pl
-	    (html:html ((:img :src "/static/ey.gif" :class "ic" :align "top"
-			      :fformat (:style "position:absolute;left:~dpx;" pos))))
-	    (html:html ((:img :src "/static/l1.gif" :class "ic" :align "top"
-			      :fformat (:style "position:absolute;left:~dpx;" pos)))))))
-
-(defun draw-simple-tree (node level first last previous-lasts &key (draw-node-fn #'draw-node) opened-node)
-  (let* ((non-leaf-node (non-leaf-node-p node))
-	 (span-c (format nil "D~d" (incf *div-id*)))
-	 (span-o (format nil "D~d" (incf *div-id*)))
-	 (div-o (format nil "D~d" (incf *div-id*)))
-	 (pos (* level 16))
-	 (display (if opened-node "display:inline;" "display:none;")))
-    (setf first (and first (zerop level)))
-    (if non-leaf-node
-	(html:html
-	 ((:div :class "d1")
-           (:nobr
-	  (draw-prev-lines2 previous-lasts)
-	  ((:span :id span-c :class "sp" :fformat (:style "left:~dpx;" pos))
-	   ((:img :src
-		  (if last
-		      (if first "/static/p1.gif" "/static/p2.gif")
-		      (if first "/static/p4.gif" "/static/p3.gif"))
-		  :class "ic" :align "top" :fformat (:onclick "fs('~a');fs('~a');fh('~a');"
-							      div-o span-o span-c)))
-	   ((:img :src "/static/fc.gif" :class "ic" :align "top")))
-	  ((:span :class "sp" :id span-o :fformat (:style "display:none;left:~dpx;" pos))
-	   ((:img :src
-		  (if last
-		      (if first "/static/m1.gif" "/static/m2.gif")
-		      (if first "/static/m4.gif" "/static/m3.gif"))
-		  :class "ic" :align "top" :fformat (:onclick "fh('~a');fh('~a');fs('~a');"
-							      div-o span-o span-c)))
-	   ((:img :src "/static/fo.gif" :class "ic" :align "top")))
-	  ((:span  :class "sp" :fformat (:style "left:~dpx;" pos))
-            "&nbsp;"
-            (funcall draw-node-fn node))))
-	  ((:div :class "d1" :id div-o :style display)
-	   (incf level)
-	   (setf previous-lasts (append previous-lasts (list last)))
-	   (map-sub-nodes #'(lambda (node first last index)
-                              (declare (ignore index))
-			      (draw-simple-tree node level first last previous-lasts :draw-node-fn draw-node-fn))
-			  node)))
-	(html:html
-	 ((:div :class "d1")
-	  (draw-prev-lines2 previous-lasts)
-	  ((:span :class "sp" :fformat (:style "left:~dpx;" pos))
-           (:nobr
-            ((:img :src
-                   (if last
-                       (if first "/static/l1.gif" "/static/l2.gif")
-                       "/static/l3.gif")
-                   :class "ic" :align "top"))
-            ((:img :src "/static/lf.gif" :class "ic" :align "top"))
-            "&nbsp;"
-            (funcall draw-node-fn node))))))))
-
-(defun draw-prev-lines (previous-lasts)
-  (loop for pl in previous-lasts do
-	(if pl
-	    (html:html ((:img :src "/static/ey.gif" :class "ic" :align "top")))
-	    (html:html ((:img :src "/static/l1.gif" :class "ic" :align "top"))))))
-
-(defun draw-huge-tree (node level index first last previous-lasts path &optional (draw-node-fn #'draw-node))
-  (let* ((non-leaf-node (non-leaf-node-p node))
-	 (opened (and non-leaf-node (eql index (pop path)))))
-    (setf first (and first (zerop level)))
-    (html:html
-     ((:div :class "d1")
-      (draw-prev-lines previous-lasts)
-      ((:img :src
-	     (if non-leaf-node
-		 (if opened
-		     (if last
-			 (if first "/static/m1.gif" "/static/m2.gif")
-			 (if first "/static/m4.gif" "/static/m3.gif"))
-		     (if last
-			 (if first "/static/p1.gif" "/static/p2.gif")
-			 (if first "/static/p4.gif" "/static/p3.gif")))
-		 (if last
-		     (if first "/static/l1.gif" "/static/l2.gif")
-		     "/static/l3.gif"))
-	     :class "ic" :align "top" :fformat (:onclick "f43(~d,~d,'~a');"
-							 level index (if opened "c" "o"))))
-       ((:img :src (if non-leaf-node (if opened "/static/fo.gif" "/static/fc.gif") "/static/lf.gif")
-	      :class "ic" :align "top"))
-      "&nbsp;&nbsp;" (funcall draw-node-fn node))
-     (incf level)
-     (setf previous-lasts (append previous-lasts (list last)))
-     (when opened
-       (map-sub-nodes #'(lambda (node first last index)
-			  (draw-huge-tree node level index first last previous-lasts path draw-node-fn))
-		      node)))))
-
 ;;;; File upload
-
-(defvar *tmp-test-directory*
-    #+(or :win32 :mswindows) #p"c:\\hunchentoot-temp\\test\\"
-    #-(or :win32 :mswindows) #p"/tmp/hunchentoot/test/")
-
-(defvar *tmp-test-files* nil)
 
 (let ((counter 0))
   (defun handle-file (post-parameter hunchentoot-request)
