@@ -387,24 +387,26 @@
      ((:div :class "modal-dialog")
       ((:div :class "modal-content")
        ((:div :class "modal-header")
+        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
         ((:h4 :class "modal-title")
          (:translate (meta::get-value-title slot)
                      :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))))
        ((:div :class "modal-body")
         (:p (:translate (meta::get-value-text slot)))
         (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
-        (when dispatcher
+        ((:div :class "list-group")
+         (when dispatcher
+          (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
+             do (html:html
+                 ((:a :class "list-group-item" :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                  (html:esc (meta::short-description object)))))
           (when (meta::null-allowed (slot dispatcher))
             (html:html "&nbsp;&nbsp;"
                        ((:a :href "javascript:f42('nil');")
-                        (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                      :sp "Ninguna de estas opciones")))))
-          (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
-             do (html:html "&nbsp;&nbsp;"
-                           ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-                            (html:esc (meta::short-description object))) :br))))
+                        (:translate '(:en "None of these choices" :fr "Aucun de ces choix" :sp "Ninguna de estas opciones"))))))))
        ((:div :class "modal-footer")
         ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))))
+
 
 (defun bs-std-pick-treeview-html-fn (dispatcher)
   (flet ((draw-item (node)
@@ -429,6 +431,7 @@
       ((:div :class "modal-content")
        ((:link :rel "stylesheet" :href "/static/css/treeview.css"))
        ((:div :class "modal-header")
+        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
         ((:h4 :class "modal-title")
          (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor"))))
        ((:div :class "modal-body")
