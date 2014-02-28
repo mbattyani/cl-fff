@@ -387,19 +387,18 @@
      ((:div :class "modal-dialog")
       ((:div :class "modal-content")
        ((:div :class "modal-header")
-        ((:h4 :class "modal-title"))
-        (:translate (meta::get-value-title slot)
-                    :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto")))
+        ((:h4 :class "modal-title")
+         (:translate (meta::get-value-title slot)
+                     :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))))
        ((:div :class "modal-body")
         (:p (:translate (meta::get-value-text slot)))
-        (:jscript "function f42(d){Fch('" item-name "',d);"
-                  "$('#GlobalModal').modal('hide');};")
+        (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
         (when dispatcher
           (when (meta::null-allowed (slot dispatcher))
             (html:html "&nbsp;&nbsp;"
                        ((:a :href "javascript:f42('nil');")
                         (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                      :sp "Ninguna de estas opciones"))) :br :br))
+                                      :sp "Ninguna de estas opciones")))))
           (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
              do (html:html "&nbsp;&nbsp;"
                            ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
@@ -418,9 +417,8 @@
 						 (if (stringp value)
 						     (html:quote-javascript-string value)
 						     value)))
-			     (html:esc text)))
-		 (html:html "&nbsp;&nbsp;"
-			    (html:esc text))))))
+			     (:esc text)))
+		 (html:html "&nbsp;&nbsp;" (:esc text))))))
     (let* ((item (interface::item dispatcher))
 	   (item-name (interface::name item))
 	   (object (interface::object dispatcher))
@@ -429,46 +427,50 @@
       (html:html
      ((:div :class "modal-dialog")
       ((:div :class "modal-content")
+       ((:link :rel "stylesheet" :href "/static/css/treeview.css"))
        ((:div :class "modal-header")
-        ((:h4 :class "modal-title"))
-        (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor")))
+        ((:h4 :class "modal-title")
+         (:translate (meta::get-value-title slot) :default '(:en "Choose a value" :fr "Choisissez une valeur" :sp "Elija un valor"))))
        ((:div :class "modal-body")
         (:p (:translate (meta::get-value-text slot)))
-        (:jscript "var shot;function f42(d){if (!shot) {parent.Fch('" item-name "',d);"
-                       "shot = true;parent.$('#global_modal').modal('hide');}};")
+        (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
         (when dispatcher
           (bs-simple-tree (funcall (meta::get-object-func (slot dispatcher))(object dispatcher)))
           (when (meta::null-allowed (slot dispatcher))
             (html:html "&nbsp;&nbsp;"
                        ((:a :href "javascript:f42('nil');")
                         (:translate '(:en "None of these choices" :fr "Aucun de ces choix"
-                                      :sp "Ninguna de estas opciones"))) :br :br))))
+                                      :sp "Ninguna de estas opciones")))))))
        ((:div :class "modal-footer")
-        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))))))
+        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))
+       ((:script :src "/static/js/treeview.js"))))))))
 
 (defvar %bs-tree-id% 0)
 
 (defun bs-simple-tree (tree)
-  (incf %bs-tree-id%)
   (html:html
-   ((:div :class "panel-group" :fformat (:id "tree~d" %bs-tree-id%))
-    ((:div :class "panel panel-default")
-     ((:div :class "panel-heading")
-      ((:h4 :class "panel-title")
-       ((:a :data-toggle "collapse" :fformat (:data-parent "#tree~d" %bs-tree-id%) :href "#"))
-       (:esc (caar tree))))
-     (html:html
-      ((:div :class "panel-collapse collapse.in")
-       ((:div :class "panel-body")
-        ((:div :class "list-group")
-         (loop for ((text object-id) . rest) in (cdr tree)
-            for node in (cdr tree)
-            do (if rest
-                   (bs-simple-tree node)
-                   (when object-id
-                     (html:html
-                      ((:a :class "list-group-item" :fformat (:href "javascript:f42('~a');" object-id))
-                       (html:esc text))))))))))))))
+   ((:div :class "tree")
+    (:ul
+     (loop for ((text object-id) . rest) in (cdr tree)
+        for node in (cdr tree)
+        do (cond ((or rest (and (not rest) (not object-id)))
+                  (bs-simple-tree-node node))
+                 (object-id
+                  (html:html
+                   (:li ((:a :fformat (:href "javascript:f42('~a');" object-id)) (:esc text)))))))))))
+
+(defun bs-simple-tree-node (node)
+  (html:html
+   (:li (:span ((:i :class "glyphicon glyphicon-minus")) "&nbsp;"(:esc (caar node)))
+        (:ul
+         (loop for ((text object-id) . rest) in (cdr node)
+            for node in (cdr node)
+            do (cond ((or rest (and (not rest) (not object-id)))
+                      (bs-simple-tree-node node))
+                     (object-id
+                      (html:html
+                       (:li (:span ((:a :fformat (:href "javascript:f42('~a');" object-id)) (:esc text))))))))))))
+
 
 ;;**** slot-list ***************************
 

@@ -1,0 +1,104 @@
+.tree {
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+    background-color: #fbfbfb;
+    border: 1px solid #999;
+    margin-bottom: 10px;
+    max-height: 300px;
+    min-height: 20px;
+    overflow-y: auto;
+    padding: 19px
+}
+
+.tree a {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 4px;
+    width: 90%
+}
+
+.tree li {
+    list-style-type: none;
+    margin: 0;
+    padding: 4px 0 0 2px;
+    position: relative
+}
+
+.tree li::before,.tree li::after {
+    content: '';
+    left: -20px;
+    position: absolute;
+    right: auto
+}
+
+.tree li::before {
+    border-left: 1px solid #999;
+    bottom: 50px;
+    height: 100%;
+    top: 0;
+    width: 1px;
+}
+
+.tree li::after {
+    border-top: 1px solid #999;
+    height: 20px;
+    top: 13px;
+    width: 23px;
+}
+
+.tree li span {
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border: 1px solid #999;
+    border-radius: 5px;
+    display: inline-block;
+    line-height: 14px;
+    padding: 2px 4px;
+    text-decoration: none;
+}
+
+.tree li span:hover {
+    background-color: #428bca;
+    border: 1px solid #428bca;
+    color: #fff
+}
+
+.tree li a:hover {
+    background-color: #428bca;
+    border: 1px solid #428bca;
+    color: #fff
+}
+
+.tree li.parent_li>span {
+    cursor: pointer
+}
+
+.tree li.parent_li>span:hover {
+    background-color: #eea236;
+    border: 1px solid #ec971f;
+    color: #fff
+}
+
+.tree li.parent_li>span:hover+ul li::after {
+    border-top-color: #f0ad4e
+}
+
+.tree li.parent_li>span:hover+ul li::before {
+    border-left-color: #f0ad4e
+}
+
+.tree li.parent_li>span:hover+ul li span {
+    background: #fef9f3;
+    border: 1px solid #f4c37d;
+    color: #000
+}
+
+.tree li:last-child::before {
+    height: 30px
+}
+
+.tree>ul>li::before,.tree>ul>li::after {
+    border: 0
+}
