@@ -474,6 +474,190 @@
                       (html:html
                        (:li (:span ((:a :fformat (:href "javascript:f42('~a');" object-id)) (:esc text))))))))))))
 
+;;***  pick-val ****************************
+
+(defclass bs-pick-val (html-item)
+  ((html-fn :accessor html-fn :initform nil :initarg :html-fn)
+   (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
+   (action-link :accessor action-link :initform nil :initarg :action-link)))
+
+(defmethod initialize-instance :after ((item bs-pick-val) &rest init-options &key &allow-other-keys)
+  (setf (action-link item) (when (choices-fn item) (concatenate 'string (name item) "l"))))
+
+(defclass bs-pick-val-dispatcher (slot-dispatcher)
+  ((state :accessor state :initform nil)
+   (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
+   ))
+
+(defmethod make-dispatcher (interface object (item bs-pick-val))
+  (make-instance 'bs-pick-val-dispatcher :interface interface :object object :item item
+		 :choices-fn (choices-fn item)))
+
+(defmethod make-set-status-javascript ((item bs-pick-val) status slot)
+  (when (modifiable-p *dispatcher*)
+    (when (action-link item)
+      (if status
+	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='hidden';")
+	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='inherit';")))))
+
+(defmethod slot-pick-val-tag ((frontend bootstrap) attributes form)
+  (declare (ignore form))
+  (destructuring-bind (slot-name . attrs) attributes
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
+      (let ((item (make-instance 'bs-pick-val :tooltip (meta::tooltip slot) :slot slot
+				 :choices-fn (meta::get-object-func slot)
+				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-val-html-fn))))
+	`(html:html ((:input :type "text" :id ,(name item) :disabled "true" ,@attrs))
+	  (:when (modifiable-p ,slot)
+            ((:modal-button :id ,(action-link item)
+                            :target "#global_modal"
+                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                            (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))
+	    #+nil((:a :id ,(action-link item)
+		 :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a');"
+				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
+
+;;; pick-color
+
+(defclass bs-pick-color (bs-pick-val)
+  ())
+
+(defmethod make-set-value-javascript ((item bs-pick-color) value slot)
+  (setf value (if value (html:quote-javascript-string value) ""))
+  (html:fast-format nil "x_.fgt('~a').style.backgroundColor='~a';x_.fgt('~a').value='~a';"
+		    (name item) value (name item) value))
+
+(defmethod slot-pick-color-tag ((frontend bootstrap) attributes form)
+  (declare (ignore form))
+  (destructuring-bind (slot-name . attrs) attributes
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
+      (let ((item (make-instance 'bs-pick-color :tooltip (meta::tooltip slot) :slot slot
+				 :choices-fn t
+				 :html-fn (or (meta::get-object-func slot) 'std-pick-color-html-fn))))
+	`(html:html ((:input :type "text" :id ,(name item) :readonly "true" ,@attrs))
+	  (:when (modifiable-p ,slot)
+	    #+nil((:a :id ,(action-link item)
+		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
+				(name item))) 
+             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
+            ((:modal-button :id ,(action-link item)
+                            :target "#global_modal"
+                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                                ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
+            ))))))
+
+;;; slot-pick-multi-val
+
+(defclass bs-pick-multi-val (bs-pick-val)
+  ((action-func  :initform nil :accessor action-func :initarg :action-fn)
+   (current-list :initform nil :accessor current-list)))
+
+(defmethod make-set-value-javascript ((item bs-pick-multi-val) value slot)
+  (if value
+      (with-output-to-string (s)
+	(html:fast-format s "x_.fgt('~a').innerHTML='" (name item))
+	(loop for (val . rest) on value do
+	      (write-string (html:quote-javascript-string (meta::short-description val)) s)
+	      (when rest (write-string ", " s)))
+	(write-string "';" s))
+      (html:fast-format nil "x_.fgt('~a').innerHTML='';" (name item))))
+
+(defmethod bs-pick-multi-val-action-fn (object value click-str)
+  (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
+	 (list (funcall (get-value-fn *dispatcher*) object)))
+    (if (plusp value)
+	(funcall (set-value-fn *dispatcher*) (cons choice list) object)
+	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
+
+(defmethod slot-pick-multi-val-tag ((frontend bootstrap) attributes form)
+  (declare (ignore form))
+  (destructuring-bind (slot-name . attrs) attributes
+    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
+		      :test #'string= :key #'c2mop:slot-definition-name))
+	  (vertical (getf attrs :vertical)))
+      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
+      (let ((item (make-instance 'html-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
+				 :choices-fn (or (meta::get-object-func slot) 'std-get-mval-choices)
+				 :action-fn 'html-pick-multi-val-action-fn
+				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-multi-val-html-fn))))
+      (setf attrs (copy-list attrs))
+      (remf attrs :vertical)
+	(if vertical
+	    `(html:html
+	      ((:table :width "100%")
+	       (:tr
+		(:td ((:span :id ,(name item) ,@attrs))))
+	       (:when (modifiable-p ,slot)
+		 (:tr
+		  ((:td :align "right" :valign "top")
+                   #+nil((:a :id ,(action-link item)
+			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
+				       (name item))) 
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+                   ((:modal-button :id ,(action-link item)
+                                   :target "#global_modal"
+                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+		   )))))
+	    `(html:html
+              ((:span :id ,(name item) ,@attrs))
+              (:when (modifiable-p ,slot)
+                #+nil((:a :id ,(action-link item)
+                     :href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
+                                    (name item)))
+                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
+                ((:modal-button :id ,(action-link item)
+                                   :target "#global_modal"
+                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+
+(defun bs-obj-del-request-handler (request)
+  (decode-posted-content request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (dispatcher nil))
+    (when link (setf link (gethash link *http-links*)))
+    (when (and link item) (setf dispatcher (gethash item (dispatchers link))))
+    (let* ((*session* (session link))
+           (*user* (user *session*))
+           (*country-language* (country-language *session*)))
+      (with-output-to-request (request)
+        (html::html-to-stream
+         *request-stream*
+         ((:div :class "modal-dialog")
+      ((:div :class "modal-content")
+       ((:div :class "modal-header")
+        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+        ((:h4 :class "modal-title")
+         (:if (> (length (objects-to-delete dispatcher)) 1)
+                      (:translate '(:en "Do you want to remove these objects:"
+                                    :sp "Está seguro de querer eliminar estos objetos:"
+                                    :fr "Voulez vous vraiment supprimer ces objets:"))
+                      (:translate '(:en "Do you want to remove this object:"
+                                    :sp "Está seguro de querer eliminar este objeto:"
+                                    :fr "Voulez vous vraiment supprimer cet objet:")))))
+       ((:div :class "modal-body")
+     ;   (:p (:translate (meta::get-value-text slot)))
+        (:jscript "function f42(d){Fck('" item "',d);$('#GlobalModal').modal('hide');};")
+        (dolist (object (objects-to-delete dispatcher))
+               (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br))
+        ((:div :align "center")
+             ((:div :class "call" :data-value "30000")
+              (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
+             "&nbsp;&nbsp;&nbsp;&nbsp;"
+             ((:div :class "call" :data-value "30001")
+              (:translate '(:en "No" :fr "Non" :sp "No")))
+             ))
+       ((:div :class "modal-footer")
+        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))
+       (:jscript "$('div.call').click(function(){f42($(this).data('value'))});"))))))
+    t))
+
+(interface::add-named-url "/bs-obj-del.html" 'bs-obj-del-request-handler)
 
 ;;**** slot-list ***************************
 
@@ -722,110 +906,6 @@
 ;;;syntax ((:slot-list :class "css" :width width :height height)
 ;;;         ("col-title" col-width col-forms)
 
-;;***  pick-val ****************************
-
-(defclass html-pick-val (html-item)
-  ((html-fn :accessor html-fn :initform nil :initarg :html-fn)
-   (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
-   (action-link :accessor action-link :initform nil :initarg :action-link)))
-
-(defmethod initialize-instance :after ((item html-pick-val) &rest init-options &key &allow-other-keys)
-  (setf (action-link item) (when (choices-fn item) (concatenate 'string (name item) "l"))))
-
-(defclass html-pick-val-dispatcher (slot-dispatcher)
-  ((state :accessor state :initform nil)
-   (choices-fn :accessor choices-fn :initform nil :initarg :choices-fn)
-   ))
-
-(defmethod make-dispatcher (interface object (item html-pick-val))
-  (make-instance 'html-pick-val-dispatcher :interface interface :object object :item item
-		 :choices-fn (choices-fn item)))
-
-(defmethod make-set-status-javascript ((item html-pick-val) status slot)
-  (when (modifiable-p *dispatcher*)
-    (when (action-link item)
-      (if status
-	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='hidden';")
-	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='inherit';")))))
-
-(defun slot-pick-val-tag (attributes form)
-  (declare (ignore form))
-  (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
-		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((item (make-instance 'html-pick-val :tooltip (meta::tooltip slot) :slot slot
-				 :choices-fn (meta::get-object-func slot)
-				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-val-html-fn))))
-	`(html:html ((:input :type "text" :id ,(name item) :disabled "true" ,@attrs))
-	  (:when (modifiable-p ,slot)
-            ((:modal-button :id ,(action-link item)
-                            :target "#global_modal"
-                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                            (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))
-	    #+nil((:a :id ,(action-link item)
-		 :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a');"
-				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
-
-(html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
-
-;;; pick-color
-
-(defclass html-pick-color (html-pick-val)
-  ())
-
-(defmethod make-set-value-javascript ((item html-pick-color) value slot)
-  (setf value (if value (html:quote-javascript-string value) ""))
-  (html:fast-format nil "x_.fgt('~a').style.backgroundColor='~a';x_.fgt('~a').value='~a';"
-		    (name item) value (name item) value))
-
-(defun slot-pick-color-tag (attributes form)
-  (declare (ignore form))
-  (destructuring-bind (slot-name . attrs) attributes
-    (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
-		      :test #'string= :key #'c2mop:slot-definition-name)))
-      (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((item (make-instance 'html-pick-color :tooltip (meta::tooltip slot) :slot slot
-				 :choices-fn t
-				 :html-fn (or (meta::get-object-func slot) 'std-pick-color-html-fn))))
-	`(html:html ((:input :type "text" :id ,(name item) :readonly "true" ,@attrs))
-	  (:when (modifiable-p ,slot)
-	    #+nil((:a :id ,(action-link item)
-		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
-				(name item))) 
-             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
-            ((:modal-button :id ,(action-link item)
-                            :target "#global_modal"
-                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
-            ))))))
-
-(html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
-
-;;; slot-pick-multi-val
-
-(defclass html-pick-multi-val (html-pick-val)
-  ((action-func  :initform nil :accessor action-func :initarg :action-fn)
-   (current-list :initform nil :accessor current-list)))
-
-(defmethod make-set-value-javascript ((item html-pick-multi-val) value slot)
-  (if value
-      (with-output-to-string (s)
-	(html:fast-format s "x_.fgt('~a').innerHTML='" (name item))
-	(loop for (val . rest) on value do
-	      (write-string (html:quote-javascript-string (meta::short-description val)) s)
-	      (when rest (write-string ", " s)))
-	(write-string "';" s))
-      (html:fast-format nil "x_.fgt('~a').innerHTML='';" (name item))))
-
-(defmethod html-pick-multi-val-action-fn (object value click-str)
-  (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
-	 (list (funcall (get-value-fn *dispatcher*) object)))
-    (if (plusp value)
-	(funcall (set-value-fn *dispatcher*) (cons choice list) object)
-	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
-
-(html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
 
 ;;;; File upload
 

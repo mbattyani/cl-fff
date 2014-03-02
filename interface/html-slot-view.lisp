@@ -488,14 +488,14 @@
                        (setf (objects-to-delete *dispatcher*) nil))
                       ((= value -7)
                        (setf (objects-to-delete *dispatcher*) (collect-list-objects list))
-                       #+nil
-                       (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*))))      
-                       (send-to-interface
-                        (html:fast-format nil "show_modal_content('Sure?', );"))
-                       #+nil(send-to-interface
-                        (html:fast-format nil "window.open1('/obj-del.html', '250px', '250px', '~a');"
-                                          (name (item *dispatcher*)))))
+                       (cond
+                         ((is-bootstrap *frontend*)
+                          (send-to-interface
+                           (format nil "show_remote_modal_content('~a','/bs-obj-del.html', '~a');"
+                                   ""
+                                   (name (item *dispatcher*)))))
+                         (t (send-to-interface
+                             (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*)))))))
                       ((and (= value -9) *user*) ; cut
                        (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
                        (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
@@ -700,7 +700,6 @@
 	      (:body
                ((:script :type "text/javascript"  :src "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
                ((:script :type "text/javascript"  :src "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"))
-               
 	       :br
 	       (:h1 (:translate '(:en "Type of object" :fr "Type d'objet")))
                #+nil(:jscript "window.focus();var shot;function f42(d){if (!shot) {opener.Fck('" item "',d);"
@@ -722,6 +721,8 @@
 ;(defun ask-yes-no-question (request title question yes-id no-id)
 
 (defun obj-del-request-handler (request)
+  (when (is-bootstrap *frontend*)
+    (return-from obj-del-request-handler (bs-obj-del-request-handler request)))
   (decode-posted-content request)
   (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
         (item (cdr (assoc "item" (posted-content request) :test 'string=)))
@@ -797,7 +798,7 @@
 	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='hidden';")
 	  (concatenate 'string "x_.fgt('" (action-link item) "').style.visibility='inherit';")))))
 
-(defun slot-pick-val-tag (attributes form)
+(defmethod slot-pick-val-tag ((frontend html) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -816,7 +817,7 @@
 		 :href ,(format nil "javascript:open1('/pick-val.html', '250px', '500px', '~a');"
 				(name item))) (:translate '(:en "Change" :fr "Changer" :sp "Cambio")))))))))
 
-(html:add-func-tag :slot-pick-val 'slot-pick-val-tag)
+(html:add-func-tag :slot-pick-val 'slot-pick-val-tag t)
 
 (defun pick-request-handler (request)
       (decode-posted-content request)
@@ -1204,7 +1205,7 @@ function fh(name)
   (html:fast-format nil "x_.fgt('~a').style.backgroundColor='~a';x_.fgt('~a').value='~a';"
 		    (name item) value (name item) value))
 
-(defun slot-pick-color-tag (attributes form)
+(defmethod slot-pick-color-tag ((frontend html) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -1225,7 +1226,7 @@ function fh(name)
                                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
             ))))))
 
-(html:add-func-tag :slot-pick-color 'slot-pick-color-tag)
+(html:add-func-tag :slot-pick-color 'slot-pick-color-tag t)
 
 (defun luminance (r g b)
   (+ (* 0.3 r)(* 0.59 g)(* 0.11 b)))
@@ -1312,7 +1313,7 @@ function fh(name)
 	(funcall (set-value-fn *dispatcher*) (cons choice list) object)
 	(funcall (set-value-fn *dispatcher*) (delete choice list) object))))
 
-(defun slot-pick-multi-val-tag (attributes form)
+(defmethod slot-pick-multi-val-tag ((frontend html) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
@@ -1356,7 +1357,7 @@ function fh(name)
                                  
                  ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
-(html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag)
+(html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag t)
 
 (defun std-get-mval-choices (object)
   (declare (ignore object))
