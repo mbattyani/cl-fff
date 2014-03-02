@@ -384,28 +384,26 @@
 	 ;(object (object dispatcher))
 	 (slot (slot dispatcher)))
     (html:html
-     ((:div :class "modal-dialog")
-      ((:div :class "modal-content")
-       ((:div :class "modal-header")
-        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
-        ((:h4 :class "modal-title")
-         (:translate (meta::get-value-title slot)
-                     :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))))
-       ((:div :class "modal-body")
-        (:p (:translate (meta::get-value-text slot)))
-        (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
-        ((:div :class "list-group")
-         (when dispatcher
-          (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
-             do (html:html
-                 ((:a :class "list-group-item" :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
-                  (html:esc (meta::short-description object)))))
-          (when (meta::null-allowed (slot dispatcher))
-            (html:html "&nbsp;&nbsp;"
-                       ((:a :href "javascript:f42('nil');")
-                        (:translate '(:en "None of these choices" :fr "Aucun de ces choix" :sp "Ninguna de estas opciones"))))))))
-       ((:div :class "modal-footer")
-        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))))
+     ((:div :class "modal-header")
+      ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+      ((:h4 :class "modal-title")
+       (:translate (meta::get-value-title slot)
+                   :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))))
+     ((:div :class "modal-body")
+      (:p (:translate (meta::get-value-text slot)))
+      (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
+      ((:div :class "list-group")
+       (when dispatcher
+         (loop for object in (funcall (meta::get-object-func (slot dispatcher))(object dispatcher))
+            do (html:html
+                ((:a :class "list-group-item" :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                 (html:esc (meta::short-description object)))))
+         (when (meta::null-allowed (slot dispatcher))
+           (html:html "&nbsp;&nbsp;"
+                      ((:a :href "javascript:f42('nil');")
+                       (:translate '(:en "None of these choices" :fr "Aucun de ces choix" :sp "Ninguna de estas opciones"))))))))
+     ((:div :class "modal-footer")
+      ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))
 
 
 (defun bs-std-pick-treeview-html-fn (dispatcher)
@@ -427,8 +425,6 @@
 	   (slot (interface::slot dispatcher))
 	   (null-allowed (meta::null-allowed (slot dispatcher))))
       (html:html
-     ((:div :class "modal-dialog")
-      ((:div :class "modal-content")
        ((:link :rel "stylesheet" :href "/static/css/treeview.css"))
        ((:div :class "modal-header")
         ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
@@ -446,7 +442,7 @@
                                       :sp "Ninguna de estas opciones")))))))
        ((:div :class "modal-footer")
         ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))
-       ((:script :src "/static/js/treeview.js"))))))))
+       ((:script :src "/static/js/treeview.js"))))))
 
 (defvar %bs-tree-id% 0)
 
@@ -629,31 +625,29 @@
       (with-output-to-request (request)
         (html::html-to-stream
          *request-stream*
-         ((:div :class "modal-dialog")
-          ((:div :class "modal-content")
-           ((:div :class "modal-header")
-            ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
-            ((:h4 :class "modal-title")
-             (:if (> (length (objects-to-delete dispatcher)) 1)
-                  (:translate '(:en "Do you want to remove:"
-                                :sp "Está seguro de querer eliminar:"
-                                :fr "Voulez vous vraiment supprimer:"))
-                  (:translate '(:en "Do you want to remove:"
-                                :sp "Está seguro de querer eliminar:"
-                                :fr "Voulez vous vraiment supprimer:")))))
-           ((:div :class "modal-body")
+         ((:div :class "modal-header")
+          ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+          ((:h4 :class "modal-title")
+           (:if (> (length (objects-to-delete dispatcher)) 1)
+                (:translate '(:en "Do you want to remove:"
+                              :sp "Está seguro de querer eliminar:"
+                              :fr "Voulez vous vraiment supprimer:"))
+                (:translate '(:en "Do you want to remove:"
+                              :sp "Está seguro de querer eliminar:"
+                              :fr "Voulez vous vraiment supprimer:")))))
+         ((:div :class "modal-body")
                                         ;   (:p (:translate (meta::get-value-text slot)))
-            (:jscript "function f42(d){Fck('" item "',d);$('#GlobalModal').modal('hide');};")
-            (dolist (object (objects-to-delete dispatcher))
-              (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
-           ((:div :class "modal-footer")
-            (:when not-linked-value
-              ((:div :align "center")
-               ((:p :class "bg-danger")
-                ((:span :class "glyphicon glyphicon-warning-sign")) " This cannot be undone.")))
-             ((:button :type "button" :class (if not-linked-value "btn btn-danger" "btn btn-primary")
-                       :onclick "f42('30000')" :data-dismiss "modal") "Yes - Remove")
-             ((:button :type "button" :class "btn btn-default" :onclick "f42('30001')" :data-dismiss "modal") "No - Cancel"))))))))
+          (:jscript "function f42(d){Fck('" item "',d);$('#GlobalModal').modal('hide');};")
+          (dolist (object (objects-to-delete dispatcher))
+            (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
+         ((:div :class "modal-footer")
+          (:when not-linked-value
+            ((:div :align "center")
+             ((:p :class "bg-danger")
+              ((:span :class "glyphicon glyphicon-warning-sign")) " This cannot be undone.")))
+          ((:button :type "button" :class (if not-linked-value "btn btn-danger" "btn btn-primary")
+                    :onclick "f42('30000')" :data-dismiss "modal") "Yes - Remove")
+          ((:button :type "button" :class "btn btn-default" :onclick "f42('30001')" :data-dismiss "modal") "No - Cancel"))))))
     t)
 
 (interface::add-named-url "/bs-obj-del.html" 'bs-obj-del-request-handler)
