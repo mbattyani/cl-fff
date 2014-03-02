@@ -624,38 +624,37 @@
     (when (and link item) (setf dispatcher (gethash item (dispatchers link))))
     (let* ((*session* (session link))
            (*user* (user *session*))
-           (*country-language* (country-language *session*)))
+           (*country-language* (country-language *session*))
+           (not-linked-value (not (meta::linked-value (slot dispatcher)))))
       (with-output-to-request (request)
         (html::html-to-stream
          *request-stream*
          ((:div :class "modal-dialog")
-      ((:div :class "modal-content")
-       ((:div :class "modal-header")
-        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
-        ((:h4 :class "modal-title")
-         (:if (> (length (objects-to-delete dispatcher)) 1)
-                      (:translate '(:en "Do you want to remove these objects:"
-                                    :sp "Está seguro de querer eliminar estos objetos:"
-                                    :fr "Voulez vous vraiment supprimer ces objets:"))
-                      (:translate '(:en "Do you want to remove this object:"
-                                    :sp "Está seguro de querer eliminar este objeto:"
-                                    :fr "Voulez vous vraiment supprimer cet objet:")))))
-       ((:div :class "modal-body")
-     ;   (:p (:translate (meta::get-value-text slot)))
-        (:jscript "function f42(d){Fck('" item "',d);$('#GlobalModal').modal('hide');};")
-        (dolist (object (objects-to-delete dispatcher))
-               (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br))
-        ((:div :align "center")
-             ((:div :class "call" :data-value "30000")
-              (:translate '(:en "Yes" :fr "Oui" :sp "Si")))
-             "&nbsp;&nbsp;&nbsp;&nbsp;"
-             ((:div :class "call" :data-value "30001")
-              (:translate '(:en "No" :fr "Non" :sp "No")))
-             ))
-       ((:div :class "modal-footer")
-        ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))
-       (:jscript "$('div.call').click(function(){f42($(this).data('value'))});"))))))
-    t))
+          ((:div :class "modal-content")
+           ((:div :class "modal-header")
+            ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+            ((:h4 :class "modal-title")
+             (:if (> (length (objects-to-delete dispatcher)) 1)
+                  (:translate '(:en "Do you want to remove:"
+                                :sp "Está seguro de querer eliminar:"
+                                :fr "Voulez vous vraiment supprimer:"))
+                  (:translate '(:en "Do you want to remove:"
+                                :sp "Está seguro de querer eliminar:"
+                                :fr "Voulez vous vraiment supprimer:")))))
+           ((:div :class "modal-body")
+                                        ;   (:p (:translate (meta::get-value-text slot)))
+            (:jscript "function f42(d){Fck('" item "',d);$('#GlobalModal').modal('hide');};")
+            (dolist (object (objects-to-delete dispatcher))
+              (html:html "&nbsp;&nbsp;&nbsp;&nbsp;" (html:esc (meta:short-description object)) :br)))
+           ((:div :class "modal-footer")
+            (:when not-linked-value
+              ((:div :align "center")
+               ((:p :class "bg-danger")
+                ((:span :class "glyphicon glyphicon-warning-sign")) " This cannot be undone.")))
+             ((:button :type "button" :class (if not-linked-value "btn btn-danger" "btn btn-primary")
+                       :onclick "f42('30000')" :data-dismiss "modal") "Yes - Remove")
+             ((:button :type "button" :class "btn btn-default" :onclick "f42('30001')" :data-dismiss "modal") "No - Cancel"))))))))
+    t)
 
 (interface::add-named-url "/bs-obj-del.html" 'bs-obj-del-request-handler)
 
