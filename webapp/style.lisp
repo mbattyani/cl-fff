@@ -48,10 +48,13 @@
      (:when (is-bootstrap *frontend*)
        ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap.min.css"))
        ((:link :rel "stylesheet" :href "/static/bootstrap/bootstrap-theme.min.css"))
+       ((:link :rel "stylesheet" :href "/static/libs/bs-datetimepicker/bootstrap-datetimepicker.min.css"))
        ((:link :rel "stylesheet" :href "/static/css/fcweb-bs.css"))
-       ((:script :src "/static/jquery/jquery.js"))
-       ((:script :src "/static/bootstrap/bootstrap.min.js")))
-     #+nil((:script :src "/static/fgt.js"))
+       ((:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"))
+;       (:jscript "window.jQuery || document.write('<script src=\"/static/jquery/jquery.js\"></script>')")
+       ((:script :src "/static/bootstrap/bootstrap.min.js"))
+       ((:script :src "/static/libs/moment.js/moment.min.js"))
+       ((:script :src "/static/libs/bs-datetimepicker/bootstrap-datetimepicker.min.js")))
      ((:script :src "/static/fractal.js"))))
 
 (defmethod insert-global-modal (app page)
@@ -96,8 +99,7 @@
         (gen-breadcrumbs app page *object*)
         :use-ui-ws
         (funcall (content-func page))))
-     (insert-page-footer app page)
-     #+nil((:script :src "/static/fractal-ws.js"))))))
+     (insert-page-footer app page)))))
 
 (defun process-404-request (request)
   (let ((new-params nil))

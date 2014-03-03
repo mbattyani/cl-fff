@@ -119,21 +119,18 @@
   (if value
       (multiple-value-bind (s mn h d m y) 
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-	(let ((j-value (if (not (show-time item))
-                           (format nil "~2,'0d/~2,'0d/~d" d m y)
-			   (if (show-date item)
-                               (format nil "~2,'0d/~2,'0d/~d ~2,'0d:~2,'0d:~2,'0d" d m y h mn s)
-                               (format nil "~2,'0d:~2,'0d:~2,'0d" h mn s)))))
-	  (concatenate 'string "x_.f826si('" (name item) "', '" j-value "');")))
-      (concatenate 'string "x_.f826si('" (name item) "', '');")))
+	(let ((iso-date (if (not (show-time item))
+                            (format nil "~4,'0d-~2,'0d-~2,'0d" y m d)
+                            (if (show-date item)
+                                (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" y m d h mn s)
+                                (format nil "~2,'0d:~2,'0d:~2,'0d" h mn s)))))
+	  (concatenate 'string "x_.$('#" (name item) "').data('DateTimePicker').setDate('" iso-date "');")))
+      (concatenate 'string "x_.$('#" (name item) "').data('DateTimePicker').setDate('');")))
 
 (defmethod make-set-status-javascript ((item bs-date) status slot)
   (when (modifiable-p *dispatcher*)
-    (if status
-	(concatenate 'string
-		     "x_.fgt('" (name item) "l').style.visibility='hidden';")
-	(concatenate 'string
-		     "x_.fgt('" (name item) "l').style.visibility='inherit';"))))
+    (concatenate 'string "x_.$('#" (name item) "').data('DateTimePicker')"
+                 (if status ".disable();" ".enable();"))))
 
 (defmethod slot-date-edit-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
@@ -144,142 +141,12 @@
       (let ((edit (make-instance 'bs-date :tooltip (meta::tooltip slot) :slot slot
 				 :show-time (getf attrs :show-time)
                                  :show-date (getf attrs :show-date t))))
-	(setf attrs (copy-list attrs))
-	(remf attrs :show-time)
-	(remf attrs :show-date)
-	`(html:html (:if (modifiable-p ,slot)
-			 (:progn
-			   ((:span :id ,(concatenate 'string (name edit) "d"))) " &nbsp;"
-                           " "
-                           #+nil((:a :id ,(concatenate 'string (name edit) "l") :href "#openModalCalendar" :onclick ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit)))
-                            "Change...")
-                           ((:modal-button :id ,(concatenate 'string (name edit) "l") :target "#openModalCalendar"
-                                           :onclick
-                                           #+nil,(format nil "$('#selectedTarget').load(make_src('/calendar.html', '~a'));" (name edit))
-                                           ,(format nil "set_src('calendar_iframe', '/calendar.html', '~a')" (name edit))) "Change...")
-                           ((:modal-window :id "openModalCalendar")
-                            (:body
-                             ((:iframe :width "200px" :height "280px" :id "calendar_iframe" :name "calendar_iframe")))))
-			 ((:span :id ,(concatenate 'string (name edit) "d")))))))))
-
-;(html:add-func-tag :slot-date-edit 'slot-date-edit-tag)
-
-(defun bs-html-month (item day month year show-time)
-  (let ((first-week-day (first-week-day month year))
-	(last-day (last-day month year))
-	(time (if show-time 
-		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
-		  "');"))
-        (div-class (princ (gensym "divclass"))))
-    (html:html
-     #+nil (:jscript "window.focus();function f42(d){if (d == '') window.opener.Fch('" item "','nil');else window.opener.Fch('" item "',d+'/" month "/" year time
-	       "window.close();};")
-      ((:script :src "https://code.jquery.com/jquery.js"))
-      (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.$('#openModalCalendar').modal('hide');};")
-       ;f42($(this).text());
-          
-     ((:table :class "calt" :align "center")
-      (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
-             (html:html ((:th :class "calh") day))))
-      "<tr>"
-      (loop for d from (- first-week-day)
-	    for col from 0
-	    until (and (> d last-day)(= (mod col 7) 0))
-	    do (html:html (:if (or (< d 1)(> d last-day))
-			    ((:td :class "cald"))
-			    ((:td :class "cald" :insert-string (if (= day d) "style='background-color:#ffffff';" ""))
-                             ((:div :fformat (:class "~a" div-class)) d)
-                             #+nil((:a :fformat (:href "javascript:f42(~a);" d)) d)))
-			  (:when (= (mod col 7) 6) "</tr>"))))
-     (:jscript "$('div." div-class "').click(function(){f42($(this).text())});")
-     )))
-
-(defun bs-calendar-request-handler (request)
-      (decode-posted-content request)
-      (let* ((link-name (cdr (assoc "link" (posted-content request) :test 'string=)))
-	     (link (gethash link-name *http-links*))
-	     (item (cdr (assoc "item" (posted-content request) :test 'string=)))
-	     (year (cdr (assoc "year" (posted-content request) :test 'string=)))
-	     (month (cdr (assoc "month" (posted-content request) :test 'string=)))
-             (day nil)
-	     (hour (cdr (assoc "hour" (posted-content request) :test 'string=)))
-	     (mn (cdr (assoc "mn" (posted-content request) :test 'string=)))
-	     (sec (cdr (assoc "sec" (posted-content request) :test 'string=)))
-	     (dispatcher (when link (gethash item (dispatchers link))))
-	     (*session* (session link))
-	     (*user* (user *session*))
-	     (*country-language* (country-language *session*)))
-	(setf year  (when year (parse-integer year)))
-	(setf month (when month (parse-integer month)))
-	(setf hour (when hour (parse-integer hour :junk-allowed t)))
-	(setf mn (when mn (parse-integer mn :junk-allowed t)))
-	(setf sec (when sec (parse-integer sec :junk-allowed t)))
-	(multiple-value-bind (s min h d m y) 
-            (if meta::*GMT-time*
-                (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))
-                                           (get-universal-time)) 0)
-                (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))
-                                           (get-universal-time))))
-	  (setf year (or year y))
-	  (setf month (or month m))
-	  (setf day d)
-	  (setf hour (or hour h))
-	  (setf mn (or mn min))
-	  (setf sec (or sec s)))
-	(with-output-to-request (request)
-	  (html::html-to-stream
-	   *request-stream*
-	   "<!doctype html>"
-           (:html
-             (:head
-              ((:meta :http-Equiv "Cache-Control" :Content "no-cache"))
-              ((:meta :http-Equiv "Pragma" :Content "no-cache"))
-              ((:meta :http-Equiv "Expires" :Content "0"))
-              (:title (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-              ((:link :rel "stylesheet" :type "text/css" :href "/static/cal.css"))
-              (:jscript "function f42(d){}"))
-             (:body
-              :br
-              (:h1 (:translate '(:en "Choose a day" :fr "Choisissez une date" :sp "Elija una fecha")))
-              ((:form :name "go" :method "post" :action "/calendar.html")
-               ((:input :name "item" :type "hidden" :value item))
-               ((:div :align "center")
-                ((:input :name "link" :type "hidden" :value link-name))
-                ((:select :name "month" :onchange "document.forms['go'].submit();")
-                 (loop for m from 1 to 12
-                    for name in (getf *month-names* *country-language* *default-month-names*)
-                    do (if (= month m)
-                           (html:ffmt "<option value=~d SELECTED>~d" m name)
-                           (html:ffmt "<option value=~d>~d" m name))))
-                "&nbsp;&nbsp;"
-                ((:select :name "year" :onchange "document.forms['go'].submit();")
-                 (loop for a from 1901 below 2100
-                    do (if (= year a)
-                           (html:ffmt "<option value=~d SELECTED>~d" a a)
-                           (html:ffmt "<option value=~d>~d" a a)))))
-               (html-month item day month year (show-time (item dispatcher)))
-	      
-               ((:div :align "center")
-                (:when (show-time (item dispatcher))
-                  ((:input :name "hour" :id "hour" :value (princ-to-string hour) :style "width:20px;"))
-                  ":"
-                  ((:input :name "mn" :id "mn" :value (princ-to-string mn) :style "width:20px;"))
-                  ":"
-                  ((:input :name "sec" :id "sec" :value (princ-to-string sec) :style "width:20px;")) :br
-                  (html:html "&nbsp;&nbsp;"
-                             ((:a :fformat (:href "javascript:f42(~d);" day))
-                              (:translate '(:en "Submit" :fr "Envoyer" :sp "Submit"))) :br))
-                (when (and dispatcher (meta::null-allowed (slot dispatcher)))
-                  (html:html "&nbsp;&nbsp;"
-                             ((:a :href "javascript:f42('');")
-                              (:translate '(:en "No date" :fr "Aucune date" :sp "Ninguna fecha"))) :br))
-                (#+nil(:button :type "button" :class "close" :data-dismiss "modal" :aria-hidden "true" )
-                 (:a :class "call" :href "javascript:parent.$('#openModalCalendar').modal('hide');") ;window.close();
-                 (:translate '(:en "Close" :fr "Fermer" :sp "Cerrar"))))
-               ))))))
-      t)
-
-;(interface::add-named-url "/calendar.html" 'calendar-request-handler)
+	`(html:html
+          ((:div :class "input-group date" :id ,(name edit))
+           ((:input :type "text" :class "form-control"))
+           ((:span :class "input-group-addon")((:span :class "glyphicon glyphicon-calendar"))))
+          (:jscript "$(function () { $('#" ,(name edit) "').datetimepicker();$('#" ,(name edit)
+                   "').data('DateTimePicker').enable();});"))))))
 
 ;;; ***** Combo *************
 (defclass bs-combo (html-item)
