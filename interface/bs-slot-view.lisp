@@ -370,13 +370,11 @@
                        ((:span :class "input-group-btn")
                         ((:a :class "btn btn-default" :data-toggle "modal"
                              :id ,(action-link obj-link)  :type "button"
-                             :data-target "#GlobalModal" #+nil "#global_modal"
-                             :onclick #+nil(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name obj-link))
-                             ,(format nil "show_remote_modal_content('~a','/pick-val.html', '~a');"
+                             :onclick ,(format nil "show_remote_modal_content('~a','/pick-val.html', '~a');"
                                                (meta::translate (meta::get-value-title slot)
                                                                 :default '(:en "Choose an object" :fr "Choisissez un objet" :sp "Elija un objeto"))
                                              (name obj-link)))
-                         ((:span :class "glyphicon glyphicon-expand")"&nbsp;Change..."))))))))))))
+                         ((:span :class "glyphicon glyphicon-edit")"&nbsp;Change..."))))))))))))
 
 (defun bs-std-pick-obj-html-fn (dispatcher)
   (let* ((item (item dispatcher))
@@ -512,12 +510,12 @@
              (on-click (format nil "show_remote_modal_content('','/pick-val.html', '~a');" (name item))))
         `(html:html
           ((:div :class "input-group")
-           ((:input :type "text " :class "form-control" :disabled "true" :id ,(name item) :onclick ,on-click ,@attrs))
+           ((:input :type "text " :class "form-control" :disabled "true" :id ,(name item) ,@attrs))
            ,@(when (action-link item)
                    `((:when (modifiable-p ,slot)
                        ((:span :class "input-group-btn")
                         ((:button :class "btn btn-default" :id ,(action-link item) :type "button" :onclick ,on-click)
-                         ((:span :class "glyphicon glyphicon-expand")"&nbsp;Change..."))))))))))))
+                         ((:span :class "glyphicon glyphicon-edit")"&nbsp;Change..."))))))))))))
 
 (defun bs-std-pick-val-html-fn (dispatcher)
   (let* ((item (item dispatcher))
@@ -588,14 +586,14 @@
 (defmethod make-set-value-javascript ((item bs-pick-multi-val) value slot)
   (if value
       (with-output-to-string (s)
-	(html:fast-format s "x_.fgt('~a').innerHTML='" (name item))
+	(html:fast-format s "x_.fgt('~a').value='" (name item))
 	(loop for (val . rest) on value do
 	      (write-string (html:quote-javascript-string (meta::short-description val)) s)
 	      (when rest (write-string ", " s)))
 	(write-string "';" s))
-      (html:fast-format nil "x_.fgt('~a').innerHTML='';" (name item))))
+      (html:fast-format nil "x_.fgt('~a').value='';" (name item))))
 
-(defmethod bs-pick-multi-val-action-fn (object value click-str)
+(defun bs-pick-multi-val-action-fn (object value click-str)
   (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
 	 (list (funcall (get-value-fn *dispatcher*) object)))
     (if (plusp value)
@@ -606,43 +604,63 @@
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
-		      :test #'string= :key #'c2mop:slot-definition-name))
-	  (vertical (getf attrs :vertical)))
+		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((item (make-instance 'html-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
-				 :choices-fn (or (meta::get-object-func slot) 'std-get-mval-choices)
-				 :action-fn 'html-pick-multi-val-action-fn
-				 :html-fn (or (meta::get-value-html-fn slot) 'std-pick-multi-val-html-fn))))
-      (setf attrs (copy-list attrs))
-      (remf attrs :vertical)
-	(if vertical
-	    `(html:html
-	      ((:table :width "100%")
-	       (:tr
-		(:td ((:span :id ,(name item) ,@attrs))))
-	       (:when (modifiable-p ,slot)
-		 (:tr
-		  ((:td :align "right" :valign "top")
-                   #+nil((:a :id ,(action-link item)
-			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
-				       (name item))) 
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-                   ((:modal-button :id ,(action-link item)
-                                   :target "#global_modal"
-                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                    ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-		   )))))
-	    `(html:html
-              ((:span :id ,(name item) ,@attrs))
-              (:when (modifiable-p ,slot)
-                #+nil((:a :id ,(action-link item)
-                     :href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
-                                    (name item)))
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
-                ((:modal-button :id ,(action-link item)
-                                   :target "#global_modal"
-                                 :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                 ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
+      (let* ((item (make-instance 'bs-pick-multi-val :tooltip (meta::tooltip slot) :slot slot
+                                  :choices-fn (or (meta::get-object-func slot) 'std-get-mval-choices)
+                                  :action-fn 'bs-pick-multi-val-action-fn
+                                  :html-fn (or (meta::get-value-html-fn slot) 'bs-std-pick-multi-val-html-fn))))
+        `(html:html
+          ((:div :class "input-group")
+           ((:input :type "text " :class "form-control" :disabled "true" :id ,(name item) ,@attrs))
+           ,@(when (action-link item)
+                   `((:when (modifiable-p ,slot)
+                       ((:span :class "input-group-btn")
+                        ((:button :class "btn btn-default" :id ,(action-link item) :type "button"
+                                  :onclick ,(format nil "show_remote_modal_content('','/pick-val.html', '~a');" (name item)))
+                         ((:span :class "glyphicon glyphicon-edit"))"&nbsp;Change...")))))))))))
+      #+nil
+        `(html:html
+          ((:span :id ,(name item) ,@attrs))
+          (:when (modifiable-p ,slot)
+          ((:modal-button :id ,(action-link item)
+                          :target "#global_modal"
+                          :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
+           ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))))
+
+(defun bs-std-pick-multi-val-html-fn (dispatcher)
+  (let* ((item (interface::item dispatcher))
+	 (item-name (interface::name item))
+	 (object (interface::object dispatcher))
+	 (slot (interface::slot dispatcher))
+	 (slot-value (funcall (get-value-fn dispatcher) object))
+	 (choices ()))
+    (html:html
+     ((:div :class "modal-header")
+      ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+      ((:h4 :class "modal-title")
+       (:translate (meta::get-value-title slot)
+                   :default '(:en "Choose" :fr "Choisissez" :sp "Elija"))))
+     ((:div :class "modal-body")
+      (:p (:translate (meta::get-value-text slot)))
+      (:jscript "function f42(i,st){if (st) Fck('" item-name "',i);"
+		"else Fck('" item-name "',-i);};")
+      ((:form :class "form-horizontal")
+       (when dispatcher
+         (loop for (text value) in (funcall (choices-fn dispatcher)(object dispatcher))
+              for i from 0
+            do (html:html
+                ((:div :class "form-group")
+                       ((:div :class "checkbox col-sm-offset-3 col-sm-7 col-md-7 col-lg-6")
+                        (:label
+                         ((:input :type "checkbox" :fformat (:id "CB~d" i)
+                                  :fformat (:onclick "f42(~d,CB~a.checked);" (1+ i) i)
+                                  :insert-string (if (member value slot-value :test #'equal) "CHECKED" "")))
+                         (:esc text)))))
+              (push value choices))
+         (setf (item-state dispatcher) (nreverse choices)))))
+     ((:div :class "modal-footer")
+      ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close")))))
 
 (defun bs-obj-del-request-handler (request)
   (decode-posted-content request)
