@@ -145,8 +145,10 @@
           ((:div :class "input-group date" :id ,(name edit))
            ((:input :type "text" :class "form-control"))
            ((:span :class "input-group-addon")((:span :class "glyphicon glyphicon-calendar"))))
-          (:jscript "$(function () { $('#" ,(name edit) "').datetimepicker();$('#" ,(name edit)
-                   "').data('DateTimePicker').enable();});"))))))
+          (:jscript "$(function () { $('#" ,(name edit) "').datetimepicker();
+                     $('#" ,(name edit) "').data('DateTimePicker').disable();
+                     $('#" ,(name edit)"').on('change.dp',function (e) {
+               Fch('" ,(name edit) "', 'ctime'+$('#" ,(name edit) "').data('DateTimePicker').getDate());});});"))))))
 
 ;;; ***** Combo *************
 (defclass bs-combo (html-item)
