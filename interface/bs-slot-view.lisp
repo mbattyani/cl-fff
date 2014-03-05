@@ -145,7 +145,10 @@
           ((:div :class "input-group date" :id ,(name edit))
            ((:input :type "text" :class "form-control"))
            ((:span :class "input-group-addon")((:span :class "glyphicon glyphicon-calendar"))))
-          (:jscript "$(function () { $('#" ,(name edit) "').datetimepicker();
+          (:jscript "$(function () { $('#" ,(name edit) "').datetimepicker("
+                    ,@(when (not (show-date edit)) '("{pickDate: false}"))
+                    ,@(when (not (show-time edit)) '("{pickTime: false}"))
+                ");
                      $('#" ,(name edit) "').data('DateTimePicker').disable();
                      $('#" ,(name edit)"').on('change.dp',function (e) {
                Fch('" ,(name edit) "', 'ctime'+$('#" ,(name edit) "').data('DateTimePicker').getDate());});});"))))))
