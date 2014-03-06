@@ -119,7 +119,8 @@
   (if value
       (multiple-value-bind (s mn h d m y) 
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
-	(let ((iso-date (if (not (show-time item))
+	(let ((iso-date (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" y m d h mn s)
+                #+nil(if (not (show-time item))
                             (format nil "~4,'0d-~2,'0d-~2,'0d" y m d)
                             (if (show-date item)
                                 (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" y m d h mn s)
