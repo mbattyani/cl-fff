@@ -383,7 +383,7 @@
              (on-click (format nil "show_remote_modal_content('','/pick-val.html', '~a');" (name item))))
         `(html:html
           ((:div :class "input-group")
-           ((:input :type "text " :class "form-control" :disabled "true" :id ,(name item) ,@attrs))
+           ((:input :type "text" :class "form-control" :disabled "true" :id ,(name item) ,@attrs))
            ,@(when (action-link item)
                    `((:when (modifiable-p ,slot)
                        ((:span :class "input-group-btn")
@@ -429,26 +429,79 @@
   (html:fast-format nil "x_.fgt('~a').style.backgroundColor='~a';x_.fgt('~a').value='~a';"
 		    (name item) value (name item) value))
 
+(defmethod make-set-status-javascript ((item bs-pick-color) status slot)
+  (when (modifiable-p *dispatcher*)
+    (when (action-link item)
+      (if status
+	  (concatenate 'string "x_.fgt('" (action-link item) "').disabled=true;")
+	  (concatenate 'string "x_.fgt('" (action-link item) "').disabled=false;")))))
+
 (defmethod slot-pick-color-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
   (destructuring-bind (slot-name . attrs) attributes
     (let ((slot (find (symbol-name slot-name) (c2mop:class-slots *current-class*)
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
-      (let ((item (make-instance 'bs-pick-color :tooltip (meta::tooltip slot) :slot slot
-				 :choices-fn t
-				 :html-fn (or (meta::get-object-func slot) 'std-pick-color-html-fn))))
-	`(html:html ((:input :type "text" :id ,(name item) :readonly "true" ,@attrs))
-	  (:when (modifiable-p ,slot)
-	    #+nil((:a :id ,(action-link item)
-		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
-				(name item))) 
-             ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
-            ((:modal-button :id ,(action-link item)
-                            :target "#global_modal"
-                            :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
-            ))))))
+      (let* ((item (make-instance 'bs-pick-color :tooltip (meta::tooltip slot) :slot slot
+                                  :choices-fn t
+                                  :html-fn (or (meta::get-value-html-fn slot) 'bs-std-pick-color-html-fn)))
+             (on-click (format nil "show_remote_modal_content('','/pick-val.html', '~a');" (name item))))
+        `(html:html
+          ((:div :class "input-group")
+           ((:input :type "text" :class "form-control" :disabled "true" :id ,(name item) ,@attrs))
+           (:when (modifiable-p ,slot)
+             ((:span :class "input-group-btn")
+              ((:button :class "btn btn-default" :id ,(action-link item) :type "button" :onclick ,on-click)
+               ((:span :class "glyphicon glyphicon-edit")"&nbsp;Change..."))))))))))
+  
+
+(defun bs-std-pick-color-html-fn (dispatcher)
+  (flet ((color-td (r g b)
+	   (let ((color (format nil "#~2,'0x~2,'0x~2,'0x" r g b)))
+	     (html:html ((:td :bgcolor color :fformat (:onclick "f42('~a');" color))"&nbsp;&nbsp;&nbsp;")))))
+    (let* ((item (item dispatcher))
+           (item-name (name item))
+                                        ;(object (object dispatcher))
+           (slot (slot dispatcher))
+           (colors nil))
+      (dotimes (r 6)
+        (dotimes (g 6)
+          (dotimes (b 6)
+            (push (list (* r 51) (* g 51) (* b 51)(luminance r g b)) colors))))
+      (setf colors (sort colors #'> :key 'fourth))
+      (html:html
+       ((:div :class "modal-header")
+        ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+        ((:h4 :class "modal-title")
+         (:translate (meta::get-value-title slot)
+                     :default '(:en "Choose a color" :fr "Choisissez une couleur"))))
+       ((:div :class "modal-body")
+        (:p (:translate (meta::get-value-text slot)))
+        (:jscript "function f42(d){Fch('" item-name "',d);$('#GlobalModal').modal('hide');};")
+        ((:div :class "list-group")
+         (:when dispatcher
+           ((:table :class "pcolt" :align "center")
+            (loop for x below 18
+	       for row = (loop repeat 12 collect (pop colors))
+	       for bl = (round (* 255 (- 1 (/ x 17))))
+	       do
+	       (html:html
+		(:tr
+		 (color-td  bl bl bl)
+		 (color-td  bl  0  0)
+		 (color-td   0 bl  0)
+		 (color-td   0  0 bl)
+		 (color-td   0 bl bl)
+		 (color-td  bl  0 bl)
+		 (color-td  bl bl  0)
+		 (loop for (r g b nil) in row
+		       do (color-td r g b))))))))
+      (when (meta::null-allowed (slot dispatcher))
+        (html:html "&nbsp;&nbsp;"
+                   ((:a :href "javascript:f42('nil');")
+                    (:translate '(:en "None of these choices" :fr "Aucun de ces choix" :sp "Ninguna de estas opciones"))))))
+     ((:div :class "modal-footer")
+      ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))))
 
 ;;; slot-pick-multi-val
 
