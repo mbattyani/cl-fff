@@ -214,11 +214,9 @@
                                                     ,@(meta::html-tag-attributes slot)))))
                        (t
                         `((:div :class "form-group")
-                          ((:label :class "control-label col-sm-3") ,user-name ,unit)
-                          ((:div :class "col-sm-7")
-                           ((:slot-list ,(c2mop:slot-definition-name slot)
-                                        ,@(html:merge-attributes
-                                           (meta::html-tag-attributes slot) '(:class "dvl")))))))))
+                          ((:slot-list ,(c2mop:slot-definition-name slot)
+                                       ,@(html:merge-attributes
+                                          (meta::html-tag-attributes slot) '(:class "dvl"))))))))
                     ((meta::fc-class-p (meta::value-type slot))
                      (case (meta::view-type slot)
                        ((:embed t)
