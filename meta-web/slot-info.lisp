@@ -221,10 +221,10 @@
 	  for text = (meta::translate (second (assoc keyword choices)))
 	  collect (list text position))))
 
-(defparameter *value-types* '(:boolean boolean :string string :date :date :time-of-day :time-of-day 
-			      :utime :universal-time :integer integer :decimal :decimal :float float
-			      :object :object :other-type :other-type :timestamp :timestamp :symbol symbol
-			      :color meta::color :ip-address :ip-address))
+(defparameter *value-types* '(:boolean boolean :string string :date meta::date :time-of-day meta::time-of-day
+			      :utime meta::universal-time :integer integer :decimal meta::decimal :float float
+			      :object :object :other-type :other-type meta::timestamp meta::timestamp :symbol symbol
+			      :color meta::color :ip-address meta::ip-address))
 
 (defun get-value-type (slot-info)
   (case (value-type slot-info)

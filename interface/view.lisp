@@ -168,14 +168,14 @@
                      (std-row `((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
                                   ,(c2mop:slot-definition-name slot) :class "dvcve"
                                   ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :date)
+                    ((eq (meta::value-type slot) 'meta::date)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot) :class "dvcve"
                                                  ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :universal-time)
+                    ((eq (meta::value-type slot) 'meta::universal-time)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t :class "dvcve"
                                                  ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :time-of-day)
+                    ((eq (meta::value-type slot) 'meta::time-of-day)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t :show-date nil
                                                  ,@(meta::html-tag-attributes slot)))))
@@ -243,14 +243,14 @@
                      (std-row `((,(if (eq (meta::view-type slot) :medit) :slot-medit :slot-edit)
                                   ,(c2mop:slot-definition-name slot)
                                   ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :date)
+                    ((eq (meta::value-type slot) 'meta::date)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :universal-time)
+                    ((eq (meta::value-type slot) 'meta::universal-time)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t
                                                  ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :time-of-day)
+                    ((eq (meta::value-type slot) 'meta::time-of-day)
                      (std-row `((:slot-date-edit ,(c2mop:slot-definition-name slot)
                                                  :show-time t :show-date nil
                                                  ,@(meta::html-tag-attributes slot)))))
