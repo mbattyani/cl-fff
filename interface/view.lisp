@@ -154,7 +154,7 @@
                     ((eq (meta::view-type slot) :named-slot-view)
                      (std-row `((,(meta::slot-view-name slot) ,(c2mop:slot-definition-name slot)
                                   ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :color)
+                    ((eq (meta::value-type slot) 'meta::color)
                      (std-row `((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
                                   ,(c2mop:slot-definition-name slot) :class "dvcve"
                                   ,@(meta::html-tag-attributes slot)))))
@@ -229,7 +229,7 @@
                     ((eq (meta::view-type slot) :named-slot-view)
                      (std-row `((,(meta::slot-view-name slot) ,(c2mop:slot-definition-name slot)
                                   ,@(meta::html-tag-attributes slot)))))
-                    ((eq (meta::value-type slot) :color)
+                    ((eq (meta::value-type slot) 'meta::color)
                      (std-row `((,(if (eq (meta::view-type slot) :edit) :slot-edit :slot-pick-color)
                                   ,(c2mop:slot-definition-name slot)
                                   ,@(meta::html-tag-attributes slot)))))

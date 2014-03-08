@@ -224,7 +224,7 @@
 (defparameter *value-types* '(:boolean boolean :string string :date :date :time-of-day :time-of-day 
 			      :utime :universal-time :integer integer :decimal :decimal :float float
 			      :object :object :other-type :other-type :timestamp :timestamp :symbol symbol
-			      :color :color :ip-address :ip-address))
+			      :color meta::color :ip-address :ip-address))
 
 (defun get-value-type (slot-info)
   (case (value-type slot-info)
