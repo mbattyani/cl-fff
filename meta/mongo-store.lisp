@@ -134,8 +134,6 @@
          (document (find-mongo-document store object))
          (*read-eval* nil)
          (*package* (find-package "COMMON-LISP-USER")))
-    (unless document
-      (break))
     (init-object-from-document object document)))
 
 (defmethod read-object-from-store ((store mongo-store) id)

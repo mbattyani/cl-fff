@@ -275,21 +275,3 @@
       ,@(cdr forms))))
 
 (html::add-func-tag :unless-groups 'unless-groups-tag)
-
-;;; **** when-frontends *****
-(defun when-frontends-tag (attributes forms)
-  (declare (ignore attributes))
-  `(html:html
-    (:when (find *frontend* ,(car forms))
-      ,@(cdr forms))))
-
-(html::add-func-tag :when-frontends 'when-frontends-tag)
-
-;;; **** unless-frontends *****
-(defun unless-frontends-tag (attributes forms)
-  (declare (ignore attributes))
-  `(html:html
-    (:unless (find *frontend* ,(car forms))
-      ,@(cdr forms))))
-
-(html::add-func-tag :unless-frontends 'unless-frontends-tag)

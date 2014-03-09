@@ -25,7 +25,7 @@
 
 #|
 ;object record format
-;<object> ::= <type=object-tag(byte)><class-id(long)><id(long)><size(long)>{<slot>}*
+;<object> ::= <type=object-tag(byte)><class-id(long)><id(long)><size(long)>{<slot>}*!
 ;<object> ::= <type=anonymous-object-tag(byte)><class-id(long)><size(long)>{<slot>}*
 ;<slot> ::= <slot-name><type(byte)><value>
 ;<type> ::= void || boolean || long || double || string || symbol
@@ -80,9 +80,7 @@
 	 (list    (write-tag #.+list-tag+)
 		  (dolist (v value) (write-value-as-ascii v integer-as-id))
 		  (write-tag #.+end-of-list-tag+))
-	 (root-object (when (eq (id value) :anonymous)
-                        (break))
-                      (if (eq (id value) :anonymous)
+	 (root-object (if (eq (id value) :anonymous)
                           (write-anonymous-fc-object-as-ascii value)
                           (write-tag-value #.+linked-object-tag+ (id value)))))
       (write-tag #.+void-tag+)))
