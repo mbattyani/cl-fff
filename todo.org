@@ -1,6 +1,7 @@
 #+STARTUP: indent
 #+STARTUP: hidestars
-* various things to be done in the webapp framework
+
+* various things to be done in CL-FFF
 * meta
 ** optimize mongodb
 ** think about large lists
@@ -9,11 +10,14 @@ CLOSED: [2013-12-02 Mon 10:45]
 :LOGBOOK:
 - State "DONE"       from ""           [2013-12-02 Mon 10:45]
 :END:
-** TODO (re)implement anonymous objects in ascii-store and mongodb
+** DONE (re)implement anonymous objects in ascii-store and mongodb
+CLOSED: [2014-03-09 Sun 22:34]
 :LOGBOOK:
+- State "DONE"       from "TODO"       [2014-03-09 Sun 22:34]
 - State "TODO"       from "CANCELLED"  [2014-01-05 Sun 16:00]
 :END:
-Not so simple in the current version of the FW
+Real anonymous objects are not so simple in the current version of the FW so this has been replaced
+by a read/write time anonymous storage with an instanciation in a memory store as a non anonymous object.
 * html
 ** bootstrap components
 *** DONE tabs/pills
@@ -22,67 +26,153 @@ CLOSED: [2013-12-02 Mon 10:46]
 - State "DONE"       from ""           [2013-12-02 Mon 10:46]
 :END:
 * interface
-** de-obfuscate the javascript functions and variable names
+** de-obfuscate the javascript functions and variable names in fractal.js
+** using jQuery in place of the manual and probably too old JS
+** rewriting some JS functions in the lisp html generation using parenscript?
 ** http-link
 *** use standard XMLHttpRequest library
 *** better security
+*** removing the hidden iframe
+probably all the browsers even old ones can use XHR now so we could replace it by XHR calls
 ** ws-link
+*** put it back
+*** removing the hidden iframe
+if the browser can use ws there is really no need for iframes
 *** optimizations
 *** better security
 ** DONE add support for multiple frontends
-CLOSED: [2013-12-02 Mon 10:43]
+CLOSED: [2014-03-09 Sun 22:40]
 :LOGBOOK:
-- State "DONE"       from ""           [2013-12-02 Mon 10:43]
+- State "DONE"       from "TODO"       [2014-03-09 Sun 22:40]
 :END:
+The base mechanism is done but it's still experimental. 
 ** new widgets
-*** password with confirmation
+*** DONE password with confirmation
+CLOSED: [2014-03-09 Sun 22:42]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:42]
+:END:
 *** image
 *** upload-file
 ** bootstrap
-*** linked-html
-*** html-push-button
+*** DONE linked-html
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
+*** DONE html-push-button
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
 *** html-fn-link
 *** DONE html-edit
 CLOSED: [2013-12-20 Fri 23:09]
 :LOGBOOK:
 - State "DONE"       from ""           [2013-12-20 Fri 23:09]
 :END:
-*** html-span
+*** DONE html-span
+CLOSED: [2014-03-09 Sun 22:42]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:42]
+:END:
 *** html-medit
-*** html-date
+*** DONE html-date
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
 - date only
 - date + time
 - time only
-*** html-combo
-*** html-check-box
+*** DONE html-combo
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
+*** DONE html-check-box
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
 *** html-slot-list
-*** html-pick-val
-*** html-pick-multi-val
-*** html-obj-link
-*** html-pick-color
-*** slot-table
+*** DONE html-pick-val
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
+*** DONE html-pick-multi-val
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
+*** DONE html-obj-link
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
+*** DONE html-pick-color
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
+*** DONE slot-table
+CLOSED: [2014-03-09 Sun 22:43]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:43]
+:END:
 *** obj-fn-table
 *** obj-fn
 *** object-dialog
-*** date picker
-*** time picker
-*** date/time picker
+*** DONE date picker
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
+*** DONE time picker
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
+*** DONE date/time picker
+CLOSED: [2014-03-09 Sun 22:44]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:44]
+:END:
 
 ** lists
 *** using slick-grid?
 ** External widgets
 *** Upload files/photos
 *** Photo galery
-* web-app demo
-** choosing an application
-- task clocking
-- multi-user task management
-- event organizer
-** adding standard objects
-*** app-admin
-*** user
+* web-app
+** DONE Adding webapp layer
+CLOSED: [2014-03-09 Sun 22:46]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:46]
+:END:
+** DONE adding standard objects
+CLOSED: [2014-03-09 Sun 22:46]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:46]
+:END:
+*** DONE app-admin
+CLOSED: [2014-03-09 Sun 22:45]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:45]
+:END:
+*** DONE user
+CLOSED: [2014-03-09 Sun 22:45]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:45]
+:END:
+** quickstart application skeleton
 * meta-web
-** new look and feel (bootstrap)
+** DONE new look and feel (bootstrap)
+CLOSED: [2014-03-09 Sun 22:45]
+:LOGBOOK:
+- State "DONE"       from ""           [2014-03-09 Sun 22:45]
+:END:
 ** remove deprecated features
 ** DONE adding an app-admin object
 CLOSED: [2013-12-02 Mon 10:44]
@@ -91,3 +181,15 @@ CLOSED: [2013-12-02 Mon 10:44]
 :END:
 * utilities/misc
 ** debug email
+* usability
+** an understandable and less boring readme
+*** what is it?
+*** history section
+*** how to start
+*** FAQ
+** exporting and documenting symbols
+** documentation
+** tutorials
+** how-to
+** example applications?
+** live demos?
