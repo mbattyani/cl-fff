@@ -140,7 +140,7 @@ function SLk2(v456, v457, v458, v459){
   doc.forms['go'].submit();
 };
 
-function F6451(){
+function F3Watchdog(){
     if (F3TimeOutCounter >= v683) {
         var x = getxh();
         if (x)

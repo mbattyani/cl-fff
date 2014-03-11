@@ -370,9 +370,9 @@ function SLk2(v456, v457, v458, v459){
     doc.forms['go'].submit();
 };
 
-function F6451()
+function F3Watchdog()
 {
-    // console.log("F6451: " + F3TimeOutCounter + " " + v683);
+    // console.log("F3Watchdog: " + F3TimeOutCounter + " " + v683);
   if (F3TimeOutCounter >= v683)
     {
       var x = getxh();

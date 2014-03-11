@@ -3,7 +3,7 @@
 ;; explanations for fractal.js compression and obfuscation
 ;; F3TimeOutCounter and v683 are time out and watchdog counters
 ;; F3IncTimeoutCounter() is increment timeout counter
-;; F6451() is watchdog functions
+;; F3Watchdog() is watchdog function
 ;; F6514(str) is send-string-to-server(string)
 ;; v685 is URL postfix for watchdog
 ;; F3PullURL is URL pull for watchdog
@@ -287,11 +287,11 @@
   (destructuring-bind (&optional views) forms
     `(let ((http-link-url (url-pull (make-instance 'http-link :session *session* :views ,views))))
        (html::optimize-progn
-         ,(html::html-gen `(:jscript "window.setInterval('F6451()', 5000);"
+         ,(html::html-gen `(:jscript "window.setInterval('F3Watchdog()', 5000);"
                                           (html:ffmt "F3PullURL=~s;" http-link-url)))
          ,(html::html-gen `((:iframe :id "Lisp1" :name "Lisp1" :frameborder "0"
                                      :src http-link-url :scrolling "0" :style "width:1px;height:1px;")))
-         #+nil,(html::html-gen `(:jscript "F6451();"))))))
+         #+nil,(html::html-gen `(:jscript "F3Watchdog();"))))))
 
 ;example : :connect
 (html::add-func-tag :connect 'connect-tag)
