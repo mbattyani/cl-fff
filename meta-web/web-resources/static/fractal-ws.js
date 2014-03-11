@@ -84,7 +84,7 @@ function f825foc(name)
 }
 
 var F3TimeOutCounter=3651;
-var v683=3651;
+var F3WatchdogCounter=3651;
 var F3PullURL='';
 // var F3PushURL;
 var v685='';
@@ -372,14 +372,14 @@ function SLk2(v456, v457, v458, v459){
 
 function F3Watchdog()
 {
-    // console.log("F3Watchdog: " + F3TimeOutCounter + " " + v683);
-  if (F3TimeOutCounter >= v683)
+    // console.log("F3Watchdog: " + F3TimeOutCounter + " " + F3WatchdogCounter);
+  if (F3TimeOutCounter >= F3WatchdogCounter)
     {
       var x = getxh();
       if (x)
 	SLk('', '', '', F3PushURL);
       else
-	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=F3TimeOutCounter;
+	window.frames['Lisp1'].document.location.replace(F3PullURL);F3WatchdogCounter=F3TimeOutCounter;
     }
 };
 */

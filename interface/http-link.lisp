@@ -1,7 +1,7 @@
 (in-package #:interface)
 
 ;; explanations for fractal.js compression and obfuscation
-;; F3TimeOutCounter and v683 are time out and watchdog counters
+;; F3TimeOutCounter and F3WatchdogCounter are time out and watchdog counters
 ;; F3IncTimeoutCounter() is increment timeout counter
 ;; F3Watchdog() is watchdog function
 ;; F6514(str) is send-string-to-server(string)
