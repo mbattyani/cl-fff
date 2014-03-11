@@ -1,7 +1,7 @@
 (in-package #:interface)
 
 ;; explanations for fractal.js compression and obfuscation
-;; v684 and v683 are time out and watchdog counters
+;; F3TimeOutCounter and v683 are time out and watchdog counters
 ;; F6541() is increment timeout counter
 ;; F6451() is watchdog functions
 ;; F6514(str) is send-string-to-server(string)
@@ -10,7 +10,7 @@
 ;; F3SetPullURL() is set URL pull and http-link-id for watchdog
 ;; F3SetPushURL() is set URL push
 ;; F3SetSyncPacket() is set packet-sync
-;; F5146() is check page-packet-sync <= packet-sync
+;; F3CheckSyncPacket() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink
 ;; Fch is fire_on_change
 ;; Fck is fire_on_click
@@ -80,8 +80,8 @@
 		  (if queue
 		   (progn
 		     (setf (output-queue http-link) '())
-		     (incf (output-counter http-link));alert(window.F5146+'  '+ parent.F5146 + x_.F5146);
-		     (html:html-to-string (html:ffmt "if(x_.F5146(~d)){" (output-counter http-link)) ;; x_.F5146(~d)
+		     (incf (output-counter http-link));alert(window.F3CheckSyncPacket+'  '+ parent.F3CheckSyncPacket + x_.F3CheckSyncPacket);
+		     (html:html-to-string (html:ffmt "if(x_.F3CheckSyncPacket(~d)){" (output-counter http-link)) ;; x_.F3CheckSyncPacket(~d)
 					  (dolist (string (nreverse queue))
 					    (write-string string html:*html-stream*))
 					  "} ;" :crlf)) ;; {alert('nie jest wiekksze?WTF!?');}

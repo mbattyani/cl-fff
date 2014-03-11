@@ -83,7 +83,9 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var F3PullURL='';
+var F3TimeOutCounter=3651;
+var v683=3651;
+var F3PullURL='';
 // var F3PushURL;
 var v685='';
 var F3PacketSync=0;
@@ -101,7 +103,9 @@ function F3SetSyncPacket(v856){
     F3PacketSync=v856;
 };
 
-function F5146(v856){return F3PacketSync<v856;};
+function F3CheckSyncPacket(v856){
+    return F3PacketSync<v856;
+};
 
 
 
@@ -327,7 +331,7 @@ catch (e)
 
 /*
 function F6541(){
-    v684++;
+    F3TimeOutCounter++;
     window.status = '  ';
 };
 
@@ -368,14 +372,14 @@ function SLk2(v456, v457, v458, v459){
 
 function F6451()
 {
-    // console.log("F6451: " + v684 + " " + v683);
-  if (v684 >= v683)
+    // console.log("F6451: " + F3TimeOutCounter + " " + v683);
+  if (F3TimeOutCounter >= v683)
     {
       var x = getxh();
       if (x)
 	SLk('', '', '', F3PushURL);
       else
-	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=v684;
+	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=F3TimeOutCounter;
     }
 };
 */

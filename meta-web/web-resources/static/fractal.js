@@ -90,10 +90,10 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var F3PullURL=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
+var F3TimeOutCounter=3651;var v683=3651; var F3PullURL=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
 
 function F6541(){
-    v684++;
+    F3TimeOutCounter++;
     window.status = '  ';
 };
 
@@ -110,9 +110,11 @@ function F3SetSyncPacket(v856){
     F3PacketSync=v856;
 };
 
-function F5146(v856){return F3PacketSync<v856;};
-function SLk2(v456, v457, v458, v459)
-{
+function F3CheckSyncPacket(v856){
+    return F3PacketSync<v856;
+};
+
+function SLk2(v456, v457, v458, v459){
   var container;
   var containerName = 'F'+ FrameNb;
   FrameNb++;
@@ -138,15 +140,13 @@ function SLk2(v456, v457, v458, v459)
   doc.forms['go'].submit();
 };
 
-function F6451()
-{
-  if (v684 >= v683) 
-    {
-      var x = getxh();
-      if (x)
-	SLk('', '', '', F3PushURL);
-      else
-	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=v684;
+function F6451(){
+    if (F3TimeOutCounter >= v683) {
+        var x = getxh();
+        if (x)
+	    SLk('', '', '', F3PushURL);
+        else
+	    window.frames['Lisp1'].document.location.replace(F3PullURL);v683=F3TimeOutCounter;
     }
 };
 
