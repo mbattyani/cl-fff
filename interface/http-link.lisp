@@ -9,7 +9,6 @@
 ;; v686 is URL pull for watchdog
 ;; F5641() is set URL pull and http-link-id for watchdog
 ;; F5614() is set URL push
-;; v687 is packet-sync
 ;; F5164() is set packet-sync
 ;; F5146() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink

@@ -90,7 +90,7 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var v686=''; var F3PushURL; var v685=''; var v687=0;  var FrameNb = 12; var F3LinkId; var v690;
+var v684=3651;var v683=3651; var v686=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
 function F6541(){v684++;window.status = '  ';};
 function F5641(v856, LinkId){
     v686 = v856;
@@ -101,8 +101,8 @@ function F5614(PushURL){
     F3PushURL = PushURL;
 };
 
-function F5164(v856){v687=v856;};
-function F5146(v856){return v687<v856;};
+function F5164(v856){F3PacketSync=v856;};
+function F5146(v856){return F3PacketSync<v856;};
 function SLk2(v456, v457, v458, v459)
 {
   var container;
