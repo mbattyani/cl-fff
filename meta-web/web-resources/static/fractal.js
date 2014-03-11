@@ -90,9 +90,13 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var v686=''; var v688; var v685=''; var v687=0;  var FrameNb = 12; var v689; var v690;
+var v684=3651;var v683=3651; var v686=''; var v688; var v685=''; var v687=0;  var FrameNb = 12; var F3LinkId; var v690;
 function F6541(){v684++;window.status = '  ';};
-function F5641(v856, v857){v686=v856;v689=v857;};
+function F5641(v856, LinkId){
+    v686 = v856;
+    F3LinkId = LinkId;
+};
+
 function F5614(v856){v688=v856;};
 function F5164(v856){v687=v856;};
 function F5146(v856){return v687<v856;};
@@ -150,7 +154,7 @@ function f854(name, id)
 
 function open1(url, dx, dy, item)
 {
- v690 = window.open(url+'?link='+v689+'&item='+item,'pop','status=no,width='+dx+'px,height='+dy+'px,resizable=yes,scrollbars=yes');
+ v690 = window.open(url+'?link='+F3LinkId+'&item='+item,'pop','status=no,width='+dx+'px,height='+dy+'px,resizable=yes,scrollbars=yes');
 };
 
 function close()
@@ -284,7 +288,7 @@ function SLk(v456, v457, v458, v459)
 };
 
 function set_src(name, url, item) {
-    document.getElementById(name).setAttribute("src", url+'?link='+v689+'&item='+item);
+    document.getElementById(name).setAttribute("src", url+'?link='+F3LinkId+'&item='+item);
 }
 
 function show_modal_content(title, content) {
@@ -312,7 +316,7 @@ function show_remote_modal_content(title, url, item_id) {
   $(this).removeData('bs.modal');
 });
     modal.modal({
-        remote: url+'?link='+v689+'&item='+item_id,
+        remote: url+'?link='+F3LinkId+'&item='+item_id,
         hidden: false
 });
 }

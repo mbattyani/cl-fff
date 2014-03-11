@@ -87,7 +87,7 @@ var v684=3651;var v683=3651; var v686='';
 // var v688;
 var v685=''; 
 var v687=0;  
-var FrameNb = 12; var v689; var v690;
+var FrameNb = 12; var F3LinkId; var v690;
 
 
 /*
@@ -117,16 +117,16 @@ function f854(name, id){
 
 function open1(url, dx, dy, item)
 {
- v690 = window.open(url+'?link='+v689+'&item='+item,'pop','status=no,width='+dx+'px,height='+dy+'px,resizable=yes,scrollbars=yes');
+ v690 = window.open(url+'?link='+F3LinkId+'&item='+item,'pop','status=no,width='+dx+'px,height='+dy+'px,resizable=yes,scrollbars=yes');
 };
 
 
 function set_src(name, url, item) {
-    document.getElementById(name).setAttribute("src", url+'?link='+v689+'&item='+item);
+    document.getElementById(name).setAttribute("src", url+'?link='+F3LinkId+'&item='+item);
 }
 
 function make_src(url, item) {
-    return url+'?link='+v689+'&item='+item;
+    return url+'?link='+F3LinkId+'&item='+item;
 }
 
 function close()
@@ -144,7 +144,7 @@ function SendEvent(msg_type,name,value){
     // first send ID to get http-link, this should be fixed! get id form client
     msg = new Object();
     msg.type = "id";
-    msg.value = v689;
+    msg.value = F3LinkId;
     msg_stringify = JSON.stringify(msg);
     // alert ("ws.sends " + msg_stringify);
     ws.send(msg_stringify);
@@ -184,15 +184,15 @@ function send_id(){
     var msg;
     msg = new Object();
     msg.type = "id";
-    msg.value = v689;
+    msg.value = F3LinkId;
     ws.send(JSON.stringify(msg));
 };
 
 
 
 ws.onopen = function(){
-    if(v689){
-        console.log("ID: " + v689);
+    if(F3LinkId){
+        console.log("ID: " + F3LinkId);
         send_id();
     }
 };
@@ -215,12 +215,12 @@ ws.onerror = function(evt){
 };
 
 
-function F5641(v856, v857){
+function F5641(v856, LinkId){
     // sets pull  url    
     v686=v856; // sets url-pull
-    v689=v857; // sets interface-id
+    F3LinkId = LinkId; // sets interface-id
     if(ws.readyState===1){
-        console.log("in F5641, ID: " + v689 +", state: "+ ws.readyState);
+        console.log("in F5641, ID: " + F3LinkId +", state: "+ ws.readyState);
         send_id();
     }
 };
@@ -392,7 +392,7 @@ function SLk(v456, v457, v458, v459){
     var msg_stringify;
     msg = new Object();
     msg.type = "id";
-    msg.value = v689;
+    msg.value = F3LinkId;
     msg_stringify = JSON.stringify(msg);
     // alert ("ws.sends " + msg_stringify);
     ws.send(msg_stringify);

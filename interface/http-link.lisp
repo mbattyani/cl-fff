@@ -11,7 +11,6 @@
 ;; v688 is push URL
 ;; F5614() is set URL push
 ;; v687 is packet-sync
-;; v689 is http-link-id
 ;; F5164() is set packet-sync
 ;; F5146() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink
