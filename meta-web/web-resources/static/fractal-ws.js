@@ -91,7 +91,7 @@ var FrameNb = 12; var F3LinkId; var v690;
 
 
 /*
-function F5614(v856){
+function F3SetPushURL(v856){
 // sets push url
     F3PushURL=v856;
 };
@@ -379,7 +379,7 @@ function F6451()
 */
 /*
 function SLk(v456, v457, v458, v459){
-// v458 is set by F5614()
+// v458 is set by F3SetPushURL()
     var x = getxh();
     window.ble = x;
     if (!x) return SLk2(v456, v457, v458, v459);

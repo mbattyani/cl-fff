@@ -8,7 +8,7 @@
 ;; v685 is URL postfix for watchdog
 ;; F3PullURL is URL pull for watchdog
 ;; F3SetPullURL() is set URL pull and http-link-id for watchdog
-;; F5614() is set URL push
+;; F3SetPushURL() is set URL push
 ;; F5164() is set packet-sync
 ;; F5146() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink
@@ -89,7 +89,7 @@
   (when (output-sent http-link)
     (html:html (loop for string in (output-sent http-link)
 		     when string do (write-string string html:*html-stream*))
-	       (html:ffmt "x_.F5164(~d);x_.F3SetPullURL(~s, ~s);x_.F5614(~s);"
+	       (html:ffmt "x_.F5164(~d);x_.F3SetPullURL(~s, ~s);x_.F3SetPushURL(~s);"
 			  (output-counter http-link) (url-pull http-link)
 			  (interface-id http-link) (url-push http-link)) :crlf))
   (pop (output-sent http-link)))
@@ -136,7 +136,7 @@
 	     "{var x_=window;"
 	     (send-packets *http-link*)
 	     "F6541();"
-	     (html:ffmt "F3SetPullURL(~s, ~s);F5614(~s);}"
+	     (html:ffmt "F3SetPullURL(~s, ~s);F3SetPushURL(~s);}"
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
 	     (:html ((:body :optional
@@ -144,7 +144,7 @@
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
 			       "parent.F6541();"
-			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F5614(~s);}"
+			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F3SetPushURL(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
 		     )))))
@@ -158,7 +158,7 @@
 	     "{var x_=window;"
 	     (send-packets *http-link*)
 	      "F6541();"
-	     (html:ffmt "F3SetPullURL(~s, ~s);F5614(~s);}"
+	     (html:ffmt "F3SetPullURL(~s, ~s);F3SetPushURL(~s);}"
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
 	     (:html ((:body :optional
@@ -166,7 +166,7 @@
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
                                "parent.F6541();"
-			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F5614(~s);}"
+			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F3SetPushURL(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
 		     )))))
@@ -316,7 +316,7 @@
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
 			       "parent.F6541();"
-			       (html:ffmt "parent.F3SetPullURL(~s);parent.F5614(~s);"
+			       (html:ffmt "parent.F3SetPullURL(~s);parent.F3SetPushURL(~s);"
                                           (url-pull interface) (url-push interface)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull interface)))
 		     ))))

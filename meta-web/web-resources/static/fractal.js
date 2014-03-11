@@ -101,7 +101,7 @@ function F3SetPullURL(v856, LinkId){
     F3LinkId = LinkId;
 };
 
-function F5614(PushURL){
+function F3SetPushURL(PushURL){
     F3PushURL = PushURL;
 };
 
