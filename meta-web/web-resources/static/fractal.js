@@ -96,6 +96,7 @@ function F6541(){
     v684++;
     window.status = '  ';
 };
+
 function F3SetPullURL(v856, LinkId){
     F3PullURL = v856;
     F3LinkId = LinkId;
@@ -105,7 +106,10 @@ function F3SetPushURL(PushURL){
     F3PushURL = PushURL;
 };
 
-function F5164(v856){F3PacketSync=v856;};
+function F3SetSyncPacket(v856){
+    F3PacketSync=v856;
+};
+
 function F5146(v856){return F3PacketSync<v856;};
 function SLk2(v456, v457, v458, v459)
 {

@@ -97,7 +97,9 @@ function F3SetPushURL(v856){
 };
 */
 
-function F5164(v856){F3PacketSync=v856;};
+function F3SetSyncPacket(v856){
+    F3PacketSync=v856;
+};
 
 function F5146(v856){return F3PacketSync<v856;};
 

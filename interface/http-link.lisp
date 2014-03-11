@@ -9,7 +9,7 @@
 ;; F3PullURL is URL pull for watchdog
 ;; F3SetPullURL() is set URL pull and http-link-id for watchdog
 ;; F3SetPushURL() is set URL push
-;; F5164() is set packet-sync
+;; F3SetSyncPacket() is set packet-sync
 ;; F5146() is check page-packet-sync <= packet-sync
 ;; Slk is SendLink
 ;; Fch is fire_on_change
@@ -89,7 +89,7 @@
   (when (output-sent http-link)
     (html:html (loop for string in (output-sent http-link)
 		     when string do (write-string string html:*html-stream*))
-	       (html:ffmt "x_.F5164(~d);x_.F3SetPullURL(~s, ~s);x_.F3SetPushURL(~s);"
+	       (html:ffmt "x_.F3SetSyncPacket(~d);x_.F3SetPullURL(~s, ~s);x_.F3SetPushURL(~s);"
 			  (output-counter http-link) (url-pull http-link)
 			  (interface-id http-link) (url-push http-link)) :crlf))
   (pop (output-sent http-link)))
