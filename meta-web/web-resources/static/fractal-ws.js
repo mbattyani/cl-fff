@@ -84,7 +84,7 @@ function f825foc(name)
 }
 
 var v684=3651;var v683=3651; var v686=''; 
-// var v688;
+// var F3PushURL;
 var v685=''; 
 var v687=0;  
 var FrameNb = 12; var F3LinkId; var v690;
@@ -93,7 +93,7 @@ var FrameNb = 12; var F3LinkId; var v690;
 /*
 function F5614(v856){
 // sets push url 
-    v688=v856;
+    F3PushURL=v856;
 };
 */
 
@@ -160,22 +160,22 @@ function SendEvent(msg_type,name,value){
 function Fch(name, val){
     // '4'
     SendEvent('4',name,''+val);
-    // SLk('4', Name, ''+val, v688);
+    // SLk('4', Name, ''+val, F3PushURL);
 };
 
 function Fad(name, val){
     SendEvent('12',name,''+val);
-    // SLk('12', Name, ''+val, v688);
+    // SLk('12', Name, ''+val, F3PushURL);
 };
 
 function Fck(name, val){
     SendEvent('8',name,''+val);
-    // SLk('8', Name, ''+val, v688);
+    // SLk('8', Name, ''+val, F3PushURL);
 };
 
 function Fcl(name, val){
     SendEvent('13',name,''+val);
-    // SLk('13', Name, ''+val, v688);
+    // SLk('13', Name, ''+val, F3PushURL);
 };
 
 var ws = new WebSocket("ws://"+ window.location.hostname + ":1339/");
@@ -342,7 +342,7 @@ function SLk2(v456, v457, v458, v459){
     var container;
     var containerName = 'F'+ FrameNb;
     FrameNb++;
-    if (!v688) return;
+    if (!F3PushURL) return;
     document.body.insertAdjacentHTML( 'afterBegin', '<span id=\"SPAN' + containerName + '\"></span>' );
     var span = fgt("SPAN" + containerName);
     var html = '<iframe name=\"' + containerName + '\" src=\"javascript:void;\"></iframe>';
@@ -371,7 +371,7 @@ function F6451()
     {
       var x = getxh();
       if (x)
-	SLk('', '', '', v688);
+	SLk('', '', '', F3PushURL);
       else
 	window.frames['Lisp1'].document.location.replace(v686);v683=v684;
     }
@@ -384,7 +384,7 @@ function SLk(v456, v457, v458, v459){
     window.ble = x;
     if (!x) return SLk2(v456, v457, v458, v459);
   
-    //if (!v688)
+    //if (!F3PushURL)
     //    return;
     console.log("456: "+v456+" 457: "+v457+" 458-val: "+ v458+ " 459 "+ v459);    
     // x.open("POST", v459, true);
