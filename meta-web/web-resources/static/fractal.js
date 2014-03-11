@@ -92,7 +92,7 @@ function f825foc(name)
 
 var F3TimeOutCounter=3651;var v683=3651; var F3PullURL=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
 
-function F6541(){
+function F3IncTimeoutCounter(){
     F3TimeOutCounter++;
     window.status = '  ';
 };

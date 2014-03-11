@@ -330,7 +330,7 @@ catch (e)
 
 
 /*
-function F6541(){
+function F3IncTimeoutCounter(){
     F3TimeOutCounter++;
     window.status = '  ';
 };

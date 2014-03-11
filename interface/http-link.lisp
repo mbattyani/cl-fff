@@ -2,7 +2,7 @@
 
 ;; explanations for fractal.js compression and obfuscation
 ;; F3TimeOutCounter and v683 are time out and watchdog counters
-;; F6541() is increment timeout counter
+;; F3IncTimeoutCounter() is increment timeout counter
 ;; F6451() is watchdog functions
 ;; F6514(str) is send-string-to-server(string)
 ;; v685 is URL postfix for watchdog
@@ -135,7 +135,7 @@
 	    (html:html-to-stream s
 	     "{var x_=window;"
 	     (send-packets *http-link*)
-	     "F6541();"
+	     "F3IncTimeoutCounter();"
 	     (html:ffmt "F3SetPullURL(~s, ~s);F3SetPushURL(~s);}"
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
@@ -143,7 +143,7 @@
 			    (:onload "if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
-			       "parent.F6541();"
+			       "parent.F3IncTimeoutCounter();"
 			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F3SetPushURL(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
@@ -157,7 +157,7 @@
 	    (html:html-to-stream s
 	     "{var x_=window;"
 	     (send-packets *http-link*)
-	      "F6541();"
+	      "F3IncTimeoutCounter();"
 	     (html:ffmt "F3SetPullURL(~s, ~s);F3SetPushURL(~s);}"
 			(url-pull *http-link*) interface-id (url-push *http-link*)))
 	    (html:html-to-stream s
@@ -165,7 +165,7 @@
 			    #+nil(:onload #+nil"if (!parent.getxh()) setTimeout('location.reload(true)',1000);"))
 		     (:jscript "{var x_=parent;"
 			       (send-packets *http-link*)
-                               "parent.F6541();"
+                               "parent.F3IncTimeoutCounter();"
 			       (html:ffmt "parent.F3SetPullURL(~s, ~s);parent.F3SetPushURL(~s);}"
 					  (url-pull *http-link*) interface-id (url-push *http-link*)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull *http-link*)))
@@ -315,7 +315,7 @@
 		    ((:body :optional (:onload (unless no-refresh "if (!getxh()) setTimeout('location.reload(true)',2100);")))
 		     (:p "no-refresh "no-refresh)
 		     (:jscript (send-packets interface)
-			       "parent.F6541();"
+			       "parent.F3IncTimeoutCounter();"
 			       (html:ffmt "parent.F3SetPullURL(~s);parent.F3SetPushURL(~s);"
                                           (url-pull interface) (url-push interface)))
 		     (:p *count* " " (html:ffmt "~s" (url-pull interface)))
