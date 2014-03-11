@@ -83,7 +83,7 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var v686=''; 
+var v684=3651;var v683=3651; var F3PullURL=''; 
 // var F3PushURL;
 var v685=''; 
 var F3PacketSync=0;  
@@ -217,7 +217,7 @@ ws.onerror = function(evt){
 
 function F5641(v856, LinkId){
     // sets pull  url    
-    v686=v856; // sets url-pull
+    F3PullURL=v856; // sets url-pull
     F3LinkId = LinkId; // sets interface-id
     if(ws.readyState===1){
         console.log("in F5641, ID: " + F3LinkId +", state: "+ ws.readyState);
@@ -373,7 +373,7 @@ function F6451()
       if (x)
 	SLk('', '', '', F3PushURL);
       else
-	window.frames['Lisp1'].document.location.replace(v686);v683=v684;
+	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=v684;
     }
 };
 */

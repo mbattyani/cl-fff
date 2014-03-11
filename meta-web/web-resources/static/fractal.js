@@ -90,10 +90,10 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var v686=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
+var v684=3651;var v683=3651; var F3PullURL=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
 function F6541(){v684++;window.status = '  ';};
 function F5641(v856, LinkId){
-    v686 = v856;
+    F3PullURL = v856;
     F3LinkId = LinkId;
 };
 
@@ -138,7 +138,7 @@ function F6451()
       if (x)
 	SLk('', '', '', F3PushURL);
       else
-	window.frames['Lisp1'].document.location.replace(v686);v683=v684;
+	window.frames['Lisp1'].document.location.replace(F3PullURL);v683=v684;
     }
 };
 
