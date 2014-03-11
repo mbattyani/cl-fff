@@ -16,19 +16,19 @@ function f85425(Tabs, Panes, nTab, BaseClassName, SelectedClassName, remove){
     Panes[nTab].style.display = "";
     if (remove){
         Tab = Tabs[nTab+1];
-        if (Tab) 
+        if (Tab)
             Tab.style.borderLeftStyle = "none";
         Tab = Tabs[nTab-1];
-        if (Tab) 
+        if (Tab)
             Tab.style.borderRightStyle = "none";
     }
 }
-    
-function f8532(Tabs, table, SelClass) 
+
+function f8532(Tabs, table, SelClass)
 {
   var iTabSelected = 0;
   var iLength = Tabs.length;
-  for (var i = 0; i < iLength; i++) 
+  for (var i = 0; i < iLength; i++)
       if (Tabs[i].className == SelClass) iTabSelected = i;
   table.setAttribute("s", iTabSelected);
 }
@@ -73,9 +73,9 @@ function f8252s(name) {
     f825h(name+'d');
     f825s(name);
 }
-    
+
 function f8252h(name) {f825h(name);f825s(name+'d');}
-    
+
 function f825foc(name)
 {
   f825h(name);
@@ -83,16 +83,16 @@ function f825foc(name)
   Fck(name, '0');
 }
 
-var v684=3651;var v683=3651; var F3PullURL=''; 
+var v684=3651;var v683=3651; var F3PullURL='';
 // var F3PushURL;
-var v685=''; 
-var F3PacketSync=0;  
+var v685='';
+var F3PacketSync=0;
 var FrameNb = 12; var F3LinkId; var v690;
 
 
 /*
 function F5614(v856){
-// sets push url 
+// sets push url
     F3PushURL=v856;
 };
 */
@@ -215,12 +215,12 @@ ws.onerror = function(evt){
 };
 
 
-function F5641(v856, LinkId){
-    // sets pull  url    
+function F3SetPullURL(v856, LinkId){
+    // sets pull  url
     F3PullURL=v856; // sets url-pull
     F3LinkId = LinkId; // sets interface-id
     if(ws.readyState===1){
-        console.log("in F5641, ID: " + F3LinkId +", state: "+ ws.readyState);
+        console.log("in F3SetPullURL, ID: " + F3LinkId +", state: "+ ws.readyState);
         send_id();
     }
 };
@@ -244,7 +244,7 @@ function getxh()
   catch (e) {
     try {
       x=new ActiveXObject("Microsoft.XMLHTTP");
-    } 
+    }
     catch (E) {
       x=false;
     }
@@ -261,11 +261,11 @@ function getxh()
 }
 */
 
-function encPar(wide) 
+function encPar(wide)
 {
     var narrow= encUtf8(wide);
     var enc= '';
-    for (var i= 0; i<narrow.length; i++) 
+    for (var i= 0; i<narrow.length; i++)
     {
 	if (encPar_OK.indexOf(narrow.charAt(i))==-1)
 	    enc= enc+encHex2(narrow.charCodeAt(i));
@@ -277,7 +277,7 @@ function encPar(wide)
 
 var encPar_OK= 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*@-_./';
 
-function encHex2(v) 
+function encHex2(v)
 {
     return '%'+encHex2_DIGITS.charAt(v>>>4)+encHex2_DIGITS.charAt(v&0xF);
 }
@@ -367,7 +367,7 @@ function SLk2(v456, v457, v458, v459){
 function F6451()
 {
     // console.log("F6451: " + v684 + " " + v683);
-  if (v684 >= v683) 
+  if (v684 >= v683)
     {
       var x = getxh();
       if (x)
@@ -383,10 +383,10 @@ function SLk(v456, v457, v458, v459){
     var x = getxh();
     window.ble = x;
     if (!x) return SLk2(v456, v457, v458, v459);
-  
+
     //if (!F3PushURL)
     //    return;
-    console.log("456: "+v456+" 457: "+v457+" 458-val: "+ v458+ " 459 "+ v459);    
+    console.log("456: "+v456+" 457: "+v457+" 458-val: "+ v458+ " 459 "+ v459);
     // x.open("POST", v459, true);
     var msg;
     var msg_stringify;
@@ -408,13 +408,13 @@ function SLk(v456, v457, v458, v459){
         eval(evt.data);
     };
     return null;
-    
-   // x.onreadystatechange = function() { 
-   //     if(x.readyState == 4) { 
+
+   // x.onreadystatechange = function() {
+   //     if(x.readyState == 4) {
    //         eval(x.responseText);
    //         x.onreadystatechange = function() {};
    //     }
-   // } 
+   // }
    // x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
    //  x.send ("v654="+v456+"&v645="+v457+"&v465="+encodeURIComponent(v458)+"&v564=1");
 };

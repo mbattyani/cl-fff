@@ -91,8 +91,12 @@ function f825foc(name)
 }
 
 var v684=3651;var v683=3651; var F3PullURL=''; var F3PushURL; var v685=''; var F3PacketSync=0;  var FrameNb = 12; var F3LinkId; var v690;
-function F6541(){v684++;window.status = '  ';};
-function F5641(v856, LinkId){
+
+function F6541(){
+    v684++;
+    window.status = '  ';
+};
+function F3SetPullURL(v856, LinkId){
     F3PullURL = v856;
     F3LinkId = LinkId;
 };
