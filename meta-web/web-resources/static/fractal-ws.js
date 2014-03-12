@@ -166,22 +166,22 @@ function SendEvent(msg_type,name,value){
 function Fch(name, val){
     // '4'
     SendEvent('4',name,''+val);
-    // SLk('4', Name, ''+val, F3PushURL);
+    // SendToLink('4', Name, ''+val, F3PushURL);
 };
 
 function Fad(name, val){
     SendEvent('12',name,''+val);
-    // SLk('12', Name, ''+val, F3PushURL);
+    // SendToLink('12', Name, ''+val, F3PushURL);
 };
 
 function Fck(name, val){
     SendEvent('8',name,''+val);
-    // SLk('8', Name, ''+val, F3PushURL);
+    // SendToLink('8', Name, ''+val, F3PushURL);
 };
 
 function Fcl(name, val){
     SendEvent('13',name,''+val);
-    // SLk('13', Name, ''+val, F3PushURL);
+    // SendToLink('13', Name, ''+val, F3PushURL);
 };
 
 var ws = new WebSocket("ws://"+ window.location.hostname + ":1339/");
@@ -344,7 +344,7 @@ function fgt(name) {
     return item;
 }
 
-function SLk2(v456, v457, v458, v459){
+function SendToLink2(v456, v457, v458, v459){
     var container;
     var containerName = 'F'+ FrameNb;
     FrameNb++;
@@ -377,18 +377,18 @@ function F3Watchdog()
     {
       var x = getxh();
       if (x)
-	SLk('', '', '', F3PushURL);
+	SendToLink('', '', '', F3PushURL);
       else
 	window.frames['Lisp1'].document.location.replace(F3PullURL);F3WatchdogCounter=F3TimeOutCounter;
     }
 };
 */
 /*
-function SLk(v456, v457, v458, v459){
+function SendToLink(v456, v457, v458, v459){
 // v458 is set by F3SetPushURL()
     var x = getxh();
     window.ble = x;
-    if (!x) return SLk2(v456, v457, v458, v459);
+    if (!x) return SendToLink2(v456, v457, v458, v459);
 
     //if (!F3PushURL)
     //    return;

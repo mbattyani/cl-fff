@@ -114,7 +114,7 @@ function F3CheckSyncPacket(v856){
     return F3PacketSync<v856;
 };
 
-function SLk2(v456, v457, v458, v459){
+function SendToLink2(v456, v457, v458, v459){
   var container;
   var containerName = 'F'+ FrameNb;
   FrameNb++;
@@ -144,7 +144,7 @@ function F3Watchdog(){
     if (F3TimeOutCounter >= F3WatchdogCounter) {
         var x = getxh();
         if (x)
-	    SLk('', '', '', F3PushURL);
+	    SendToLink('', '', '', F3PushURL);
         else
 	    window.frames['Lisp1'].document.location.replace(F3PullURL);F3WatchdogCounter=F3TimeOutCounter;
     }
@@ -177,10 +177,10 @@ function close()
   }
 };
 
-function Fch(Name, val){SLk('4', Name, ''+val, F3PushURL);};
-function Fad(Name, val){SLk('12', Name, ''+val, F3PushURL);};
-function Fck(Name, val){SLk('8', Name, ''+val, F3PushURL);};
-function Fcl(Name, val){SLk('13', Name, ''+val, F3PushURL);};
+function Fch(Name, val){SendToLink('4', Name, ''+val, F3PushURL);};
+function Fad(Name, val){SendToLink('12', Name, ''+val, F3PushURL);};
+function Fck(Name, val){SendToLink('8', Name, ''+val, F3PushURL);};
+function Fcl(Name, val){SendToLink('13', Name, ''+val, F3PushURL);};
 
 
 function open2(text, dx, dy)
@@ -279,11 +279,11 @@ catch (e)
     encodeURIComponent = encPar;
 }
 
-function SLk(v456, v457, v458, v459)
+function SendToLink(v456, v457, v458, v459)
 {
   var x = getxh();
   if (!x)
-    return SLk2(v456, v457, v458, v459);
+    return SendToLink2(v456, v457, v458, v459);
 
   if (!F3PushURL) return;
 

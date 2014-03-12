@@ -11,7 +11,6 @@
 ;; F3SetPushURL() is set URL push
 ;; F3SetSyncPacket() is set packet-sync
 ;; F3CheckSyncPacket() is check page-packet-sync <= packet-sync
-;; Slk is SendLink
 ;; Fch is fire_on_change
 ;; Fck is fire_on_click
 ;; Fad is fire_add
