@@ -117,6 +117,10 @@
 
 (defmethod make-set-value-javascript ((item bs-date) value slot)
   (if value
+      (format nil "x_.$('#~a').data('DateTimePicker').setDate(~d);"
+              (name item)
+              (* (- value #.(encode-universal-time 0 0 0 1 1 1970)) 1000))
+      #+nil
       (multiple-value-bind (s mn h d m y) 
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
 	(let ((iso-date (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" y m d h mn s)
