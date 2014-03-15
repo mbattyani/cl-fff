@@ -1,8 +1,14 @@
 (in-package meta-web)
 
 (defun make-translation (tr)
-  (list 'make-instance ''meta::translated-string
-	:en (english tr) :fr (french tr) :de (german tr) :sp (spanish tr) :it (italian tr)))
+  (flet ((non-null (str)
+           (> (length str) 1)))
+    `(make-instance 'meta::translated-string
+        ,@(when (non-null (english tr)) (list :en (english tr)))
+        ,@(when (non-null (french tr)) (list :fr (french tr)))
+        ,@(when (non-null (german tr)) (list :de (german tr)))
+        ,@(when (non-null (spanish tr)) (list :sp (spanish tr)))
+        ,@(when (non-null (italian tr)) (list :it (italian tr))))))
 
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:fr) :name "ts" :source-code 
@@ -69,9 +75,14 @@
        ((:slot-edit italian))))))
 
 (defun make-object-help (oh)
-  (list 'make-instance ''meta::object-help
-	:en (english-tooltip oh) :fr (french-tooltip oh) :de (german-tooltip oh)
-	:sp (spanish-tooltip oh) :it (italian-tooltip oh)))
+  (flet ((non-null (str)
+           (> (length str) 1)))
+    `(make-instance 'meta::object-help
+        ,@(when (non-null (english-tooltip oh)) (list :en (english-tooltip oh)))
+        ,@(when (non-null (french-tooltip oh)) (list :fr (french-tooltip oh)))
+        ,@(when (non-null (german-tooltip oh)) (list :de (german-tooltip oh)))
+        ,@(when (non-null (spanish-tooltip oh)) (list :sp (spanish-tooltip oh)))
+        ,@(when (non-null (italian-tooltip oh)) (list :it (italian-tooltip oh))))))
 
 (make-instance 'interface::object-view :object-class 'object-help
 	       :country-languages '(:fr :en) :name "oh" :source-code 
