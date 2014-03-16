@@ -211,11 +211,15 @@
       `(when (,accessor ,slot) (list ,keyword (,accessor ,slot))))))
 
 (defmacro %add-slot% (accessor slot &key (keyword (intern (symbol-name accessor) :keyword))
-			       translation read)
+			       translation read (default nil defaultp))
   (setf *current-slot-attribute* (symbol-name accessor))
-  (if read
-    `(list ,keyword (safe-read-from-string (,accessor ,slot)))
-    `(list ,keyword (,accessor ,slot))))
+  `(let ((value ,(if read
+                     `(safe-read-from-string (,accessor ,slot))
+                     `(,accessor ,slot))))
+     ,(if defaultp
+          `(unless (equal ,default value)
+             (list ,keyword value))
+          `(list ,keyword value))))
 
 (defun get-view-types (object)
   (let* ((type (value-type object))
@@ -273,12 +277,12 @@
     :modifiable-groups ',(mapcar #'(lambda (g)
 				     (intern (string-upcase (name g)) 'keyword))
 				 (modifiable-groups slot-info))
-    ,@(%add-slot% stored slot-info)
-    ,@(%add-slot% in-proxy slot-info)
-    ,@(%add-slot% indexed slot-info)
-    ,@(%add-slot% unique slot-info :keyword :unique)
-    ,@(%add-slot% null-allowed slot-info)
-    ,@(%add-slot% list-of-values slot-info)
+    ,@(%add-slot% stored slot-info :default t)
+    ,@(%add-slot% in-proxy slot-info :default nil)
+    ,@(%add-slot% indexed slot-info :default nil)
+    ,@(%add-slot% unique slot-info :keyword :unique :default nil)
+    ,@(%add-slot% null-allowed slot-info :default t)
+    ,@(%add-slot% list-of-values slot-info :default nil)
     ,@(%add-slot% new-objects-first slot-info)
     ,@(%add-slot% linked-value slot-info)
     ,@(%add-slot% modifiable slot-info)
