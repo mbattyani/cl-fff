@@ -1,14 +1,34 @@
 (in-package meta-web)
 
-(defun make-translation (tr)
+(defun make-translation (keyword tr)
+  (flet ((non-null (str)
+           (> (length str) 1))) 
+    (let ((translated-string
+           `(make-instance 'meta::translated-string
+              ,@(when (non-null (english tr)) (list :en (english tr)))
+              ,@(when (non-null (french tr)) (list :fr (french tr)))
+              ,@(when (non-null (german tr)) (list :de (german tr)))
+              ,@(when (non-null (spanish tr)) (list :sp (spanish tr)))
+              ,@(when (non-null (italian tr)) (list :it (italian tr))))))
+      (when (> (length translated-string) 3)
+        (if keyword
+            (list keyword translated-string)
+            translated-string)))))
+
+(defun make-object-help (keyword oh)
   (flet ((non-null (str)
            (> (length str) 1)))
-    `(make-instance 'meta::translated-string
-        ,@(when (non-null (english tr)) (list :en (english tr)))
-        ,@(when (non-null (french tr)) (list :fr (french tr)))
-        ,@(when (non-null (german tr)) (list :de (german tr)))
-        ,@(when (non-null (spanish tr)) (list :sp (spanish tr)))
-        ,@(when (non-null (italian tr)) (list :it (italian tr))))))
+    (let ((translated-string
+           `(make-instance 'meta::object-help
+                ,@(when (non-null (english-tooltip oh)) (list :en (english-tooltip oh)))
+                ,@(when (non-null (french-tooltip oh)) (list :fr (french-tooltip oh)))
+                ,@(when (non-null (german-tooltip oh)) (list :de (german-tooltip oh)))
+                ,@(when (non-null (spanish-tooltip oh)) (list :sp (spanish-tooltip oh)))
+                ,@(when (non-null (italian-tooltip oh)) (list :it (italian-tooltip oh))))))
+      (when (> (length translated-string) 3)
+        (if keyword
+            (list keyword translated-string)
+            translated-string)))))
 
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:fr) :name "ts" :source-code 
@@ -74,16 +94,6 @@
       ("Italian"
        ((:slot-edit italian))))))
 
-(defun make-object-help (oh)
-  (flet ((non-null (str)
-           (> (length str) 1)))
-    `(make-instance 'meta::object-help
-        ,@(when (non-null (english-tooltip oh)) (list :en (english-tooltip oh)))
-        ,@(when (non-null (french-tooltip oh)) (list :fr (french-tooltip oh)))
-        ,@(when (non-null (german-tooltip oh)) (list :de (german-tooltip oh)))
-        ,@(when (non-null (spanish-tooltip oh)) (list :sp (spanish-tooltip oh)))
-        ,@(when (non-null (italian-tooltip oh)) (list :it (italian-tooltip oh))))))
-
 (make-instance 'interface::object-view :object-class 'object-help
 	       :country-languages '(:fr :en) :name "oh" :source-code 
    `(((:tab :class "tabdv")
@@ -137,7 +147,7 @@
 
 (defun make-choice (c)
   `(list ,(read-from-string (choice-value c))
-    ,(make-translation (name c))))
+    ,(make-translation nil (name c))))
 
 (defmethod meta::short-description ((obj choice-value))
     (format nil "~a (~a)" (choice-value obj)(french (name obj))))
@@ -200,26 +210,36 @@
     (ignore-errors (read-from-string (if list (concatenate 'string "( " str " )") str)))))
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (defvar *meta-slot-list* ))
+  (defvar *meta-slot-list* ()))
 
 (defmacro %add-slot-w% (accessor slot &key (keyword (intern (symbol-name accessor) :keyword))
-				 translation read quote list)
+                                        read quote list (use-default t))
   (setf *current-slot-attribute* (symbol-name accessor))
-  (if translation
-    `(when (,accessor ,slot) (list ,keyword (translation (,accessor ,slot))))
-    (if read
+  `(when (,accessor ,slot)
+    (let ((value ,(if read
+                      `(safe-read-from-string (,accessor ,slot) ,list)
+                      `(,accessor ,slot))))
+      ,(if use-default
+           `(unless (equal ,(slot-value (find (intern (symbol-name keyword) 'meta-level)
+                                              *meta-slot-list*
+                                              :key 'c2mop:slot-definition-name)
+                                        'clos::initform)
+                           value)
+              (list ,keyword ,(if quote '(list 'quote value) 'value)))
+           `(list ,keyword ,(if quote '(list 'quote value) 'value))))))
+  #+nil(if read
       (if quote
-	`(when (,accessor ,slot) (list ,keyword (list 'quote (safe-read-from-string (,accessor ,slot) ,list))))
-	`(when (,accessor ,slot) (list ,keyword (safe-read-from-string (,accessor ,slot) ,list))))
-      `(when (,accessor ,slot) (list ,keyword (,accessor ,slot))))))
+          `(when (,accessor ,slot) (list ,keyword (list 'quote (safe-read-from-string (,accessor ,slot) ,list))))
+          `(when (,accessor ,slot) (list ,keyword (safe-read-from-string (,accessor ,slot) ,list))))
+      `(when (,accessor ,slot) (list ,keyword (,accessor ,slot))))
 
-(defmacro %add-slot% (accessor slot &key (keyword (intern (symbol-name accessor) :keyword))
-			       translation read (use-default t))
+(defmacro %add-slot% (accessor slot &key (keyword (intern (symbol-name accessor) :keyword)) read (use-default t))
+  (setf *current-slot-attribute* (symbol-name accessor))
   `(let ((value ,(if read
                      `(safe-read-from-string (,accessor ,slot))
                      `(,accessor ,slot))))
      ,(if use-default
-          `(unless (equal ,(slot-value (find (intern (symbol-name accessor) 'meta-level)
+          `(unless (equal ,(slot-value (find (intern (symbol-name keyword) 'meta-level)
                                              *meta-slot-list*
                                              :key 'c2mop:slot-definition-name)
                                        'clos::initform)
@@ -228,6 +248,7 @@
           `(list ,keyword value))))
 
 (defmacro %add-slot-groups% (accessor slot &key (keyword (intern (symbol-name accessor) :keyword)))
+  (setf *current-slot-attribute* (symbol-name accessor))
   `(when (,accessor ,slot)
      (list ,keyword (list 'quote (mapcar #'(lambda (g)
                                              (intern (string-upcase (name g)) 'keyword))
@@ -267,26 +288,19 @@
   (setf *current-slot-attribute* "name")
   `(,(safe-read-from-string (name slot-info))
      ,@(%add-slot-w% accessor slot-info :read t)
-     ,@(progn (setf *current-slot-attribute* "value-type") nil)
      :value-type ,(get-value-type slot-info)
-     ,@(progn (setf *current-slot-attribute* "user-name") nil)
-     :user-name ,(make-translation (user-name slot-info))
-     ,@(progn (setf *current-slot-attribute* "initform") nil)
+     ,@(make-translation :user-name (user-name slot-info))
      ,@(if (and (eq (value-type slot-info) :object) (create-new-object slot-info))
            `(:initform (make-instance ',(safe-read-from-string (name (object-type slot-info)))))
            (%add-slot-w% initform slot-info :read t))
      ,@(%add-slot-w% description slot-info)
-     ,@(progn (setf *current-slot-attribute* "object-help") nil)
-     :object-help ,(make-object-help (object-help slot-info))
+     ,@(make-object-help :object-help (object-help slot-info))
      ,@(%add-slot-w% sql-name slot-info)
      ,@(when (initarg slot-info) (list :initarg (intern (string-upcase (initarg slot-info)) 'keyword)))
-     ,@(progn (setf *current-slot-attribute* "choices") nil)
      :choices ,(cons 'list (mapcar #'make-choice (choices slot-info)))
      ,@(%add-slot% visible slot-info)
-     ,@(progn (setf *current-slot-attribute* "visible-groups") nil)
      ,@(%add-slot-groups% visible-groups slot-info)
      ,@(%add-slot% modifiable slot-info)
-     ,@(progn (setf *current-slot-attribute* "modifiable-groups") nil)
      ,@(%add-slot-groups% modifiable-groups slot-info)
      ,@(%add-slot% stored slot-info)
      ,@(%add-slot% in-proxy slot-info)
@@ -302,8 +316,8 @@
      ,@(%add-slot% make-copy-string slot-info)
      ,@(%add-slot-w% duplicate-value-fn slot-info :read t :quote t)
      ,@(%add-slot-w% get-value-html-fn slot-info :read t :quote t)
-     :get-value-title ,(make-translation (get-value-title slot-info))
-     :get-value-text ,(make-translation (get-value-text slot-info))
+     ,@(make-translation :get-value-title (get-value-title slot-info))
+     ,@(make-translation :get-value-text (get-value-text slot-info))
      ,@(%add-slot-w% disable-predicate slot-info :read t :quote t)
      ,@(%add-slot-w% value-constraint slot-info :read t :quote t)
      ,@(%add-slot-w% sql-length slot-info)
@@ -312,8 +326,7 @@
      ,@(%add-slot-w% value-to-sql-func slot-info :read t :keyword :value-to-sql-fn :quote t)
      ,@(%add-slot-w% sql-to-value-func slot-info :read t :keyword :sql-to-value-fn :quote t)
      ,@(%add-slot-w% nb-decimals slot-info)
-     ,@(progn (setf *current-slot-attribute* "void-link-text") nil)
-     :void-link-text ,(make-translation (void-link-text slot-info))
+     ,@(make-translation :void-link-text (void-link-text slot-info))
      ,@(%add-slot-w% pathname-filter slot-info)
      ,@(%add-slot% can-create-new-object slot-info)
      ,@(%add-slot% create-new-object slot-info)
@@ -325,22 +338,21 @@
      ,@(%add-slot% view-type slot-info)
      ,@(%add-slot-w% slot-view-name slot-info :read t :quote t)
      ,@(%add-slot-w% list-format slot-info)
-     ,@(progn (setf *current-slot* nil *current-slot-attribute* nil) nil)
      ))
 
 (defun make-slot-info-from-slot (slot)
   #.(list* 'make-instance ''slot-info :store '*meta-store*
-	   :name '(slot-definition-name slot)
-	   (loop with key-package = (find-package :keyword)
-		 for slot-name in '(user-name description tooltip stored in-proxy indexed
-				    unique null-allowed accessor initarg initform choices
-				    list-of-values value-type linked-value modifiable visible 
-				    unit disable-predicate value-constraint value-to-string-func
-				    string-to-value-func sql-length nb-decimals
-				    void-link-text pathname-filter can-create-new-object get-object-func
-				    dont-display-null-value)
-		 as key = (intern (symbol-name slot-name) key-package)
-		 nconc `(,key (,slot-name slot)))))
+           :name '(slot-definition-name slot)
+           (loop with key-package = (find-package :keyword)
+              for slot-name in '(user-name description tooltip stored in-proxy indexed
+                                 unique null-allowed accessor initarg initform choices
+                                 list-of-values value-type linked-value modifiable visible 
+                                 unit disable-predicate value-constraint value-to-string-func
+                                 string-to-value-func sql-length nb-decimals
+                                 void-link-text pathname-filter can-create-new-object get-object-func
+                                 dont-display-null-value)
+              as key = (intern (symbol-name slot-name) key-package)
+              nconc `(,key (,slot-name slot)))))
 
 (make-instance 'interface::slot-list-format 
    :name "ot2r" :country-languages '(:fr :en)
