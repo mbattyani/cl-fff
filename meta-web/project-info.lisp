@@ -379,9 +379,7 @@ rankdir=LR;
   `((:tab
      ("Description"
       (:slot-table name project-package description version project-version version-date
-                   sources-directory application-ip application-port last-class-guid class-groups))
-     ("User&nbsp;Groups"
-      (:slot-table user-groups))
+                   sources-directory application-ip application-port last-class-guid class-groups user-groups))
      #+nil("Files"
            (:slot-table print-source-files used-lisp-modules)
            ((:table :class "dvt")
