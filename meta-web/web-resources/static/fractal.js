@@ -1,11 +1,6 @@
 function fgt(name)
 {
-  var item;
-  if (document.getElementById)
-    item=document.getElementById(name);
-  else
-    item=document.all[name];
-  return item;
+  return $('#'+name)[0];
 }
 
 function f85425(Tabs, Panes, nTab, BaseClassName, SelectedClassName, remove)
