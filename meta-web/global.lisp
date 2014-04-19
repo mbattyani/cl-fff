@@ -29,10 +29,6 @@
 (defparameter *mod-lisp-port* 3100)
 (defparameter *local-port* 25142)
 
-(setf interface:*server-name* "127.0.0.1")
-(setf interface:*clws-address* interface:*server-name*)
-;(setf interface:*clws-port* 1339)
-
 (defparameter *init-file*
   #+macosx #P"~/initfc.lisp"
   #+linux #P"~/initfc.lisp"
@@ -135,7 +131,7 @@
   (setf *meta-store-timer* (start-meta-store-timer))
 
   ;; web server
-  (interface:ws-start)
+;  (interface:ws-start)
   (case webserver
     (:hunchentoot
      (setf (symbol-function 'interface::write-request)

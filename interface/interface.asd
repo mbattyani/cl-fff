@@ -32,6 +32,5 @@
                (:file "html-slot-view" :depends-on ("html-view" "process-url" "clipboard"))
                (:file "bs-slot-view" :depends-on (#+nil"bs-view" "html-slot-view"))
 	       (:file "std-web" :depends-on ("specials"))
-               (:file "clws-link" )
                )
-  :depends-on (#:iterate #:bordeaux-threads #:meta #:html #:clws #:cl-json #:usocket #:babel #:closer-mop #:hunchentoot #:log4cl))
+  :depends-on (#:iterate #:bordeaux-threads #:meta #:html #:cl-json #:usocket #:babel #:closer-mop #:hunchentoot #:log4cl))

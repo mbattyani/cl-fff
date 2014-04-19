@@ -25,10 +25,7 @@
       (cond
         (path
          (let ((string-path (princ-to-string path)))
-           (if (or (= (mismatch string-path "static/") 7)
-                   (= (mismatch string-path "fonts/") 6)
-                   (= (mismatch string-path "css/") 4)
-                   (= (mismatch string-path "js/") 3))
+           (if (= (mismatch string-path "static") 6)
                (handle-static-file
                 (merge-pathnames path (acceptor-document-root acceptor)))
                (interface::%process-hunchentoot-command% list request))))
