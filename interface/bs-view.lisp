@@ -89,13 +89,15 @@
 				:html-fn (or (meta::get-value-html-fn fc-function) 'std-fn-pick-obj-html-fn)
 				:action-fn fn-name
 				:force-visible (getf attrs :force-visible)
-				:fc-function fc-function)))
+				:fc-function fc-function))
+           (class (or (getf attrs :class) "btn btn-default")))
       (setf attrs (copy-list attrs))
       (remf attrs :force-visible)
+      (remf attrs :class)
       `(html:html
         ((:button :id ,(concatenate 'string (name item) "d") :disabled "disabled"
-                  :class "btn btn-default" :style "display:none;" ,@attrs) ,@form)
-        ((:button :id ,(name item) :class "btn btn-default"
+                  :class ,class :style "display:none;" ,@attrs) ,@form)
+        ((:button :id ,(name item) :class ,class
                   :insert-string ,(if (or (choices-fn item) (meta::get-value-html-fn fc-function))
                                       (format nil "onclick=\"open1('/pick-val.html','250px','500px','~a');\"" (name item))
                                       (format nil "onclick='f825foc(~s);'" (name item)))
