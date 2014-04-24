@@ -328,10 +328,7 @@
     (maphash #'(lambda (id session)
 		 (declare (ignore id))
 		 (when (and session
-                            (or 
-                             (and (not (browser-ip session))
-                                  (> (- *session-timer-time* (last-access-time session)) 20))
-                             (> (- *session-timer-time* (last-access-time session)) *session-timeout*)))
+                          (> (- *session-timer-time* (last-access-time session)) *session-timeout*))
 		   (end-session session)))
 	     *sessions*)
     #+nil(dump-session-log)))
