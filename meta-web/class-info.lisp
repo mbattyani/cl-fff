@@ -275,13 +275,3 @@
 	 (class-name (read-from-string (name class-info))))
   (drop-table class-name (store project))))
 
-(defun dds20 (f p1 p2 n)
-  (let ((ratio 0))
-    (loop for i below n
-      for o1 = (logtest p1 #x80000)
-      for o2 = (logtest p2 #x80000)
-      do
-      (setf p1 (logand (+ p1 f) #xfffff))
-      (setf p2 (logand (+ p2 f) #xfffff))
-      (unless (eq o1 o2)(incf ratio)))
-    (values (float (/ ratio n)) ratio)))

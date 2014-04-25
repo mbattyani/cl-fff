@@ -14,13 +14,6 @@
 (defvar *projects-list* nil)
 (defvar *meta-store-timer* nil)
 
-(defparameter *page* nil)
-(defparameter *pages* (make-hash-table :test #'equal))
-(defparameter *web-root-name* "home")
-(defparameter *static-pages-root* "/fcweb/")
-(defparameter *static-pages-url-root* "/asp/fcweb/")
-(defparameter *source-pages-default* "~/repository-static/xxx.html")
-
 (defparameter *database-ip* "127.0.0.1")
 (defparameter *database-name* "MetaFractal")
 (defparameter *database-user* "lisp")
