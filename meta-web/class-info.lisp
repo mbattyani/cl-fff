@@ -45,8 +45,20 @@
                   ,@(%add-slot-w% get-value-sql f)
                   ,@(%add-slot-w% html-tag-attributes f :read t :quote t :list t)
                   ,@(%add-slot-w% get-object-fn f :read t  :keyword :get-object-func :quote t)
+;                  ,@(%add-slot-w% process-new-object-fn f :read t  :keyword :process-object-func :quote t)
                   ,@(%add-slot-w% disable-predicate f :read t :quote t)
                   ,@(make-object-help :object-help (object-help f))))
+
+(make-instance 'interface::object-view :object-class 'function-info
+	       :country-languages '(:en) :name "class-en" :source-code
+  `(((:tab :class "tabf")
+     ("Description"
+      (:slot-table name user-name description comment
+		   visible visible-groups html-tag-attributes disable-predicate))
+     ("Choice Dialog"
+      (:slot-table get-object-fn #+nil process-new-object-fn get-value-html-fn get-value-title get-value-text get-value-sql))
+     ("Help"
+      (:object-view :object (object-help interface::*object*))))))
 
 (defun get-project-classes (class-info)
   (let* ((project (project class-info)))
