@@ -1,7 +1,7 @@
 (in-package #:meta-web)
 
 (defvar *graph-file-prefix* (asdf:system-relative-pathname :meta-web "./web-resources/"))
-(defvar *projects-source-directory-prefix* (asdf/system:system-source-directory :meta-web))
+(defvar *projects-source-directory-prefix* (asdf:system-source-directory :meta-web))
 
 (defvar *current-class* nil)
 (defvar *current-slot* nil)
