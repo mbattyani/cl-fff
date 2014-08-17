@@ -90,7 +90,7 @@
             :test #'eql :key #'c2mop:slot-definition-name)
       slot))
 
-(defmethod html-func :around ((view object-view))q
+(defmethod html-func :around ((view object-view))
   (let ((func (call-next-method)))
     (unless func
       (let* ((*current-class* (object-class view))
@@ -213,10 +213,12 @@
                         (std-row `((:slot-pick-mval ,(c2mop:slot-definition-name slot)
                                                     ,@(meta::html-tag-attributes slot)))))
                        (t
-                        `((:div :class "form-group")
-                          ((:slot-list ,(c2mop:slot-definition-name slot)
-                                       ,@(html:merge-attributes
-                                          (meta::html-tag-attributes slot) '(:class "dvl"))))))))
+                        `((:div :class "panel panel-default")
+                          ((:div :class "panel-heading") ,user-name)
+                          ((:div :class "panel-body")
+                           ((:slot-list ,(c2mop:slot-definition-name slot)
+                                        ,@(html:merge-attributes
+                                           (meta::html-tag-attributes slot) '(:class "dvl")))))))))
                     ((meta::fc-class-p (meta::value-type slot))
                      (case (meta::view-type slot)
                        ((:embed t)
@@ -288,7 +290,7 @@
 		     :name view-name :country-languages (list country-language)
 		     :user-group ()
 		     :frontend (list frontend)
-		     :source-code (nconc (make-std-object-slots-view frontend class nil nil) 
+		     :source-code (nconc (make-std-object-slots-view frontend class nil nil)
 					 (make-std-object-functions-view class))))))
 
 (defun clean-direct-views (class)
@@ -320,7 +322,7 @@
           (return-from find-best-view v)))
   (loop for v in (meta::direct-views class)
      do (when (and (not (special-view v))
-                   (find country-language (country-languages v)) ;needs some serious rework! 
+                   (find country-language (country-languages v)) ;needs some serious rework!
                    (not (frontends v))
                    (not (user-groups v)))
           (return-from find-best-view v)))

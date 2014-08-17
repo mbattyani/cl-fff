@@ -149,8 +149,6 @@
 
 (defun %ps (attributes forms)
   (declare (ignore attributes))
-  `(optimize-progn
-     ,@(mapcar (lambda (x)
-                 (html-gen (ps:ps* x))) forms)))
+  (optimize-progn (html-gen `(:jscript (:insert-string (ps:ps ,@forms))))))
 
 (add-func-tag :ps '%ps)
