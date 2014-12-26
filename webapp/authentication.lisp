@@ -27,15 +27,20 @@
 (defmethod  (setf password) (password user)
   )
 
+(defmethod  auto-login (user)
+  )
+
 (defmethod  (setf auto-login) (value user)
   )
 
 (defmethod  (setf last-access) (time user)
   )
 
+(defmethod  valid-user-name-p (app user-name)
+  t)
+
 (defmethod check-authentification (app page)
   (interface::decode-posted-content interface::*request*)
-  (setf %c% (interface::posted-content interface::*request*))
   (let* ((posted-content (interface::posted-content interface::*request*)))
     (when (not posted-content)
       (ensure-user app)
@@ -52,7 +57,7 @@
            (register (assoc "register" posted-content :test 'string=))
            (authorized nil))
       (if (and name (or sign-in register))
-          (let ((user (find-user-by-user-name *app* name)))
+          (let ((user (find-user-by-user-name app name)))
             (when sign-in
               (if (and user (string= password (password user)))
                   (progn
@@ -63,9 +68,11 @@
                     (return-from check-authentification t))
                   (return-from check-authentification (values :failed name))))
             (when register
+              (unless (valid-user-name-p app name)
+                (return-from check-authentification (values :invalid-user-name name)))
               (if user
                   (return-from check-authentification (values :exists-already name))
-                  (let ((user (create-new-user *app* name)))
+                  (let ((user (create-new-user app name)))
                     (switch-user user)
                     (setf (password user) password)
                     (setf (interface::authentified *session*) t)
@@ -74,7 +81,7 @@
                       (setf (auto-login user) t))
                     (return-from check-authentification t)))))
           (when (interface::cookie *session*)
-            (let ((user (find-user-by-cookie *app* (interface::cookie *session*))))
+            (let ((user (find-user-by-cookie app (interface::cookie *session*))))
               (when (and user (auto-login user))
                 (switch-user user)
                 (setf (interface::authentified *session*) t)
@@ -97,7 +104,8 @@
          ((:script :src "/static/sha1.js"))
          (case *auth-status*
            (:failed (bs-alert "Sorry, unknown email or password"))
-           (:exists-already (bs-alert "Sorry, this email exists already")))
+           (:invalid-user-name (bs-alert "Sorry, this user name is invalid"))
+           (:exists-already (bs-alert "Sorry, this user name exists already")))
          ((:h2 :class "form-signin-heading") "Please sign in or register")
          ((:ul :class "nav nav-tabs")
           ((:li :class "active") ((:a :href "#sign-in" :data-toggle "tab") "Sign in"))
