@@ -63,7 +63,7 @@
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (if (format-fn item)
                      (funcall (format-fn item) value)
-                     (html:quote-javascript-string 
+                     (html:quote-javascript-string
                       (cond
                        ((and (not value) (meta-level::dont-display-null-value slot)) "")
                        ((stringp value) value)
@@ -121,7 +121,7 @@
               (name item)
               (* (- value #.(encode-universal-time 0 0 0 1 1 1970)) 1000))
       #+nil
-      (multiple-value-bind (s mn h d m y) 
+      (multiple-value-bind (s mn h d m y)
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
 	(let ((iso-date (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d" y m d h mn s)
                 #+nil(if (not (show-time item))
@@ -457,7 +457,7 @@
              ((:span :class "input-group-btn")
               ((:button :class "btn btn-default" :id ,(action-link item) :type "button" :onclick ,on-click)
                ((:span :class "glyphicon glyphicon-edit")"&nbsp;Change..."))))))))))
-  
+
 
 (defun bs-std-pick-color-html-fn (dispatcher)
   (flet ((color-td (r g b)
@@ -633,3 +633,33 @@
 
 (interface::add-named-url "/bs-obj-del.html" 'bs-obj-del-request-handler)
 
+(defun bs-pick2-request-handler (request)
+  (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
+        (item (cdr (assoc "item" (posted-content request) :test 'string=)))
+        (*dispatcher* nil))
+    (when link
+      (setf link (gethash link *http-links*))
+      (when (and link item)
+        (let* ((*session* (session link))
+               (*user* (user *session*))
+               (*country-language* (country-language *session*)))
+          (setf *dispatcher* (gethash item (dispatchers link)))
+          (with-output-to-request (request)
+            (html::html-to-stream
+             *request-stream*
+             ((:div :class "modal-header")
+              ((:button :type "button" :class "close pull-right" :data-dismiss "modal") "&times;")
+              ((:h4 :class "modal-title")
+               (:translate '(:en "pick an object" :fr "Choisissez un objet" :sp "Elija un objeto"))))
+             ((:div :class "modal-body")
+                                        ;   (:p (:translate (meta::get-value-text slot)))
+              (:jscript "function f42(d){Fad('" item "',d);$('#GlobalModal').modal('hide');};")
+              (loop for object in (when *dispatcher*
+                                    (funcall (meta::get-object-func (slot *dispatcher*))(object *dispatcher*)))
+                 do (html:html "&nbsp;&nbsp;"
+                               ((:a :fformat (:href "javascript:f42('~a');" (encode-object-id object)))
+                                (html:esc (meta::short-description object))) :br)))
+             ((:div :class "modal-footer")
+              ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))
+             ))))))
+  t)

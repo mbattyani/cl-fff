@@ -62,7 +62,7 @@
     (setf value (meta::translate (second (assoc value (meta::choices slot))))))
   (let ((j-value (if (format-fn item)
                      (funcall (format-fn item) value)
-                     (html:quote-javascript-string 
+                     (html:quote-javascript-string
                       (cond
                        ((and (not value) (meta-level::dont-display-null-value slot)) "")
                        ((stringp value) value)
@@ -118,7 +118,7 @@
 
 (defmethod make-set-value-javascript ((item html-date) value slot)
   (if value
-      (multiple-value-bind (s mn h d m y) 
+      (multiple-value-bind (s mn h d m y)
           (if meta::*GMT-time* (decode-universal-time value 0)(decode-universal-time value))
 	(let ((j-value (if (not (show-time item))
                            (format nil "~2,'0d/~2,'0d/~d" d m y)
@@ -167,7 +167,7 @@
 
 (defun first-week-day (month year)
   (multiple-value-bind (sec min hr d m y dw)
-      (decode-universal-time 
+      (decode-universal-time
        (encode-universal-time 1 1 1 1 month year 0) 0)
     (declare (ignore sec min hr d m y))
     dw))
@@ -182,7 +182,7 @@
 
 (defparameter *month-names* '(:fr ("Janvier" "Février" "Mars" "Avril" "Mai" "Juin"
                                    "Juillet" "Août" "Septembre" "Octobre" "Novembre" "Décembre")
-                              :sp ("Enero" "Febrero" "Marzo" "Abril" "Mayo" "Junio" 
+                              :sp ("Enero" "Febrero" "Marzo" "Abril" "Mayo" "Junio"
                                    "Julio" "Agosto" "Septiembre" "Octubre"  "Noviembre" "Diciembre")
                               :en ("January" "February" "March" "April" "May" "June"
                                    "July" "August" "September" "October" "November" "Décember")))
@@ -200,7 +200,7 @@
 (defun html-month (item day month year show-time)
   (let ((first-week-day (first-week-day month year))
 	(last-day (last-day month year))
-	(time (if show-time 
+	(time (if show-time
 		  " '+document.getElementById('hour').value+':'+document.getElementById('mn').value+':'+document.getElementById('sec').value);"
 		  "');"))
         (div-class (princ (gensym "divclass"))))
@@ -210,7 +210,7 @@
       ((:script :src "https://code.jquery.com/jquery.js"))
       (:jscript "function f42(d){if (d == '') parent.Fch('" item "','nil');else parent.Fch('" item "',d+'/" month "/" year time "parent.$('#openModalCalendar').modal('hide');};")
        ;f42($(this).text());
-          
+
      ((:table :class "calt" :align "center")
       (:tr (dolist (day (getf *day-names* *country-language* *default-day-names*))
              (html:html ((:th :class "calh") day))))
@@ -247,7 +247,7 @@
 	(setf hour (when hour (parse-integer hour :junk-allowed t)))
 	(setf mn (when mn (parse-integer mn :junk-allowed t)))
 	(setf sec (when sec (parse-integer sec :junk-allowed t)))
-	(multiple-value-bind (s min h d m y) 
+	(multiple-value-bind (s min h d m y)
             (if meta::*GMT-time*
                 (decode-universal-time (or (funcall (get-value-fn dispatcher) (object dispatcher))
                                            (get-universal-time)) 0)
@@ -291,7 +291,7 @@
                            (html:ffmt "<option value=~d SELECTED>~d" a a)
                            (html:ffmt "<option value=~d>~d" a a)))))
                (html-month item day month year (show-time (item dispatcher)))
-	      
+
                ((:div :align "center")
                 (:when (show-time (item dispatcher))
                   ((:input :name "hour" :id "hour" :value (princ-to-string hour) :style "width:20px;"))
@@ -417,7 +417,7 @@
   (let* ((slot (slot *dispatcher*))
          (*dispatcher* *dispatcher*)
 	 (list (funcall (get-value-fn *dispatcher*) object))
-	 (list-length (length list)))    
+	 (list-length (length list)))
     (if (item-state *dispatcher*)
         (let* ((choice (elt (item-state *dispatcher*) (1- (abs value))))
                (list (funcall (get-value-fn *dispatcher*) object)))
@@ -499,13 +499,19 @@
                       ((and (= value -9) *user*) ; cut
                        (copy-to-clipboard (clipboard *user*) (collect-list-objects list) object slot)
                        (setf (objects-to-delete *dispatcher*)(collect-list-objects list))
-                       (send-to-interface
-                        (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*)))
-                        #+nil(html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
-                                          (name (item *dispatcher*)))))
+                       (cond
+                         ((is-bootstrap *frontend*)
+                          (send-to-interface
+                           (format nil "show_remote_modal_content('~a','/bs-obj-del.html', '~a');"
+                                   ""
+                                   (name (item *dispatcher*)))))
+                         (t (send-to-interface
+                             (html:fast-format nil "set_src('global_iframe', '/obj-del.html', '~a');$('#global_modal').modal('show');" (name (item *dispatcher*)))
+                             #+nil(html:fast-format nil "x_.open1('/obj-del.html', '250px', '250px', '~a');"
+                                                    (name (item *dispatcher*)))))))
                       ((and (= value -10) *user*) ; paste
                        (paste-clipboard (clipboard *user*) object slot))))))))))
-  
+
 (defmethod make-set-value-javascript ((item html-slot-list) list slot)
   (let ((*user* (user (or *session* (session (interface *dispatcher*))))))
     (let ((length (length list))
@@ -540,7 +546,7 @@
 	    (:tr
 	     ((:td :class "dvcv") index1)
 	     ((:td :class "dvcv") (std-list-checkbox index start))
-	     ((:td :class "dvcv")
+	     ((:td :class "dvcv") "&nbsp;"
 	      ((:a :href (encode-object-url object))
 	       (html:esc (meta:list-description object *object*))))))))))
 
@@ -555,7 +561,7 @@
 ;;; "" =  global
 ;;; "h" = header-table, "hr" = header row, "h1"..."hxx" = column xx header
 ;;; "t" = table, "r" = row, "c1"..."cxx" = column xx td style
-;;; "b" = buttons 
+;;; "b" = buttons
 
 (defvar *clipboard-view-context* nil)
 
@@ -580,8 +586,10 @@
 			   #+nil((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a');" (name item)))
 			    ,sub-obj-name)
                            ((:modal-button :id "obj-pick-button" :target "#global_modal"
-                                           :onclick ,(format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item)))
-                            ,sub-obj-name)
+                                           :onclick ,(if (is-bootstrap *frontend*)
+                                                         (format nil "show_remote_modal_content('','/obj-pick2.html', '~a');" (name item))
+                                                         (format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item)))))
+                           ,sub-obj-name
                            )))))
 	    `(html:html
 	      ((:div :class ,class :style ,(format nil "width:~a;" width )) ;height:~a; height
@@ -589,7 +597,7 @@
 	       ((:div :class ,(concatenate 'string class "h")
 		      :style ,(format nil "width:100%;height:100%;overflow:auto;")
 		      :id ,(name item)))
-	       
+
 	       ((:table :class ,(concatenate 'string class "h") :align "left" :width "100%")
 		(:tr
 		 (:td
@@ -623,9 +631,11 @@
 			      ((:span :align "right")
 			       #+nil((:a :href ,(format nil "javascript:open1('/obj-pick2.html', '250px', '500px', '~a')"
 					     (name item)))
-				,sub-obj-name)
+                                     ,sub-obj-name)
                                ((:modal-button :target "#global_modal"
-                                 :onclick ,(format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item)))
+                                 :onclick ,(if (is-bootstrap *frontend*)
+                                                             (format nil "show_remote_modal_content('','/obj-pick2.html', '~a');" (name item))
+                                                             (format nil "set_src('global_iframe','/obj-pick2.html', '~a');" (name item))))
                                 ,sub-obj-name)
                                ))))
 		  ,@(when (and (meta::can-create-new-object slot) (not (meta::get-object-func slot)))
@@ -636,6 +646,8 @@
 
 (defun pick2-request-handler (request)
   (decode-posted-content request)
+  (when (is-bootstrap *frontend*)
+    (return-from pick2-request-handler (bs-pick2-request-handler request)))
   (let ((link (cdr (assoc "link" (posted-content request) :test 'string=)))
         (item (cdr (assoc "item" (posted-content request) :test 'string=)))
         (*dispatcher* nil))
@@ -864,8 +876,8 @@
       (when dispatcher
 	(when (meta::null-allowed (slot dispatcher))
 	  (html:html "&nbsp;&nbsp;"
-		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices" 
-                                                                        :fr "Aucun de ces choix" 
+		     ((:a :href "javascript:f42('nil');") (:translate '(:en "None of these choices"
+                                                                        :fr "Aucun de ces choix"
                                                                         :sp "Ninguna de estas opciones"))) :br :br))
 	(loop for (text value) in (funcall (choices-fn dispatcher)(object dispatcher))
 	      do (html:html "&nbsp;&nbsp;"
@@ -918,7 +930,7 @@
   if (item)
      item.style.display = 'inline';
 }
-    
+
 function fh(name)
 {
   var item;
@@ -946,7 +958,7 @@ function fh(name)
 	  (draw-simple-tree (funcall (meta::get-object-func (slot dispatcher)) object) 0 t (not null-allowed) ()
 			    :draw-node-fn #'draw-item :opened-node t)
 	  (when null-allowed
-	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix" 
+	    (draw-simple-tree `((,(meta::translate '(:en "None of these choices" :fr "Aucun de ces choix"
                                                                                  :sp "Ninguna de estas opciones")) "")) 0  nil t ()
 			      :draw-node-fn #'draw-item)))
 	:br :br
@@ -991,7 +1003,7 @@ function fh(name)
   if (item)
      item.style.display = 'inline';
 }
-    
+
 function fh(name)
 {
   var item;
@@ -1070,7 +1082,7 @@ function fh(name)
   if (item)
      item.style.display = 'inline';
 }
-    
+
 function fh(name)
 {
   var item;
@@ -1142,7 +1154,7 @@ function fh(name)
       (let ((obj-link (make-instance 'html-obj-link :tooltip (meta::tooltip slot) :slot slot
 				     :choices-fn (meta::get-object-func slot)
 				     :html-fn (or (meta::get-value-html-fn slot) 'std-pick-obj-html-fn))))
-	`(html:html ((:a :href "" :id ,(name obj-link) ,@attrs)) 
+	`(html:html ((:a :href "" :id ,(name obj-link) ,@attrs))
 	  ,@(when (action-link obj-link)
 		  `((:when (modifiable-p ,slot) ;"&nbsp; "
 		      #+nil((:a :id ,(action-link obj-link)
@@ -1218,7 +1230,7 @@ function fh(name)
 	  (:when (modifiable-p ,slot)
 	    #+nil((:a :id ,(action-link item)
 		 :href ,(format nil "javascript:open1('/pick-val.html', '400px', '500px', '~a')"
-				(name item))) 
+				(name item)))
              ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "baseline" :title "Change")))
             ((:modal-button :id ,(action-link item)
                             :target "#global_modal"
@@ -1336,12 +1348,12 @@ function fh(name)
 		  ((:td :align "right" :valign "top")
                    #+nil((:a :id ,(action-link item)
 			:href ,(format nil "javascript:open1('/pick-val.html', '300px', '500px', '~a')"
-				       (name item))) 
+				       (name item)))
                     ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
                    ((:modal-button :id ,(action-link item)
                                    :target "#global_modal"
                                  :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                 
+
                     ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change")))
 		   )))))
 	    `(html:html
@@ -1354,7 +1366,7 @@ function fh(name)
                 ((:modal-button :id ,(action-link item)
                                    :target "#global_modal"
                                  :onclick ,(format nil "set_src('global_iframe','/pick-val.html', '~a');" (name item)))
-                                 
+
                  ((:img :border "0" :src "/static/ch.png" :width "16" :height "16" :align "top" :title "Change"))))))))))
 
 (html:add-func-tag :slot-pick-mval 'slot-pick-multi-val-tag t)
@@ -1447,7 +1459,7 @@ function fh(name)
   if (item)
      item.style.display = 'inline';
 }
-    
+
 function fh(name)
 {
   var item;
@@ -1525,7 +1537,7 @@ function fh(name)
   if (item)
      item.style.display = 'inline';
 }
-    
+
 function fh(name)
 {
   var item;
@@ -1851,7 +1863,7 @@ function fh(name)
                                                           (hunchentoot:url-encode file-name)
                                                           (hunchentoot:url-encode (namestring path))))
                                         file-name)))))))))))))
-    
+
 (defun file-upload-test-request-handler (request)
   (let ((hunchentoot-request (hunchentoot-request request)))
     ;; (print (hunchentoot:post-parameters (hunchentoot-request request)))

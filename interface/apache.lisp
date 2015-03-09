@@ -44,7 +44,8 @@
                  for ch = (read-byte stream nil nil)
                  if (and ch (/= ch (char-code #\NEWLINE))) collect ch into line
                  else do (return line))))
-    (babel:octets-to-string (make-array (length line) :element-type '(unsigned-byte 8) :initial-contents line))))
+    (when line
+      (babel:octets-to-string (make-array (length line) :element-type '(unsigned-byte 8) :initial-contents line)))))
 
 (defun get-apache-command ()
   (ignore-errors
@@ -98,7 +99,7 @@
     (force-output *apache-socket*)))
 
 ;;; a fix to load portable aserve instead of apache
-(handler-case 
+(handler-case
     (progn (intern "FIXNUMP" 'common-lisp)
            (setf (symbol-function 'common-lisp::fixnump) (symbol-function 'lw:fixnump)))
   (error (error)))
