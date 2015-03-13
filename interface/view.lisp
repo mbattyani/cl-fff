@@ -213,12 +213,11 @@
                         (std-row `((:slot-pick-mval ,(c2mop:slot-definition-name slot)
                                                     ,@(meta::html-tag-attributes slot)))))
                        (t
-                        `((:div :class "panel panel-default")
+                        `((:div :class "panel panel-primary")
                           ((:div :class "panel-heading") ,user-name)
-                          ((:div :class "panel-body")
-                           ((:slot-list ,(c2mop:slot-definition-name slot)
-                                        ,@(html:merge-attributes
-                                           (meta::html-tag-attributes slot) '(:class "dvl")))))))))
+                          ((:slot-list ,(c2mop:slot-definition-name slot)
+                                       ,@(html:merge-attributes
+                                          (meta::html-tag-attributes slot) '(:class "dvl"))))))))
                     ((meta::fc-class-p (meta::value-type slot))
                      (case (meta::view-type slot)
                        ((:embed t)

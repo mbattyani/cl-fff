@@ -11,7 +11,8 @@
                         (cons "Referer" (referer request))
                         (cons "User-Agent" (cdr (assoc :user-agent headers-in)))
                         (cons "Accept-Language" (cdr (assoc :accept-language headers-in)))
-                        (cons "posted-content" (hunchentoot:post-parameters request)) ; post-parameters)
+                        (cons "posted-content" (or (hunchentoot:post-parameters request)
+                                                  (hunchentoot:raw-post-data)))
                         (cons "content-type" (cdr (assoc :content-type headers-in)))
                         (loop
                            for (cookie . value) in (cookies-in*)
