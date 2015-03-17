@@ -206,7 +206,7 @@
         (loop while next-char
            do (setf (values string next-char) (extract-param-string "sdata" url next-char))
            while string
-           do 
+           do
              (setf string (decode-url-string (nsubstitute #\= #\* (nsubstitute #\= #\_ string))))
              (setf params (nconc (loop with i = 0 and l = (length string)
 				    while (< i l)
@@ -251,8 +251,8 @@
 (defun meta::decode-object-id (string)
   (decode-object-id string))
 
-(defmethod encode-object-url (object &key stream absolute args)
-  (setf args (append (list :page "object" :object object) args))
+(defmethod encode-object-url (object &key stream absolute args (page "object"))
+  (setf args (append (list :page page :object object) args))
   (when *session*
     (setf args (list* :session (id *session*) :lang *country-language-id* args)))
   (encode-session-url stream args :absolute absolute))
@@ -338,7 +338,7 @@
     (with-open-file (s *session-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *session-log*
 	    do (format s "~s~%" session)))
-    (setf *session-log* nil))  
+    (setf *session-log* nil))
   (when *robot-log*
     (with-open-file (s *robot-file* :direction :output :if-exists :append :if-does-not-exist :create)
       (loop for session in *robot-log*
@@ -432,7 +432,7 @@
 		    ((t) string-value))
 		  default)))
     (if value value default)))
-    
+
 ;;*************************
 ;; log stuff
 
@@ -506,7 +506,7 @@
   #+nil(when url
     (let ((start (search "/asp" url)))
       (when start (subseq url start)))))
-  
+
 (defun process-url-history (request session)
   (let ((url (url request))
 	(referer (referer request)))
@@ -519,4 +519,3 @@
 
 (defun get-previous-page (request)
   (first (find (url request) (url-history (session request)) :test #'string= :key 'cdr)))
-
