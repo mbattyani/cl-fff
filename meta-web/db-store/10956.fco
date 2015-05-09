@@ -41,4 +41,5 @@
 (:obj-id 10691 111)
 (:obj-id 10685 111)))
 (meta-web::current-version t)
-(meta-web::previous-versions nil)))
+(meta-web::previous-versions nil)
+(meta-web::other-superclasses "")))

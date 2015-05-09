@@ -251,10 +251,10 @@
 (defun meta::decode-object-id (string)
   (decode-object-id string))
 
-(defmethod encode-object-url (object &key stream absolute args (page "object"))
+(defmethod encode-object-url (object &key stream absolute args (page "object") (session *session*))
   (setf args (append (list :page page :object object) args))
-  (when *session*
-    (setf args (list* :session (id *session*) :lang *country-language-id* args)))
+  (when session
+    (setf args (list* :session (id session) :lang *country-language-id* args)))
   (encode-session-url stream args :absolute absolute))
 
 (defun get-session (request &optional (session-params (decode-session-url (url request))))

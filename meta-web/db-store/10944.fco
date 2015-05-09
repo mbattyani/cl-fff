@@ -22,4 +22,5 @@
 (:obj-id 10832 111)
 (:obj-id 10759 111)))
 (meta-web::current-version t)
-(meta-web::previous-versions nil)))
+(meta-web::previous-versions nil)
+(meta-web::other-superclasses "")))

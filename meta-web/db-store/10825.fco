@@ -27,4 +27,5 @@
 (meta-web::direct-views nil)
 (meta-web::direct-functions nil)
 (meta-web::current-version t)
-(meta-web::previous-versions nil)))
+(meta-web::previous-versions nil)
+(meta-web::other-superclasses "")))
