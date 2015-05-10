@@ -96,10 +96,13 @@
   (length obj))
 
 (defmethod write-content-value ((obj string) stream)
-  ;; (write-string obj stream)
-  (map nil (lambda (char)
-             (write-byte char stream))
-       (babel:string-to-octets obj)))
+  (write-string obj stream))
+
+(defmethod content-length ((obj array))
+  (length obj))
+
+(defmethod write-content-value ((obj array) stream)
+  (write-sequence obj stream))
 
 (defconstant +disk-block-size+ 8192)
 
@@ -121,6 +124,9 @@
   (when (clear-content request)
     (setf (content-value request) nil
 	  (content-length request) 0))
+  (when (stringp (content-value request))
+      (setf (content-value request)(babel:string-to-octets (content-value request)))
+      (setf (content-length request)(length (content-value request))))
   (write-apache-header request socket)
   (when (and (content-value request)
              (not (content-sent request)))
@@ -136,8 +142,9 @@
 	 (*request-views* nil))
     (setf (content-value *request*)
      (with-output-to-string (,stream) ,@forms))
-      (when (stringp (content-value *request*))
-	(setf (content-length *request*) (length (content-value *request*))))))
+    (when (stringp (content-value *request*))
+      (setf (content-value *request*)(babel:string-to-octets (content-value *request*)))
+      (setf (content-length *request*) (length (content-value *request*))))))
 
 (defun %command-param (name command)
   (cdr (assoc name command :test #'equal)))
