@@ -66,7 +66,7 @@
            (not (content-sent request)))
       (progn
         ;; if not string we need to cal write-content-value on pathname
-        (assert (stringp (content-value request)))
+;        (assert (stringp (content-value request)))
         (let ((x (parse-integer (subseq (status request) 0 3)))) ;; temporary hack
           (hunchentoot::start-output x (content-value request)))
         (setf *close-apache-socket* (or *reply-protocol*
@@ -78,7 +78,8 @@
 
 (defun %process-hunchentoot-command% (command original-request)
   (incf *request-counter*)
-  (let* ((request (make-instance 'http-request :command command :hunchentoot-request original-request :posted-content (cdr (assoc "posted-content" command :test #'string=)))) ;; instead (decode-posted-content request)
+  (let* ((request (make-instance 'http-request :command command :hunchentoot-request original-request
+                                 :posted-content (cdr (assoc "posted-content" command :test #'string=)))) ;; instead (decode-posted-content request)
 	 (*request-id* (encode-integer *request-counter*)))
     (if (banned-ip-p (%command-param "remote-ip-addr" command))
         (http-message "Blocked IP Address<br>Contact the web site administrator" request)
