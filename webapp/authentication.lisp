@@ -73,6 +73,7 @@
            (sign-in (assoc "sign-in" posted-content :test 'string=))
            (register (assoc "register" posted-content :test 'string=))
            (authorized nil))
+      (setf %debug% (list name password forgot-pswd remember sign-in register))
       (if (and name (or sign-in register))
           (let ((user (find-user-by-user-name app name)))
             (cond
@@ -99,7 +100,7 @@
                     (return-from check-authentification (values :exists-already name))
                     (let ((user (create-new-user app name)))
                       (switch-user user)
-                      (setf (password user) (hash-password app user user-name password))
+                      (setf (password user) (hash-password app user name password))
                       (setf (interface::authentified *session*) t)
                       (link-user-cookie user (interface::cookie *session*))
                       (when remember
@@ -174,7 +175,8 @@
              ((:input :type "password" :class "form-control" :placeholder "Confirm Password" :id "passwordr2"
                       :oninput "disable_register();")))
             #+nil ((:label :class "checkbox") ((:input :type "checkbox" :name "remember")) " Remember me ")
-            ((:button :class "btn btn-lg btn-primary btn-block" :type "submit" :id "register-btn" :disabled "true") "Register")))))
+            ((:button :class "btn btn-lg btn-primary btn-block" :type "submit" :id "register-btn"
+                       :name "register" :disabled "true") "Register")))))
         ((:div :class "modal-footer")
          ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))))
    (:when (find *auth-status* '(:failed :exists-already :invalid-user-name :unknown :forgot-pswd))
