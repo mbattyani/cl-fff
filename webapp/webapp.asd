@@ -14,4 +14,4 @@
 	       (:file "style" :depends-on ("pages"))
                (:file "authentication" :depends-on ("style"))
                (:file "webapp" :depends-on ("base-classes")))
-  :depends-on (:interface))
+  :depends-on (:interface :ironclad))

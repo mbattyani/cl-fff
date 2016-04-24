@@ -9,6 +9,16 @@
     (let ((*authenticated* (eq *auth-status* t)))
       (call-next-method))))
 
+;; from https://github.com/turtl/api/blob/master/lib/crypto.lisp
+(defun sha256 (sequence/string)
+  "Return a *string* sha256 hash of the given string/byte sequence."
+  (string-downcase
+    (ironclad:byte-array-to-hex-string
+      (ironclad:digest-sequence (ironclad:make-digest 'ironclad:sha256)
+                                (if (stringp sequence/string)
+                                    (babel:string-to-octets sequence/string)
+                                    sequence/string)))))
+
 (defmethod find-user-by-user-name (app user-name)
   )
 
@@ -21,6 +31,9 @@
 (defmethod create-new-user (app user-name)
   )
 
+(defmethod hash-password (app user user-name password)
+  (sha256 (concatenate 'string "webapp" password user-name password)))
+
 (defmethod password (user)
   )
 
@@ -28,6 +41,9 @@
   )
 
 (defmethod  auto-login (user)
+  )
+
+(defmethod  send-new-password-email (app user password)
   )
 
 (defmethod  (setf auto-login) (value user)
@@ -52,34 +68,43 @@
       (return-from check-authentification (interface::authentified *session*)))
     (let* ((name (cdr (assoc "name" posted-content :test 'string=)))
            (password (cdr (assoc "password" posted-content :test 'string=)))
+           (forgot-pswd (assoc "forgot-pswd" posted-content :test 'string=))
            (remember (assoc "remember" posted-content :test 'string=))
            (sign-in (assoc "sign-in" posted-content :test 'string=))
            (register (assoc "register" posted-content :test 'string=))
            (authorized nil))
       (if (and name (or sign-in register))
           (let ((user (find-user-by-user-name app name)))
-            (when sign-in
-              (if (and user (string= password (password user)))
-                  (progn
-                    (switch-user user)
-                    (setf (interface::authentified *session*) t)
-                    (when remember
-                      (setf (auto-login user) t))
-                    (return-from check-authentification t))
-                  (return-from check-authentification (values :failed name))))
-            (when register
-              (unless (valid-user-name-p app name)
-                (return-from check-authentification (values :invalid-user-name name)))
-              (if user
-                  (return-from check-authentification (values :exists-already name))
-                  (let ((user (create-new-user app name)))
-                    (switch-user user)
-                    (setf (password user) password)
-                    (setf (interface::authentified *session*) t)
-                    (link-user-cookie user (interface::cookie *session*))
-                    (when remember
-                      (setf (auto-login user) t))
-                    (return-from check-authentification t)))))
+            (cond
+              (forgot-pswd
+               (if user
+                   (let ((password (interface::make-session-id)))
+                     (setf (password user) (hash-password app user name password))
+                     (send-new-password-email app user password)
+                     (return-from check-authentification (values :forgot-pswd name)))
+                   (return-from check-authentification (values :unknown name))))
+              (sign-in
+                (if (and user (string= (hash-password app user name password) (password user)))
+                    (progn
+                      (switch-user user)
+                      (setf (interface::authentified *session*) t)
+                      (when remember
+                        (setf (auto-login user) t))
+                      (return-from check-authentification t))
+                    (return-from check-authentification (values :failed name))))
+              (register
+                (unless (valid-user-name-p app name)
+                  (return-from check-authentification (values :invalid-user-name name)))
+                (if user
+                    (return-from check-authentification (values :exists-already name))
+                    (let ((user (create-new-user app name)))
+                      (switch-user user)
+                      (setf (password user) (hash-password app user user-name password))
+                      (setf (interface::authentified *session*) t)
+                      (link-user-cookie user (interface::cookie *session*))
+                      (when remember
+                        (setf (auto-login user) t))
+                      (return-from check-authentification t))))))
           (when (interface::cookie *session*)
             (let ((user (find-user-by-cookie app (interface::cookie *session*))))
               (when (and user (auto-login user))
@@ -87,9 +112,14 @@
                 (setf (interface::authentified *session*) t)
                 t)))))))
 
-(defun bs-alert (text)
+(defun bs-alert (text &optional (style :danger))
+  (setf style (getf '(:success "alert alert-success alert-dismissable"
+                      :info "alert alert-info alert-dismissable"
+                      :warning "alert alert-warning alert-dismissable"
+                      :danger "alert alert-danger alert-dismissable")
+                    style "alert alert-danger alert-dismissable"))
   (html:html
-   ((:div :class "alert alert-danger alert-dismissable")
+   ((:div :class style)
     ((:button :type "button" :class "close" :data-dismiss "alert" :aria-hidden "true") "&times;")
     (:insert-string text))))
 
@@ -101,8 +131,9 @@
       ((:div :class "modal-dialog")
        ((:div :class "modal-content")
         ((:div :class "modal-body")
-         ((:script :src "/static/sha1.js"))
          (case *auth-status*
+           (:forgot-pswd (webapp::bs-alert "A new password has been sent to that email address" :info))
+           (:unknown (webapp::bs-alert "Sorry, that user email is not registered"))
            (:failed (bs-alert "Sorry, unknown email or password"))
            (:invalid-user-name (bs-alert "Sorry, this user name is invalid"))
            (:exists-already (bs-alert "Sorry, this user name exists already")))
@@ -116,28 +147,38 @@
             ((:input :type "text" :class "form-control" :placeholder "Your user name" :required "required"
                      :name "name" :autofocus "autofocus" :value *auth-name*))
             ((:input :type "password" :class "form-control" :placeholder "Password"
-                     :required "required" :name "password" :id "password"))
+                     :name "password" :id "password"))
             ((:label :class "checkbox")
-             ((:input :type "checkbox" :name "remember")) " Remember me")
+             ((:input :type "checkbox" :name "forgot-pswd")) "Forgotten password")
+            #+nil((:label :class "checkbox") ((:input :type "checkbox" :name "remember")) " Remember me")
             ((:button :class "btn btn-lg btn-primary btn-block" :type "submit" :name "sign-in"
                       :onclick "fgt('password').value=CryptoJS.SHA1(fgt('password').value); return true;")
              "Sign in")))
           ((:div :class "tab-pane" :id "register")
+           (:jscript "function disable_register () {
+   if ($('#passwordr').val() == $('#passwordr2').val()) {
+       $('#register-btn').prop('disabled', false);
+       $('#pswd-div').removeClass('has-error');
+     }
+   else {
+      $('#register-btn').prop('disabled', true);
+      $('#pswd-div').addClass('has-error');
+     }
+};")
            ((:form :class "form-signin" :role "form" :method "post" :action (interface::url interface::*request*))
-            ((:input :type "text" :class "form-control" :placeholder "Your user name" :required "required"
+            ((:input :type "email" :class "form-control" :placeholder "Your email @edhec.com" :required "required"
                      :name "name" :autofocus "autofocus" :value *auth-name*))
             ((:input :type "password" :class "form-control" :placeholder "Password"
-                     :required "required" :id "passwordr" :name "password"))
-            ((:input :type "password" :class "form-control" :placeholder "Confirm Password" :id "passwordr2"))
-            ((:label :class "checkbox")
-             ((:input :type "checkbox" :name "remember")) " Remember me ")
-            ((:button :class "btn btn-lg btn-primary btn-block" :type "submit" :name "register"
-                      :onclick "fgt('passwordr').value=CryptoJS.SHA1(fgt('passwordr').value); return true;")
-             "Register")))))
+                     :required "required" :id "passwordr" :name "password" :oninput "disable_register();"))
+            ((:div :id "pswd-div")
+             ((:input :type "password" :class "form-control" :placeholder "Confirm Password" :id "passwordr2"
+                      :oninput "disable_register();")))
+            #+nil ((:label :class "checkbox") ((:input :type "checkbox" :name "remember")) " Remember me ")
+            ((:button :class "btn btn-lg btn-primary btn-block" :type "submit" :id "register-btn" :disabled "true") "Register")))))
         ((:div :class "modal-footer")
          ((:button :type "button" :class "btn btn-default" :data-dismiss "modal") "Close"))))))
-   (:when (or (eq *auth-status* :failed) (eq *auth-status* :exists-already))
-     (:script "$('#SignInModal').modal();"))))
+   (:when (find *auth-status* '(:failed :exists-already :invalid-user-name :unknown :forgot-pswd))
+          (:script "$('#SignInModal').modal();"))))
 
 (defmethod insert-log-inout-button (app page)
   (if *authenticated*
