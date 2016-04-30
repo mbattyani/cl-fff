@@ -20,7 +20,7 @@
 (defparameter *database-pwd* "")
 (defparameter *database-save-period* 30)
 (defparameter *mod-lisp-port* 3100)
-(defparameter *local-port* 25142)
+(defparameter *local-port* 25140)
 
 (defparameter *init-file*
   #+macosx #P"~/initfc.lisp"
@@ -145,4 +145,3 @@
   (clipboard user))
 
 (defvar %unique-user% nil)
-

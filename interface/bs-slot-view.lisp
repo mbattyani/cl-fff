@@ -41,14 +41,15 @@
 		      :test #'string= :key #'c2mop:slot-definition-name)))
       (unless slot (error (format nil "Unknown slot : ~a" slot-name)))
       (let* ((edit (make-instance 'bs-edit :tooltip (meta::tooltip slot) :slot slot
-                                  :force-visible (getf attrs :force-visible))))
+                                  :force-visible (getf attrs :force-visible)))
+             (password (getf attrs :password)))
 	(remf attrs :force-visible)
+	(remf attrs :password)
 	(if t ;(modifiable-p slot)
             `(html:html
-              ((:input :type "text" :id ,(name edit) :class "form-control"  :insert-string
+              ((:input :type ,(if password "password" "text") :id ,(name edit) :class "form-control"  :insert-string
                        ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs)))
-            `(html:html ((:p class "form-control-static" :id ,(name edit) ,@attrs))))
-        ))))
+            `(html:html ((:p class "form-control-static" :id ,(name edit) ,@attrs))))))))
 
 ;(html:add-func-tag :slot-edit 'slot-edit-tag t)
 
@@ -100,10 +101,9 @@
 				 :force-visible (getf attrs :force-visible))))
 	(setf attrs (copy-list attrs))
 	(remf attrs :force-visible)
-	(if (modifiable-p slot)
-            `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control" :style "display:none;"
-                                    :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs))
-                        ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
+	(if t ;(modifiable-p slot)
+            `(html:html ((:textarea :id ,(name edit) :rows ,(getf attrs :rows "3") :class "form-control"
+                                    :insert-string ,(format nil "onchange='Fch(~s,~a.value);'" (name edit)(name edit)) ,@attrs)))
             `(html:html  ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;"))))))))
 
 ;(html:add-func-tag :slot-medit 'slot-medit-tag)

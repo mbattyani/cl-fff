@@ -1,4 +1,4 @@
 (:guid 108 :version 0 :parent (:obj-id 10361 109)
 :slots ((meta-web::choice-value ":edit")
-(meta-web::name (:reader :trans-str :en "simle line edit" :fr "edit simple ligne" :sp ""))
+(meta-web::name (:reader :trans-str :en "single line edit" :fr "edit simple sur 1 ligne" :sp ""))
 (meta-web::description "")))

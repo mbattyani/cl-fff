@@ -2,7 +2,7 @@
 
 (defun make-translation (keyword tr)
   (flet ((non-null (str)
-           (> (length str) 1))) 
+           (> (length str) 1)))
     (let ((translated-string
            `(make-instance 'meta::translated-string
               ,@(when (non-null (english tr)) (list :en (english tr)))
@@ -31,7 +31,7 @@
             translated-string)))))
 
 (make-instance 'interface::object-view :object-class 'translated-string
-	       :country-languages '(:fr) :name "ts" :source-code 
+	       :country-languages '(:fr) :name "ts" :source-code
    `(((:tab :class "tabdv")
       ("Français"
        ((:table :class "dvt" :style "width:100%")
@@ -56,7 +56,7 @@
 
 
 (make-instance 'interface::object-view :object-class 'translated-string
-	       :country-languages '(:en) :name "ts-en" :source-code 
+	       :country-languages '(:en) :name "ts-en" :source-code
    `(((:tab :class "tabdv")
       ("English"
        ((:table :class "dvt" :style "width:100%")
@@ -81,7 +81,7 @@
 
 (make-instance 'interface::object-view :object-class 'translated-string
 	       :country-languages '(:en) :name "ts-en" ;:frontend '(:bootstrap)
-               :source-code 
+               :source-code
    `((:tab
       ("English"
        ((:slot-edit english)))
@@ -95,7 +95,7 @@
        ((:slot-edit italian))))))
 
 (make-instance 'interface::object-view :object-class 'object-help
-	       :country-languages '(:fr :en) :name "oh" :source-code 
+	       :country-languages '(:fr :en) :name "oh" :source-code
    `(((:tab :class "tabdv")
       ("English"
        ((:table :class "dvt" :style "width:400px")
@@ -158,7 +158,7 @@
 	  (user-groups (project obj))))
 
 (make-instance 'interface::object-view :object-class 'slot-info
-	       :country-languages '(:fr) :name "slot-fr" :source-code 
+	       :country-languages '(:fr) :name "slot-fr" :source-code
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name sql-name description comment in-proxy stored accessor initarg initform
@@ -169,12 +169,12 @@
 		   process-new-object-fn get-value-sql
 		   sql-length value-to-sql-func sql-to-value-func))
      ("Vue"
-      (:slot-table view-type slot-view-name html-tag-attributes list-format 
+      (:slot-table view-type slot-view-name html-tag-attributes list-format
 		   pathname-filter value-to-string-func string-to-value-func
-		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text 
+		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text
 		   modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("Règles"
-      (:slot-table indexed unique-p null-allowed enable-copy-paste 
+      (:slot-table indexed unique-p null-allowed enable-copy-paste
 		   duplicate-value make-copy-string duplicate-value-fn
 		   value-constraint disable-predicate))
      ("Aide"
@@ -182,7 +182,7 @@
      )))
 
 (make-instance 'interface::object-view :object-class 'slot-info
-	       :country-languages '(:en) :name "slot-en" :source-code 
+	       :country-languages '(:en) :name "slot-en" :source-code
   `(((:tab :class "tabf")
      ("Description"
       (:slot-table name user-name sql-name description comment in-proxy stored accessor initarg initform
@@ -195,11 +195,11 @@
      ("Access rights"
       (:slot-table modifiable modifiable-groups can-delete can-delete-groups visible visible-groups))
      ("View"
-      (:slot-table view-type slot-view-name html-tag-attributes list-format 
+      (:slot-table view-type slot-view-name html-tag-attributes list-format
 		   pathname-filter value-to-string-func string-to-value-func
 		   void-link-text dont-display-null-value get-value-html-fn  get-value-title get-value-text))
      ("Rules"
-      (:slot-table null-allowed value-constraint disable-predicate 
+      (:slot-table null-allowed value-constraint disable-predicate
 		   enable-copy-paste make-copy-string duplicate-value duplicate-value-fn indexed unique-p))
      ("Help"
       (:object-view :object (object-help interface::*object*)))
@@ -258,10 +258,10 @@
   (let* ((type (value-type object))
 	 (choices (meta::choices (interface::slot interface::*dispatcher*)))
 	 (keywords (cond
-		     ((list-of-values object) '(:default :named-slot-view 
+		     ((list-of-values object) '(:default :named-slot-view
 						:list :list-val :list2 :list2-val :pick-mval))
 		     ((eq type :object) '(:default :named-slot-view :link :embed :embed-val :on-off))
-		     ((eq type :string) '(:default :named-slot-view :medit :edit))
+		     ((eq type :string) '(:default :named-slot-view :medit :edit :password))
 		     ((eq type :color) '(:default :named-slot-view :pick-color :edit))
 		     (t '(:default :named-slot-view)))))
     (loop for keyword in keywords
@@ -346,7 +346,7 @@
            (loop with key-package = (find-package :keyword)
               for slot-name in '(user-name description tooltip stored in-proxy indexed
                                  unique null-allowed accessor initarg initform choices
-                                 list-of-values value-type linked-value modifiable visible 
+                                 list-of-values value-type linked-value modifiable visible
                                  unit disable-predicate value-constraint value-to-string-func
                                  string-to-value-func sql-length nb-decimals
                                  void-link-text pathname-filter can-create-new-object get-object-func
@@ -354,13 +354,13 @@
               as key = (intern (symbol-name slot-name) key-package)
               nconc `(,key (,slot-name slot)))))
 
-(make-instance 'interface::slot-list-format 
+(make-instance 'interface::slot-list-format
    :name "ot2r" :country-languages '(:fr :en)
    :object-class 'slot-info
    :list-format-fn
    #'(lambda (start objects max-nb total-length)
        (html:html
-	 ((:table :class "dvl" :style "border:'0';background-color:#808080;" 
+	 ((:table :class "dvl" :style "border:'0';background-color:#808080;"
 		  :cellpadding "2" :cellspacing "1")
 	  (:when objects
 	    (:tr
@@ -384,7 +384,7 @@
 		   ((:a :href (interface::encode-object-url object))
 		    (html:esc (meta::short-description object))))
 		  ((:td :class "dvcv")
-		   (:p (:if (list-of-values object) 
+		   (:p (:if (list-of-values object)
 			    "list"
 			    "&nbsp;&nbsp;&nbsp;&nbsp;")))
 		  ((:td :class "dvcv")
@@ -407,4 +407,3 @@
                             "all"
                             (:format "~{~a~^, ~}" (mapcar 'name (modifiable-groups object))))
                         )))))))))
-
