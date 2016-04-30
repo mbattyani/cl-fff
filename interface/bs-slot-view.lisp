@@ -24,15 +24,15 @@
                    ((and (not value) (meta-level::dont-display-null-value slot)) "")
                    ((stringp value) value)
                    (t (funcall (meta::value-to-string-fn slot) value))))))
-    (if (modifiable-p *dispatcher*)
-	(concatenate 'string "x_.f826svi('" (name item) "', '" j-value "');")
+    (if t ;(modifiable-p *dispatcher*)
+	(concatenate 'string "x_.f826sv('" (name item) "', '" j-value "');")
 	(concatenate 'string "x_.f826si('" (name item) "', '" j-value "');"))))
 
 (defmethod make-set-status-javascript ((item bs-edit) status slot)
-  (when (modifiable-p *dispatcher*)
-    (if status
-	(concatenate 'string "x_.f8252h('" (name item) "');")
-	(concatenate 'string "x_.f8252s('" (name item) "');"))))
+  (concatenate 'string "x_.$('#" (name item) "')"
+               (if (and (not status) (modifiable-p *dispatcher*))
+                   ".prop('disabled', false);"
+                   ".prop('disabled', true);")))
 
 (defmethod slot-edit-tag ((frontend bootstrap) attributes form)
   (declare (ignore form))
@@ -43,12 +43,11 @@
       (let* ((edit (make-instance 'bs-edit :tooltip (meta::tooltip slot) :slot slot
                                   :force-visible (getf attrs :force-visible))))
 	(remf attrs :force-visible)
-	(if (modifiable-p slot)
+	(if t ;(modifiable-p slot)
             `(html:html
-              ((:input :type "text" :id ,(name edit) :class "form-control" :style "display:none;" :insert-string
-                       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs))
-              ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") :style "display:none;")))
-            `(html:html ((:p class "form-control-static" :id ,(concatenate 'string (name edit) "d") ,@attrs))))
+              ((:input :type "text" :id ,(name edit) :class "form-control"  :insert-string
+                       ,(format nil "onchange='Fch(~s,~a.value);'" (name edit) (name edit)) ,@attrs)))
+            `(html:html ((:p class "form-control-static" :id ,(name edit) ,@attrs))))
         ))))
 
 ;(html:add-func-tag :slot-edit 'slot-edit-tag t)
